@@ -1,0 +1,25 @@
+package com.edujournal.domain.usecase
+
+import com.edujournal.domain.model.Student
+import com.edujournal.domain.repository.StudentRepository
+
+class CreateStudentUseCase(
+    private val repository: StudentRepository
+) {
+    suspend operator fun invoke(
+        firstName: String,
+        lastName: String,
+        middleName: String,
+        groupId: Long
+    ){
+        val student = Student(
+            id = 0,
+            firstName = firstName,
+            lastName = lastName,
+            middleName = middleName,
+            groupId = groupId
+        )
+
+        repository.createStudent(student)
+    }
+}

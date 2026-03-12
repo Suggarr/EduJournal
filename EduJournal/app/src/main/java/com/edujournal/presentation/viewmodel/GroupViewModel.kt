@@ -7,7 +7,9 @@ import com.edujournal.domain.usecase.CreateGroupUseCase
 import com.edujournal.domain.usecase.GetGroupsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,22 +19,17 @@ class GroupViewModel @Inject constructor(
     private val getGroupsUseCase: GetGroupsUseCase
 ) : ViewModel(){
 
-    private val _groups = MutableStateFlow<List<Group>>(emptyList())
-    val groups: StateFlow<List<Group>> = _groups
-
-    init {
-        loadGroups()
-    }
-    fun loadGroups(){
-        viewModelScope.launch{
-            _groups.value = getGroupsUseCase()
-        }
-    }
+    val groups: StateFlow<List<Group>> =
+        getGroupsUseCase()
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(5000),
+                emptyList()
+            )
 
     fun addGroup(name: String){
         viewModelScope.launch{
             createGroupUseCase(name)
-            loadGroups()
         }
     }
 }

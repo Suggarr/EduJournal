@@ -5,15 +5,17 @@ import com.edujournal.data.mapper.toDomain
 import com.edujournal.data.mapper.toEntity
 import com.edujournal.domain.model.Group
 import com.edujournal.domain.repository.GroupRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class GroupRepositoryImpl (
     private val localDataSource: GroupLocalDataSource
 ): GroupRepository {
 
-    override suspend fun getGroups(): List<Group>{
+    override fun getGroups(): Flow<List<Group>>{
         return localDataSource
             .getAllGroups()
-            .map{ entity -> entity.toDomain()}
+            .map{ list -> list.map { it.toDomain() }}
     }
 
     override suspend fun createGroup(group: Group){

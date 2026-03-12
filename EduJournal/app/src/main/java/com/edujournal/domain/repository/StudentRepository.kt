@@ -1,0 +1,10 @@
+package com.edujournal.domain.repository
+
+import com.edujournal.domain.model.Student
+import kotlinx.coroutines.flow.Flow
+
+interface StudentRepository {
+    fun observeStudents(groupId: Long): Flow<List<Student>>
+
+    suspend fun createStudent(student: Student)
+}
