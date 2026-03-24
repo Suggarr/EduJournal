@@ -2,8 +2,9 @@ package com.edujournal.domain.usecase
 
 import com.edujournal.domain.model.Student
 import com.edujournal.domain.repository.StudentRepository
+import javax.inject.Inject
 
-class CreateStudentUseCase(
+class CreateStudentUseCase @Inject constructor(
     private val repository: StudentRepository
 ) {
     suspend operator fun invoke(

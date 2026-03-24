@@ -14,4 +14,12 @@ class SubjectLocalDataSource(
     suspend fun insertSubject(subject: SubjectEntity) {
         subjectDao.insert(subject)
     }
+
+    suspend fun updateSubject(subject: SubjectEntity) {
+        subjectDao.update(subject)
+    }
+
+    suspend fun deleteSubject(subjectId: Long) {
+        subjectDao.deleteById(subjectId)
+    }
 }

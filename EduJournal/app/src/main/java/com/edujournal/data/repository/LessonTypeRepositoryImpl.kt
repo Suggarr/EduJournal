@@ -11,15 +11,21 @@ import kotlinx.coroutines.flow.map
 class LessonTypeRepositoryImpl(
     private val localDataSource: LessonTypeLocalDataSource
 ) : LessonTypeRepository {
-
     override fun observeLessonTypes(): Flow<List<LessonType>> {
         return localDataSource
             .observeLessonTypes()
-            .map{list -> list.map{ it.toDomain()}}
-
+            .map { list -> list.map { it.toDomain() } }
     }
 
-    override suspend fun createLessonType(lessonType: LessonType){
-        localDataSource.insert(lessonType.toEntity())
+    override suspend fun createLessonType(lessonType: LessonType) {
+        localDataSource.insertLessonType(lessonType.toEntity())
+    }
+
+    override suspend fun updateLessonType(lessonType: LessonType) {
+        localDataSource.updateLessonType(lessonType.toEntity())
+    }
+
+    override suspend fun deleteLessonType(typeId: Long) {
+        localDataSource.deleteLessonType(typeId)
     }
 }

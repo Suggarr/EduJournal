@@ -5,13 +5,21 @@ import com.edujournal.data.local.database.entities.LessonTypeEntity
 import kotlinx.coroutines.flow.Flow
 
 class LessonTypeLocalDataSource(
-    private val dao: LessonTypeDao
+    private val lessonTypeDao: LessonTypeDao
 ) {
     fun observeLessonTypes(): Flow<List<LessonTypeEntity>> {
-        return dao.observeLessonTypes()
+        return lessonTypeDao.observeLessonTypes()
     }
 
-    suspend fun insert(lessonType: LessonTypeEntity) {
-        dao.insert(lessonType)
+    suspend fun insertLessonType(lessonType: LessonTypeEntity) {
+        lessonTypeDao.insert(lessonType)
+    }
+
+    suspend fun updateLessonType(lessonType: LessonTypeEntity) {
+        lessonTypeDao.update(lessonType)
+    }
+
+    suspend fun deleteLessonType(typeId: Long) {
+        lessonTypeDao.deleteById(typeId)
     }
 }

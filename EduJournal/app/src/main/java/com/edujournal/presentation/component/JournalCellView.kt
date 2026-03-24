@@ -12,20 +12,17 @@ import com.edujournal.presentation.state.JournalCell
 
 @Composable
 fun JournalCellView(
-    cell: JournalCell
+    cell: JournalCell,
+    modifier: Modifier = Modifier
 ) {
-
     Box(
-        modifier = Modifier
+        modifier = modifier
             .width(60.dp)
             .height(40.dp),
         contentAlignment = Alignment.Center
     ) {
-
         Text(
             text = cell.value ?: "-"
         )
-
     }
-
 }

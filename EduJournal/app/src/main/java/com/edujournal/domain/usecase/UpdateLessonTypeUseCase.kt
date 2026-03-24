@@ -4,15 +4,10 @@ import com.edujournal.domain.model.LessonType
 import com.edujournal.domain.repository.LessonTypeRepository
 import javax.inject.Inject
 
-class CreateLessonTypeUseCase @Inject constructor(
+class UpdateLessonTypeUseCase @Inject constructor(
     private val repository: LessonTypeRepository
 ) {
-    suspend operator fun invoke(name: String) {
-
-        val lessonType = LessonType(
-            id = 0,
-            name = name);
-
-        repository.createLessonType(lessonType)
+    suspend operator fun invoke(lessonType: LessonType) {
+        repository.updateLessonType(lessonType)
     }
 }

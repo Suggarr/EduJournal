@@ -1,8 +1,11 @@
 package com.edujournal.data.local.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.edujournal.data.local.database.entities.SubjectEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -12,6 +15,12 @@ interface SubjectDao {
     @Query("SELECT * FROM subjects")
     fun observeSubjects(): Flow<List<SubjectEntity>>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(subject: SubjectEntity)
+
+    @Update
+    suspend fun update(subject: SubjectEntity)
+
+    @Query("DELETE FROM subjects WHERE id = :subjectId")
+    suspend fun deleteById(subjectId: Long)
 }

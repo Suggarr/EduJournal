@@ -2,8 +2,11 @@ package com.edujournal.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.edujournal.domain.model.Grade
+import com.edujournal.domain.model.GradeType
 import com.edujournal.domain.usecase.GetJournalUseCase
 import com.edujournal.domain.usecase.GetLessonsUseCase
+import com.edujournal.domain.usecase.SetGradeUseCase
 import com.edujournal.presentation.state.JournalCell
 import com.edujournal.presentation.state.JournalRow
 import com.edujournal.presentation.state.JournalState
@@ -12,12 +15,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class JournalViewModel @Inject constructor(
     private val getJournalUseCase: GetJournalUseCase,
-    private val getLessonsUseCase: GetLessonsUseCase
+    private val getLessonsUseCase: GetLessonsUseCase,
+    private val setGradeUseCase: SetGradeUseCase
 ) : ViewModel() {
 
     fun observeJournal(groupId: Long): StateFlow<JournalState> {
@@ -59,121 +64,19 @@ class JournalViewModel @Inject constructor(
             JournalState()
         )
     }
-}
-//@HiltViewModel
-//class JournalViewModel @Inject constructor(
-//    private val observeStudentsUseCase: ObserveStudentsUseCase,
-//    private val getLessonsUseCase: GetLessonsUseCase,
-//    private val getGradesForLessonUseCase: GetGradesForLessonUseCase
-//) : ViewModel() {
-//
-//    fun observeJournal(groupId: Long): StateFlow<JournalState> {
-//
-//        return combine(
-//            observeStudentsUseCase(groupId),
-//            getLessonsUseCase()
-//        ) { students, lessons ->
-//
-//            val rows = students.map { student ->
-//
-//                val cells = lessons.map { lesson ->
-//
-//                    JournalCell(
-//                        lessonId = lesson.id,
-//                        value = null
-//                    )
-//
-//                }
-//
-//                JournalRow(
-//                    studentId = student.id,
-//                    studentName = student.firstName + " " + student.lastName,
-//                    cells = cells
-//                )
-//            }
-//
-//            JournalState(
-//                lessons = lessons,
-//                rows = rows
-//            )
-//
-//        }.stateIn(
-//            viewModelScope,
-//            SharingStarted.WhileSubscribed(5000),
-//            JournalState()
-//        )
-//    }
-//}
 
-//package com.edujournal.presentation.viewmodel
-//
-//import androidx.lifecycle.ViewModel
-//import androidx.lifecycle.viewModelScope
-//import com.edujournal.domain.usecase.GetLessonsUseCase
-//import com.edujournal.domain.usecase.GetGradesForLessonUseCase
-//import com.edujournal.domain.usecase.ObserveStudentsUseCase
-//import com.edujournal.presentation.state.JournalCell
-//import com.edujournal.presentation.state.JournalRow
-//import com.edujournal.presentation.state.JournalState
-//import kotlinx.coroutines.flow.MutableStateFlow
-//import kotlinx.coroutines.flow.StateFlow
-//import kotlinx.coroutines.launch
-//import javax.inject.Inject
-//import dagger.hilt.android.lifecycle.HiltViewModel
-//import kotlinx.coroutines.flow.map
-//
-//@HiltViewModel
-//class JournalViewModel @Inject constructor(
-//
-//    private val observeStudentsUseCase: ObserveStudentsUseCase,
-//
-//    private val getLessonsUseCase: GetLessonsUseCase,
-//
-//    private val getGradesForLessonUseCase: GetGradesForLessonUseCase
-//
-//) : ViewModel() {
-//
-//    private val _state = MutableStateFlow(JournalState())
-//    val state: StateFlow<JournalState> = _state
-//
-//    fun loadJournal(groupId: Long) {
-//
-//        viewModelScope.launch {
-//
-//            observeStudentsUseCase(groupId).collect { students ->
-//
-//                getLessonsUseCase().collect { lessons ->
-//
-//                    val rows = students.map { student ->
-//
-//                        val cells = lessons.map { lesson ->
-//
-//                            JournalCell(
-//                                lessonId = lesson.id,
-//                                value = null
-//                            )
-//
-//                        }
-//
-//                        JournalRow(
-//                            studentId = student.id,
-//                            studentName = student.firstName + " " + student.lastName,
-//                            cells = cells
-//                        )
-//
-//                    }
-//
-//                    _state.value = JournalState(
-//                        lessons = lessons,
-//                        rows = rows
-//                    )
-//
-//                }
-//
-//            }
-//
-//        }
-//
-//    }
-//
-//}
+    fun setGrade(studentId: Long, lessonId: Long, value: Int) {
+        viewModelScope.launch {
+            setGradeUseCase(
+                Grade(
+                    id = 0, // Room auto-increment if handled
+                    studentId = studentId,
+                    lessonId = lessonId,
+                    value = value,
+                    type = GradeType.GRADE,
+                    comment = null
+                )
+            )
+        }
+    }
+}
