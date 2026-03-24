@@ -7,9 +7,17 @@ import kotlinx.coroutines.flow.Flow
 class StudentLocalDataSource(
     private val studentDao: StudentDao
 ) {
-    fun observeStudents(groupId: Long): Flow<List<StudentEntity>> = studentDao.observeStudents(groupId)
+    fun observeStudents(groupId: Long): Flow<List<StudentEntity>> = studentDao.getByGroup(groupId)
 
     suspend fun insert(student: StudentEntity) {
         studentDao.insert(student)
+    }
+
+    suspend fun update(student: StudentEntity) {
+        studentDao.update(student)
+    }
+
+    suspend fun delete(id: Long) {
+        studentDao.deleteById(id)
     }
 }

@@ -7,4 +7,8 @@ interface StudentRepository {
     fun observeStudents(groupId: Long): Flow<List<Student>>
 
     suspend fun createStudent(student: Student)
+
+    suspend fun updateStudent(student: Student)
+
+    suspend fun deleteStudent(studentId: Long)
 }

@@ -34,7 +34,9 @@ import com.edujournal.domain.usecase.CreateLessonTypeUseCase
 import com.edujournal.domain.usecase.CreateLessonUseCase
 import com.edujournal.domain.usecase.CreateStudentUseCase
 import com.edujournal.domain.usecase.CreateSubjectUseCase
+import com.edujournal.domain.usecase.DeleteGroupUseCase
 import com.edujournal.domain.usecase.DeleteLessonTypeUseCase
+import com.edujournal.domain.usecase.DeleteStudentUseCase
 import com.edujournal.domain.usecase.DeleteSubjectUseCase
 import com.edujournal.domain.usecase.GetGradesForLessonUseCase
 import com.edujournal.domain.usecase.GetGroupsUseCase
@@ -44,7 +46,9 @@ import com.edujournal.domain.usecase.ObserveLessonTypesUseCase
 import com.edujournal.domain.usecase.ObserveStudentsUseCase
 import com.edujournal.domain.usecase.ObserveSubjectsUseCase
 import com.edujournal.domain.usecase.SetGradeUseCase
+import com.edujournal.domain.usecase.UpdateGroupUseCase
 import com.edujournal.domain.usecase.UpdateLessonTypeUseCase
+import com.edujournal.domain.usecase.UpdateStudentUseCase
 import com.edujournal.domain.usecase.UpdateSubjectUseCase
 import dagger.Module
 import dagger.Provides
@@ -281,4 +285,26 @@ object DatabaseModule {
     fun provideDeleteLessonTypeUseCase(
         repository: LessonTypeRepository
     ): DeleteLessonTypeUseCase = DeleteLessonTypeUseCase(repository)
+
+    @Provides
+    fun provideUpdateGroupUseCase(
+        repository: GroupRepository
+    ): UpdateGroupUseCase =
+        UpdateGroupUseCase(repository)
+
+    @Provides
+    fun provideDeleteGroupUseCase(
+        repository: GroupRepository
+    ): DeleteGroupUseCase = DeleteGroupUseCase(repository)
+
+    @Provides
+    fun provideUpdateStudentUseCase(
+        repository: StudentRepository
+    ): UpdateStudentUseCase =
+        UpdateStudentUseCase(repository)
+
+    @Provides
+    fun provideDeleteStudentUseCase(
+        repository: StudentRepository
+    ): DeleteStudentUseCase = DeleteStudentUseCase(repository)
 }

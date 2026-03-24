@@ -2,7 +2,9 @@ package com.edujournal.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.edujournal.data.local.database.entities.GroupEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -10,8 +12,14 @@ import kotlinx.coroutines.flow.Flow
 interface GroupDao {
 
     @Query("SELECT * FROM 'groups'")
-    fun getAll(): Flow<List<GroupEntity>>
+    fun getGroups(): Flow<List<GroupEntity>>
 
-    @Insert
-    suspend fun insert(group: GroupEntity)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertGroup(group: GroupEntity)
+
+    @Update
+    suspend fun updateGroup(group: GroupEntity)
+
+    @Query("DELETE FROM 'groups' WHERE id = :id")
+    suspend fun deleteGroup(id: Long)
 }

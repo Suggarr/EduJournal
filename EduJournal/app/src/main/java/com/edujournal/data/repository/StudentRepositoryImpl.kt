@@ -21,4 +21,12 @@ class StudentRepositoryImpl(
     override suspend fun createStudent(student: Student) {
         localDataSource.insert(student.toEntity())
     }
+
+    override suspend fun updateStudent(student: Student) {
+        localDataSource.update(student.toEntity())
+    }
+
+    override suspend fun deleteStudent(studentId: Long) {
+        localDataSource.delete(studentId)
+    }
 }

@@ -9,10 +9,18 @@ class GroupLocalDataSource(
 )
 {
     fun getAllGroups(): Flow<List<GroupEntity>>{
-        return groupDao.getAll()
+        return groupDao.getGroups()
     }
 
     suspend fun insertGroup(group: GroupEntity){
-        groupDao.insert(group)
+        groupDao.insertGroup(group)
+    }
+
+    suspend fun updateGroup(group: GroupEntity){
+        groupDao.updateGroup(group)
+    }
+
+    suspend fun deleteGroup(id: Long) {
+        groupDao.deleteGroup(id)
     }
 }

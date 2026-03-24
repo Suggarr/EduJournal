@@ -23,4 +23,12 @@ class GroupRepositoryImpl (
             group.toEntity()
         )
     }
+
+    override suspend fun updateGroup(group: Group) {
+        localDataSource.updateGroup(group.toEntity())
+    }
+
+    override suspend fun deleteGroup(id: Long) {
+        localDataSource.deleteGroup(id)
+    }
 }
