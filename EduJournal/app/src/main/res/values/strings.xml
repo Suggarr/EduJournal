@@ -1,3 +1,68 @@
-<resources>
+﻿<resources>
     <string name="app_name">EduJournal</string>
+
+    <string name="common_back">Назад</string>
+    <string name="common_add">Добавить</string>
+    <string name="common_edit">Изменить</string>
+    <string name="common_delete">Удалить</string>
+    <string name="common_save">Сохранить</string>
+    <string name="common_cancel">Отмена</string>
+
+    <string name="bottom_home">Главная</string>
+    <string name="bottom_groups">Группы</string>
+    <string name="bottom_settings">Настройки</string>
+
+    <string name="welcome_title">Как к вам обращаться?</string>
+    <string name="welcome_name_label">Ваше имя</string>
+    <string name="welcome_start">Начать</string>
+
+    <string name="subject_greeting">Здравствуйте, %1$s!</string>
+    <string name="subject_title">Ваши предметы</string>
+    <string name="subject_empty">Список пуст. Добавьте первый предмет!</string>
+    <string name="subject_new">Новый предмет</string>
+    <string name="subject_edit">Редактировать</string>
+    <string name="subject_name_label">Название предмета</string>
+    <string name="subject_abbreviation_label">Сокращение</string>
+
+    <string name="lesson_type_select">Выберите тип занятия</string>
+    <string name="lesson_type_empty">Типы занятий не найдены</string>
+    <string name="lesson_type_new">Новый тип занятия</string>
+    <string name="lesson_type_edit">Редактировать</string>
+    <string name="lesson_type_name_label">Название (например, Лекция)</string>
+
+    <string name="group_select">Выберите группу</string>
+    <string name="group_empty">Нет групп</string>
+    <string name="group_new">Новая группа</string>
+    <string name="group_edit">Редактировать группу</string>
+    <string name="group_delete_title">Удалить группу?</string>
+    <string name="group_delete_message">Это действие нельзя отменить</string>
+    <string name="group_name_label">Название группы (например, ПИ-101)</string>
+    <string name="group_name_error">Название не может быть пустым</string>
+
+    <string name="student_column">Студент</string>
+    <string name="student_group_title">Группа %1$s</string>
+    <string name="student_empty">В группе пока нет студентов</string>
+    <string name="student_delete_title">Удалить студента?</string>
+    <string name="student_delete_confirm">Вы действительно хотите удалить студента %1$s %2$s? Это действие нельзя отменить.</string>
+    <string name="student_new">Новый студент</string>
+    <string name="student_edit">Редактировать</string>
+    <string name="student_add_desc">Добавить студента</string>
+    <string name="student_last_name">Фамилия</string>
+    <string name="student_first_name">Имя</string>
+    <string name="student_middle_name">Отчество</string>
+
+    <string name="journal_title">Журнал группы: %1$s</string>
+    <string name="journal_empty">Данных нет. Проверьте студентов и занятия для группы %1$s</string>
+    <string name="journal_set_grade">Поставить оценку</string>
+
+    <string name="settings_title">Настройки</string>
+    <string name="settings_user_name_label">Имя пользователя</string>
+    <string name="settings_name_saved">Имя сохранено</string>
+    <string name="settings_save_name">Сохранить имя</string>
+    <string name="settings_biometric">Биометрия или код</string>
+    <string name="settings_biometric_enroll">Настройте биометрию или код экрана блокировки в устройстве</string>
+    <string name="settings_biometric_unavailable">Биометрия/код недоступны на этом устройстве</string>
+
+    <string name="biometric_prompt_title">Подтвердите вход</string>
+    <string name="biometric_prompt_subtitle">Используйте биометрию или PIN/пароль устройства</string>
 </resources>

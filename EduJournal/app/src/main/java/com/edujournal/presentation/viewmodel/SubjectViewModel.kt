@@ -1,13 +1,12 @@
-// D:/DiplomProject/EduJournal/app/src/main/java/com/edujournal/presentation/viewmodel/SubjectViewModel.kt
-package com.edujournal.presentation.viewmodel
+﻿package com.edujournal.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edujournal.domain.model.Subject
 import com.edujournal.domain.usecase.CreateSubjectUseCase
+import com.edujournal.domain.usecase.DeleteSubjectUseCase
 import com.edujournal.domain.usecase.ObserveSubjectsUseCase
 import com.edujournal.domain.usecase.UpdateSubjectUseCase
-import com.edujournal.domain.usecase.DeleteSubjectUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,10 +25,9 @@ class SubjectViewModel @Inject constructor(
     val subjects: StateFlow<List<Subject>> = observeSubjectsUseCase()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // Теперь принимаем и описание
-    fun addSubject(name: String, description: String?) {
+    fun addSubject(name: String, abbreviation: String?) {
         viewModelScope.launch {
-            createSubjectUseCase(name, description)
+            createSubjectUseCase(name, abbreviation)
         }
     }
 

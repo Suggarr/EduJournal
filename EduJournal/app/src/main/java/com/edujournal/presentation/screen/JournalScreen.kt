@@ -1,17 +1,35 @@
-package com.edujournal.presentation.screen
+﻿package com.edujournal.presentation.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.edujournal.R
 import com.edujournal.presentation.component.JournalHeader
 import com.edujournal.presentation.component.JournalRowView
 import com.edujournal.presentation.state.JournalCell
@@ -33,10 +51,10 @@ fun JournalScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Журнал группы: $groupId") },
+                title = { Text(stringResource(R.string.journal_title, groupId.toString())) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 }
             )
@@ -49,7 +67,7 @@ fun JournalScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Данных нет. Проверьте студентов и занятия для группы $groupId")
+                Text(stringResource(R.string.journal_empty, groupId.toString()))
             }
         } else {
             Column(
@@ -77,7 +95,6 @@ fun JournalScreen(
         }
     }
 
-    // Диалог выбора оценки
     selectedCell?.let { (row, cell) ->
         GradeSelectionDialog(
             onDismiss = { selectedCell = null },
@@ -96,7 +113,7 @@ fun GradeSelectionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Поставить оценку") },
+        title = { Text(stringResource(R.string.journal_set_grade)) },
         text = {
             Column {
                 listOf(2, 3, 4, 5).forEach { grade ->
@@ -111,7 +128,7 @@ fun GradeSelectionDialog(
         },
         confirmButton = {
             Button(onClick = onDismiss) {
-                Text("Отмена")
+                Text(stringResource(R.string.common_cancel))
             }
         }
     )

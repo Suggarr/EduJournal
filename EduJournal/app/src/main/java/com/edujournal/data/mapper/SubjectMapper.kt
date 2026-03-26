@@ -7,7 +7,7 @@ fun SubjectEntity.toDomain(): Subject {
     return Subject(
         id = id,
         name = name,
-        description = description
+        abbreviation = abbreviation
     )
 }
 
@@ -15,6 +15,6 @@ fun Subject.toEntity(): SubjectEntity {
     return SubjectEntity(
         id = id,
         name = name,
-        description = description
+        abbreviation = abbreviation
     )
 }

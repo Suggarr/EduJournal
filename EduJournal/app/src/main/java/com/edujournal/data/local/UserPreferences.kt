@@ -19,6 +19,14 @@ class UserPreferences @Inject constructor(
         prefs.edit().putString("user_name", name).apply()
     }
 
+    fun isBiometricEnabled(): Boolean {
+        return prefs.getBoolean("biometric_enabled", false)
+    }
+
+    fun setBiometricEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("biometric_enabled", enabled).apply()
+    }
+
     fun isFirstRun(): Boolean {
         return getUserName() == null
     }

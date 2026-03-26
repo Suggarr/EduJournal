@@ -1,4 +1,4 @@
-package com.edujournal.presentation.component
+﻿package com.edujournal.presentation.component
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.horizontalScroll
@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.edujournal.R
 import com.edujournal.domain.model.Lesson
 
 @Composable
@@ -21,7 +23,7 @@ fun JournalHeader(
 ) {
     Row(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "Студент",
+            text = stringResource(R.string.student_column),
             modifier = Modifier
                 .width(140.dp)
                 .padding(8.dp),

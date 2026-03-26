@@ -9,12 +9,12 @@ class CreateSubjectUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(
         name: String,
-        description: String?
+        abbreviation: String?
     ){
         val subject = Subject(
             id = 0,
             name = name,
-            description = description
+            abbreviation = abbreviation
         )
 
         subjectRepository.createSubject(subject)

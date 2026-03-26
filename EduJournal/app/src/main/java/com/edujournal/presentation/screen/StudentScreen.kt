@@ -1,16 +1,49 @@
-package com.edujournal.presentation.screen
+﻿package com.edujournal.presentation.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.edujournal.R
 import com.edujournal.domain.model.Student
 import com.edujournal.presentation.viewmodel.StudentViewModel
 
@@ -19,40 +52,50 @@ import com.edujournal.presentation.viewmodel.StudentViewModel
 fun StudentScreen(
     groupId: Long,
     onBackClick: () -> Unit,
-    onOpenJournal: () -> Unit,
     viewModel: StudentViewModel = hiltViewModel()
 ) {
-    // Вызываем загрузку при первом появлении экрана
     LaunchedEffect(groupId) {
         viewModel.load(groupId)
     }
 
     val students by viewModel.students.collectAsState()
+    val groupName by viewModel.groupName.collectAsState()
+
     var showAddDialog by remember { mutableStateOf(false) }
     var studentToEdit by remember { mutableStateOf<Student?>(null) }
-    var studentToDelete by remember { mutableStateOf<Student?>(null) } // Состояние для подтверждения удаления
+    var studentToDelete by remember { mutableStateOf<Student?>(null) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Студенты группы") },
+                title = { Text(stringResource(R.string.student_group_title, groupName ?: groupId.toString())) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Добавить студента")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.student_add_desc))
             }
         }
     ) { padding ->
-        Box(modifier = Modifier.padding(padding).padding(horizontal = 16.dp)) {
+        Box(
+            modifier = Modifier
+                .padding(padding)
+                .padding(horizontal = 16.dp)
+        ) {
             if (students.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("В группе пока нет студентов", color = MaterialTheme.colorScheme.outline)
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        stringResource(R.string.student_empty),
+                        color = MaterialTheme.colorScheme.outline
+                    )
                 }
             } else {
                 LazyColumn(
@@ -63,7 +106,7 @@ fun StudentScreen(
                         StudentCard(
                             student = student,
                             onEditClick = { studentToEdit = student },
-                            onDeleteClick = { studentToDelete = student } // Запоминаем студента для удаления
+                            onDeleteClick = { studentToDelete = student }
                         )
                     }
                 }
@@ -71,13 +114,14 @@ fun StudentScreen(
         }
     }
 
-    // Диалог подтверждения удаления
     studentToDelete?.let { student ->
         AlertDialog(
             onDismissRequest = { studentToDelete = null },
-            title = { Text("Удалить студента?") },
+            title = { Text(stringResource(R.string.student_delete_title)) },
             text = {
-                Text("Вы действительно хотите удалить студента ${student.lastName} ${student.firstName}? Это действие нельзя отменить.")
+                Text(
+                    stringResource(R.string.student_delete_confirm, student.lastName, student.firstName)
+                )
             },
             confirmButton = {
                 Button(
@@ -87,12 +131,12 @@ fun StudentScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Удалить")
+                    Text(stringResource(R.string.common_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { studentToDelete = null }) {
-                    Text("Отмена")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
@@ -100,7 +144,7 @@ fun StudentScreen(
 
     if (showAddDialog) {
         StudentDialog(
-            title = "Новый студент",
+            title = stringResource(R.string.student_new),
             onDismiss = { showAddDialog = false },
             onConfirm = { firstName, lastName, middleName ->
                 viewModel.addStudent(firstName, lastName, middleName, groupId)
@@ -111,17 +155,19 @@ fun StudentScreen(
 
     studentToEdit?.let { student ->
         StudentDialog(
-            title = "Редактировать",
+            title = stringResource(R.string.student_edit),
             initialFirstName = student.firstName,
             initialLastName = student.lastName,
             initialMiddleName = student.middleName,
             onDismiss = { studentToEdit = null },
             onConfirm = { firstName, lastName, middleName ->
-                viewModel.updateStudent(student.copy(
-                    firstName = firstName,
-                    lastName = lastName,
-                    middleName = middleName
-                ))
+                viewModel.updateStudent(
+                    student.copy(
+                        firstName = firstName,
+                        lastName = lastName,
+                        middleName = middleName
+                    )
+                )
                 studentToEdit = null
             }
         )
@@ -136,7 +182,9 @@ fun StudentCard(
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -145,10 +193,18 @@ fun StudentCard(
                 modifier = Modifier.weight(1f)
             )
             IconButton(onClick = onEditClick) {
-                Icon(Icons.Default.Edit, contentDescription = "Изменить", tint = MaterialTheme.colorScheme.primary)
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = stringResource(R.string.common_edit),
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
             IconButton(onClick = onDeleteClick) {
-                Icon(Icons.Default.Delete, contentDescription = "Удалить", tint = MaterialTheme.colorScheme.error)
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.common_delete),
+                    tint = MaterialTheme.colorScheme.error
+                )
             }
         }
     }
@@ -175,7 +231,7 @@ fun StudentDialog(
                 OutlinedTextField(
                     value = lastName,
                     onValueChange = { lastName = it },
-                    label = { Text("Фамилия") },
+                    label = { Text(stringResource(R.string.student_last_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -183,7 +239,7 @@ fun StudentDialog(
                 OutlinedTextField(
                     value = firstName,
                     onValueChange = { firstName = it },
-                    label = { Text("Имя") },
+                    label = { Text(stringResource(R.string.student_first_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -191,7 +247,7 @@ fun StudentDialog(
                 OutlinedTextField(
                     value = middleName,
                     onValueChange = { middleName = it },
-                    label = { Text("Отчество") },
+                    label = { Text(stringResource(R.string.student_middle_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -201,10 +257,14 @@ fun StudentDialog(
             Button(
                 onClick = { onConfirm(firstName, lastName, middleName) },
                 enabled = firstName.isNotBlank() && lastName.isNotBlank()
-            ) { Text("Сохранить") }
+            ) {
+                Text(stringResource(R.string.common_save))
+            }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Отмена") }
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.common_cancel))
+            }
         }
     )
 }

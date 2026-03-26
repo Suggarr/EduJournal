@@ -12,9 +12,19 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
 
     val userName = mutableStateOf(userPreferences.getUserName())
+    val biometricEnabled = mutableStateOf(userPreferences.isBiometricEnabled())
 
     fun saveName(name: String) {
         userPreferences.saveUserName(name)
         userName.value = name
+    }
+
+    fun updateUserName(name: String) {
+        saveName(name)
+    }
+
+    fun setBiometricEnabled(enabled: Boolean) {
+        userPreferences.setBiometricEnabled(enabled)
+        biometricEnabled.value = enabled
     }
 }

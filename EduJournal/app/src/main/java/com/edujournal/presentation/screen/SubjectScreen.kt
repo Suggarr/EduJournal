@@ -1,20 +1,49 @@
-package com.edujournal.presentation.screen
+﻿package com.edujournal.presentation.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.edujournal.R
 import com.edujournal.domain.model.Subject
 import com.edujournal.presentation.viewmodel.SubjectViewModel
 
@@ -35,12 +64,12 @@ fun SubjectScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Здравствуйте, $userName!",
+                            text = stringResource(R.string.subject_greeting, userName),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "Ваши предметы",
+                            text = stringResource(R.string.subject_title),
                             style = MaterialTheme.typography.headlineSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 24.sp
@@ -52,14 +81,14 @@ fun SubjectScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Добавить")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.common_add))
             }
         }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues).padding(horizontal = 16.dp)) {
             if (subjects.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Список пуст. Добавьте первый предмет!", color = MaterialTheme.colorScheme.outline)
+                    Text(stringResource(R.string.subject_empty), color = MaterialTheme.colorScheme.outline)
                 }
             } else {
                 LazyColumn(
@@ -81,10 +110,10 @@ fun SubjectScreen(
 
     if (showAddDialog) {
         SubjectDialog(
-            title = "Новый предмет",
+            title = stringResource(R.string.subject_new),
             onDismiss = { showAddDialog = false },
-            onConfirm = { name, description ->
-                viewModel.addSubject(name, description)
+            onConfirm = { name, abbreviation ->
+                viewModel.addSubject(name, abbreviation)
                 showAddDialog = false
             }
         )
@@ -92,12 +121,12 @@ fun SubjectScreen(
 
     subjectToEdit?.let { subject ->
         SubjectDialog(
-            title = "Редактировать",
+            title = stringResource(R.string.subject_edit),
             initialName = subject.name,
-            initialDescription = subject.description ?: "",
+            initialAbbreviation = subject.abbreviation ?: "",
             onDismiss = { subjectToEdit = null },
-            onConfirm = { newName, newDescription ->
-                viewModel.updateSubject(subject.copy(name = newName, description = newDescription))
+            onConfirm = { newName, newAbbreviation ->
+                viewModel.updateSubject(subject.copy(name = newName, abbreviation = newAbbreviation))
                 subjectToEdit = null
             }
         )
@@ -125,7 +154,7 @@ fun SubjectCard(
                     text = subject.name,
                     style = MaterialTheme.typography.titleLarge
                 )
-                subject.description?.let {
+                subject.abbreviation?.let {
                     if (it.isNotBlank()) {
                         Text(
                             text = it,
@@ -136,10 +165,10 @@ fun SubjectCard(
                 }
             }
             IconButton(onClick = onEditClick) {
-                Icon(Icons.Default.Edit, contentDescription = "Изменить", tint = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.common_edit), tint = MaterialTheme.colorScheme.primary)
             }
             IconButton(onClick = onDeleteClick) {
-                Icon(Icons.Default.Delete, contentDescription = "Удалить", tint = MaterialTheme.colorScheme.error)
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.common_delete), tint = MaterialTheme.colorScheme.error)
             }
         }
     }
@@ -149,12 +178,12 @@ fun SubjectCard(
 fun SubjectDialog(
     title: String,
     initialName: String = "",
-    initialDescription: String = "",
+    initialAbbreviation: String = "",
     onDismiss: () -> Unit,
     onConfirm: (String, String?) -> Unit
 ) {
     var name by remember { mutableStateOf(initialName) }
-    var description by remember { mutableStateOf(initialDescription) }
+    var abbreviation by remember { mutableStateOf(initialAbbreviation) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -164,27 +193,27 @@ fun SubjectDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Название предмета") },
+                    label = { Text(stringResource(R.string.subject_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Описание") },
+                    value = abbreviation,
+                    onValueChange = { abbreviation = it },
+                    label = { Text(stringResource(R.string.subject_abbreviation_label)) },
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(name, description.ifBlank { null }) },
+                onClick = { onConfirm(name, abbreviation.ifBlank { null }) },
                 enabled = name.isNotBlank()
-            ) { Text("Сохранить") }
+            ) { Text(stringResource(R.string.common_save)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Отмена") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     )
 }

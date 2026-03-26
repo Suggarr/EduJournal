@@ -1,10 +1,23 @@
-package com.edujournal.presentation.component
+﻿package com.edujournal.presentation.component
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.edujournal.R
 
 @Composable
 fun GroupDialog(
@@ -24,14 +37,14 @@ fun GroupDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Название группы (например, ПИ-101)") },
+                    label = { Text(stringResource(R.string.group_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     isError = !isNameValid && name.isNotEmpty()
                 )
                 if (!isNameValid && name.isNotEmpty()) {
                     Text(
-                        text = "Название не может быть пустым",
+                        text = stringResource(R.string.group_name_error),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(start = 16.dp, top = 4.dp)
@@ -44,12 +57,12 @@ fun GroupDialog(
                 onClick = { onConfirm(name.trim()) },
                 enabled = isNameValid
             ) {
-                Text("Сохранить")
+                Text(stringResource(R.string.common_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Отмена")
+                Text(stringResource(R.string.common_cancel))
             }
         }
     )

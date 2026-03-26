@@ -1,22 +1,93 @@
-package com.edujournal
+﻿package com.edujournal
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.compose.ui.platform.ComposeView
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
+import com.edujournal.data.local.UserPreferences
 import com.edujournal.presentation.navigation.AppNavigation
 import com.edujournal.ui.theme.EduJournalTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
+
+    @Inject
+    lateinit var userPreferences: UserPreferences
+
+    private var isBiometricAuthenticated = false
+    private var isPromptInProgress = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            EduJournalTheme {
-                AppNavigation()
+
+        val composeView = ComposeView(this).apply {
+            setContent {
+                EduJournalTheme {
+                    AppNavigation()
+                }
             }
         }
+        setContentView(composeView)
+    }
+
+    override fun onStart() {
+        super.onStart()
+        requestBiometricIfNeeded()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (!isChangingConfigurations) {
+            isBiometricAuthenticated = false
+        }
+    }
+
+    private fun requestBiometricIfNeeded() {
+        if (!userPreferences.isBiometricEnabled()) return
+        if (userPreferences.getUserName().isNullOrBlank()) return
+        if (isBiometricAuthenticated || isPromptInProgress) return
+
+        val authenticators =
+            BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                BiometricManager.Authenticators.DEVICE_CREDENTIAL
+
+        val biometricManager = BiometricManager.from(this)
+        if (biometricManager.canAuthenticate(authenticators) != BiometricManager.BIOMETRIC_SUCCESS) {
+            userPreferences.setBiometricEnabled(false)
+            return
+        }
+
+        val executor = ContextCompat.getMainExecutor(this)
+        val biometricPrompt = BiometricPrompt(
+            this,
+            executor,
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    super.onAuthenticationSucceeded(result)
+                    isPromptInProgress = false
+                    isBiometricAuthenticated = true
+                }
+
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                    isPromptInProgress = false
+                    isBiometricAuthenticated = false
+                    moveTaskToBack(true)
+                }
+            }
+        )
+
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(getString(R.string.biometric_prompt_title))
+            .setSubtitle(getString(R.string.biometric_prompt_subtitle))
+            .setAllowedAuthenticators(authenticators)
+            .build()
+
+        isPromptInProgress = true
+        biometricPrompt.authenticate(promptInfo)
     }
 }
