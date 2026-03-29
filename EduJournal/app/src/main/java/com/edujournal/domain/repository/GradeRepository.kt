@@ -9,5 +9,9 @@ interface GradeRepository {
 
     suspend fun insertGrade(grade: Grade)
 
-    fun getJournal(groupId: Long): Flow<List<JournalRow>>
+    fun getJournal(
+        groupId: Long,
+        subjectId: Long,
+        lessonTypeId: Long
+    ): Flow<List<JournalRow>>
 }

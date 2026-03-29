@@ -31,7 +31,14 @@ interface GradeDao {
         ON grades.studentId = students.id
         AND grades.lessonId = lessons.id
         WHERE students.groupId = :groupId
-        ORDER BY students.lastName
+        AND lessons.groupId = :groupId
+        AND lessons.subjectId = :subjectId
+        AND lessons.lessonTypeId = :lessonTypeId
+        ORDER BY students.lastName, students.firstName, lessons.date
         """)
-    fun getJournal(groupId: Long): Flow<List<JournalRow>>
+    fun getJournal(
+        groupId: Long,
+        subjectId: Long,
+        lessonTypeId: Long
+    ): Flow<List<JournalRow>>
 }

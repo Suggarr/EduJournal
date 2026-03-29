@@ -21,8 +21,16 @@ class MainActivity : FragmentActivity() {
     private var isBiometricAuthenticated = false
     private var isPromptInProgress = false
 
+    companion object {
+        private const val STATE_BIOMETRIC_AUTHENTICATED = "state_biometric_authenticated"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        isBiometricAuthenticated =
+            savedInstanceState?.getBoolean(STATE_BIOMETRIC_AUTHENTICATED, false) ?: false
+        isPromptInProgress = false
 
         val composeView = ComposeView(this).apply {
             setContent {
@@ -44,6 +52,11 @@ class MainActivity : FragmentActivity() {
         if (!isChangingConfigurations) {
             isBiometricAuthenticated = false
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(STATE_BIOMETRIC_AUTHENTICATED, isBiometricAuthenticated)
     }
 
     private fun requestBiometricIfNeeded() {

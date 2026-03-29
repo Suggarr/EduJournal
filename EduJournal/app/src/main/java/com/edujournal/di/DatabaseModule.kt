@@ -2,8 +2,9 @@ package com.edujournal.di
 
 import android.content.Context
 import androidx.room.Room
-import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.edujournal.data.local.dao.GradeDao
 import com.edujournal.data.local.dao.GroupDao
 import com.edujournal.data.local.dao.LessonDao
@@ -60,6 +61,71 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+    private val migration1to2 = object : Migration(1, 2) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("PRAGMA foreign_keys=OFF")
+
+            database.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS lessons_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    groupId INTEGER NOT NULL,
+                    subjectId INTEGER NOT NULL,
+                    lessonTypeId INTEGER NOT NULL,
+                    date TEXT NOT NULL,
+                    topic TEXT NOT NULL,
+                    FOREIGN KEY(groupId) REFERENCES `groups`(id) ON DELETE CASCADE,
+                    FOREIGN KEY(subjectId) REFERENCES subjects(id) ON DELETE CASCADE,
+                    FOREIGN KEY(lessonTypeId) REFERENCES lesson_types(id) ON DELETE CASCADE
+                )
+                """.trimIndent()
+            )
+            database.execSQL(
+                """
+                INSERT INTO lessons_new (id, groupId, subjectId, lessonTypeId, date, topic)
+                SELECT id, groupId, subjectId, lessonTypeId, date, topic FROM lessons
+                """.trimIndent()
+            )
+            database.execSQL("DROP TABLE lessons")
+            database.execSQL("ALTER TABLE lessons_new RENAME TO lessons")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_lessons_groupId ON lessons(groupId)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_lessons_subjectId ON lessons(subjectId)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_lessons_lessonTypeId ON lessons(lessonTypeId)")
+            database.execSQL(
+                "CREATE UNIQUE INDEX IF NOT EXISTS index_lessons_groupId_subjectId_date ON lessons(groupId, subjectId, date)"
+            )
+
+            database.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS grades_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    studentId INTEGER NOT NULL,
+                    lessonId INTEGER NOT NULL,
+                    value INTEGER,
+                    type TEXT NOT NULL,
+                    comment TEXT,
+                    FOREIGN KEY(studentId) REFERENCES students(id) ON DELETE CASCADE,
+                    FOREIGN KEY(lessonId) REFERENCES lessons(id) ON DELETE CASCADE
+                )
+                """.trimIndent()
+            )
+            database.execSQL(
+                """
+                INSERT INTO grades_new (id, studentId, lessonId, value, type, comment)
+                SELECT id, studentId, lessonId, value, type, comment FROM grades
+                """.trimIndent()
+            )
+            database.execSQL("DROP TABLE grades")
+            database.execSQL("ALTER TABLE grades_new RENAME TO grades")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_grades_studentId ON grades(studentId)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS index_grades_lessonId ON grades(lessonId)")
+            database.execSQL(
+                "CREATE UNIQUE INDEX IF NOT EXISTS index_grades_studentId_lessonId ON grades(studentId, lessonId)"
+            )
+
+            database.execSQL("PRAGMA foreign_keys=ON")
+        }
+    }
 
     @Provides
     @Singleton
@@ -70,6 +136,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "edujournal_db"
         )
+        .addMigrations(migration1to2)
         .addCallback(object : RoomDatabase.Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)

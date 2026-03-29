@@ -11,10 +11,10 @@ import com.edujournal.presentation.state.JournalCell
 import com.edujournal.presentation.state.JournalRow
 import com.edujournal.presentation.state.JournalState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,30 +25,33 @@ class JournalViewModel @Inject constructor(
     private val setGradeUseCase: SetGradeUseCase
 ) : ViewModel() {
 
-    fun observeJournal(groupId: Long): StateFlow<JournalState> {
+    fun observeJournal(
+        groupId: Long,
+        subjectId: Long,
+        lessonTypeId: Long
+    ): StateFlow<JournalState> {
 
         return combine(
-            getJournalUseCase(groupId),
-            getLessonsUseCase()
+            getJournalUseCase(groupId, subjectId, lessonTypeId),
+            getLessonsUseCase(groupId, subjectId, lessonTypeId)
         ) { journalRows, lessons ->
-
             val grouped = journalRows.groupBy { it.studentId }
 
             val rows = grouped.map { (_, studentRows) ->
-
                 val first = studentRows.first()
 
                 JournalRow(
                     studentId = first.studentId,
-                    studentName = "${first.studentFirstName} ${first.studentLastName}",
-
-                    cells = studentRows.map {
-
+                    studentName = "${first.studentLastName} ${first.studentFirstName}",
+                    cells = lessons.map { lesson ->
+                        val rowForLesson = studentRows.firstOrNull { it.lessonId == lesson.id }
                         JournalCell(
-                            lessonId = it.lessonId,
-                            value = it.gradeValue?.toString() ?: it.gradeType
+                            lessonId = lesson.id,
+                            value = formatCellValue(
+                                gradeValue = rowForLesson?.gradeValue,
+                                gradeType = rowForLesson?.gradeType
+                            )
                         )
-
                     }
                 )
             }
@@ -57,7 +60,6 @@ class JournalViewModel @Inject constructor(
                 lessons = lessons,
                 rows = rows
             )
-
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
@@ -65,11 +67,11 @@ class JournalViewModel @Inject constructor(
         )
     }
 
-    fun setGrade(studentId: Long, lessonId: Long, value: Int) {
+    fun setNumericGrade(studentId: Long, lessonId: Long, value: Int) {
         viewModelScope.launch {
             setGradeUseCase(
                 Grade(
-                    id = 0, // Room auto-increment if handled
+                    id = 0,
                     studentId = studentId,
                     lessonId = lessonId,
                     value = value,
@@ -77,6 +79,49 @@ class JournalViewModel @Inject constructor(
                     comment = null
                 )
             )
+        }
+    }
+
+    fun setGradeType(studentId: Long, lessonId: Long, type: GradeType) {
+        viewModelScope.launch {
+            setGradeUseCase(
+                Grade(
+                    id = 0,
+                    studentId = studentId,
+                    lessonId = lessonId,
+                    value = null,
+                    type = type,
+                    comment = null
+                )
+            )
+        }
+    }
+
+    fun clearGrade(studentId: Long, lessonId: Long) {
+        viewModelScope.launch {
+            setGradeUseCase(
+                Grade(
+                    id = 0,
+                    studentId = studentId,
+                    lessonId = lessonId,
+                    value = null,
+                    type = GradeType.GRADE,
+                    comment = null
+                )
+            )
+        }
+    }
+
+    private fun formatCellValue(
+        gradeValue: Int?,
+        gradeType: String?
+    ): String {
+        return when {
+            gradeValue != null -> gradeValue.toString()
+            gradeType == GradeType.ABSENT.name -> "\u041D" // Н
+            gradeType == GradeType.SICK.name -> "\u0417" // З
+            gradeType == GradeType.PASS.name -> "\u041E" // О
+            else -> "-"
         }
     }
 }

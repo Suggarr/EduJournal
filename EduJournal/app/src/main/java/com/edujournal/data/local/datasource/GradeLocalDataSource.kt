@@ -18,7 +18,11 @@ class GradeLocalDataSource @Inject constructor(
         gradeDao.insertGrade(grade)
     }
 
-    fun getJournal(groupId: Long): Flow<List<JournalRow>> {
-        return gradeDao.getJournal(groupId)
+    fun getJournal(
+        groupId: Long,
+        subjectId: Long,
+        lessonTypeId: Long
+    ): Flow<List<JournalRow>> {
+        return gradeDao.getJournal(groupId, subjectId, lessonTypeId)
     }
 }

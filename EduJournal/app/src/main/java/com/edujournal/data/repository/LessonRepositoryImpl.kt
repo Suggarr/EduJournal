@@ -13,9 +13,13 @@ class LessonRepositoryImpl @Inject constructor(
     private val lessonLocalDataSource: LessonLocalDataSource
 ) : LessonRepository {
 
-    override fun getLessons(): Flow<List<Lesson>> {
+    override fun observeLessons(
+        groupId: Long,
+        subjectId: Long,
+        lessonTypeId: Long
+    ): Flow<List<Lesson>> {
         return lessonLocalDataSource
-            .getLessons()
+            .observeLessons(groupId, subjectId, lessonTypeId)
             .map { list -> list.map { it.toDomain() }
         }
 
@@ -23,5 +27,13 @@ class LessonRepositoryImpl @Inject constructor(
 
     override suspend fun insertLesson(lesson: Lesson) {
         lessonLocalDataSource.insertLesson(lesson.toEntity())
+    }
+
+    override suspend fun updateLesson(lesson: Lesson) {
+        lessonLocalDataSource.updateLesson(lesson.toEntity())
+    }
+
+    override suspend fun deleteLesson(lessonId: Long) {
+        lessonLocalDataSource.deleteLesson(lessonId)
     }
 }

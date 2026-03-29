@@ -7,7 +7,10 @@ class GetJournalUseCase @Inject constructor(
     private val repository: GradeRepository
 ) {
 
-    operator fun invoke(groupId: Long) =
-        repository.getJournal(groupId)
+    operator fun invoke(
+        groupId: Long,
+        subjectId: Long,
+        lessonTypeId: Long
+    ) = repository.getJournal(groupId, subjectId, lessonTypeId)
 
 }

@@ -51,9 +51,22 @@
     <string name="student_first_name">Имя</string>
     <string name="student_middle_name">Отчество</string>
 
-    <string name="journal_title">Журнал группы: %1$s</string>
-    <string name="journal_empty">Данных нет. Проверьте студентов и занятия для группы %1$s</string>
+    <string name="journal_title">Журнал</string>
+    <string name="journal_empty">Нет данных для отображения. Добавьте темы занятий и проверьте студентов.</string>
     <string name="journal_set_grade">Поставить оценку</string>
+    <string name="journal_topics_button">Темы занятий</string>
+    <string name="journal_grade_legend">Оценки 1-10, Н - отсутствовал, З - болел, О - освобожден.</string>
+    <string name="journal_clear_grade">Очистить оценку</string>
+
+    <string name="lesson_topics_title">Темы занятий</string>
+    <string name="lesson_topics_empty">Темы пока не добавлены</string>
+    <string name="lesson_topics_add">Добавить тему</string>
+    <string name="lesson_topics_edit">Редактировать тему</string>
+    <string name="lesson_topics_topic_label">Тема занятия</string>
+    <string name="lesson_topics_pick_date">Выбрать дату</string>
+    <string name="lesson_topics_selected_date">Дата: %1$s</string>
+    <string name="lesson_topics_delete_title">Удалить тему?</string>
+    <string name="lesson_topics_delete_message">Удалить тему занятия от %1$s? Это действие нельзя отменить.</string>
 
     <string name="settings_title">Настройки</string>
     <string name="settings_user_name_label">Имя пользователя</string>

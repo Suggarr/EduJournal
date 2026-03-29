@@ -23,7 +23,11 @@ class GradeRepositoryImpl @Inject constructor(
         localDataSource.insertGrade(grade.toEntity())
     }
 
-    override fun getJournal(groupId: Long): Flow<List<JournalRow>> {
-        return localDataSource.getJournal(groupId)
+    override fun getJournal(
+        groupId: Long,
+        subjectId: Long,
+        lessonTypeId: Long
+    ): Flow<List<JournalRow>> {
+        return localDataSource.getJournal(groupId, subjectId, lessonTypeId)
     }
 }
