@@ -11,8 +11,8 @@ class SubjectLocalDataSource(
         return subjectDao.observeSubjects()
     }
 
-    suspend fun insertSubject(subject: SubjectEntity) {
-        subjectDao.insert(subject)
+    suspend fun insertSubject(subject: SubjectEntity): Long {
+        return subjectDao.insert(subject)
     }
 
     suspend fun updateSubject(subject: SubjectEntity) {

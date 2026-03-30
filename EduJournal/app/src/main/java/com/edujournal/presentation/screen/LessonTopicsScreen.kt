@@ -48,6 +48,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.Lesson
 import com.edujournal.presentation.viewmodel.LessonTopicsViewModel
+import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -65,6 +66,7 @@ fun LessonTopicsScreen(
     viewModel: LessonTopicsViewModel = hiltViewModel()
 ) {
     val lessons by viewModel.observeLessons(groupId, subjectId, lessonTypeId).collectAsState()
+    val requiredHours by viewModel.observeRequiredHours(subjectId, lessonTypeId).collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var lessonToEdit by remember { mutableStateOf<Lesson?>(null) }
     var lessonToDelete by remember { mutableStateOf<Lesson?>(null) }
@@ -89,54 +91,72 @@ fun LessonTopicsScreen(
             }
         }
     ) { paddingValues ->
-        if (lessons.isEmpty()) {
-            Box(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp)
+        ) {
+            requiredHours?.let { hours ->
+                Text(
+                    text = stringResource(
+                        R.string.lesson_topics_required_hours,
+                        formatHoursValue(hours)
+                    ),
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.padding(top = 12.dp)
+                )
+            }
+
+            if (lessons.isEmpty()) {
+                Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
+                    .padding(top = 12.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(stringResource(R.string.lesson_topics_empty))
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                items(lessons) { lesson ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 12.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(lessons) { lesson ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = lesson.date.format(lessonDateFormatter),
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(text = lesson.topic)
-                            }
-                            IconButton(onClick = { lessonToEdit = lesson }) {
-                                Icon(
-                                    Icons.Default.Edit,
-                                    contentDescription = stringResource(R.string.common_edit)
-                                )
-                            }
-                            IconButton(onClick = { lessonToDelete = lesson }) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = stringResource(R.string.common_delete),
-                                    tint = MaterialTheme.colorScheme.error
-                                )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = lesson.date.format(lessonDateFormatter),
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(text = lesson.topic)
+                                }
+                                IconButton(onClick = { lessonToEdit = lesson }) {
+                                    Icon(
+                                        Icons.Default.Edit,
+                                        contentDescription = stringResource(R.string.common_edit)
+                                    )
+                                }
+                                IconButton(onClick = { lessonToDelete = lesson }) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = stringResource(R.string.common_delete),
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
                             }
                         }
                     }
@@ -148,6 +168,9 @@ fun LessonTopicsScreen(
     if (showAddDialog) {
         LessonTopicDialog(
             title = stringResource(R.string.lesson_topics_add),
+            isDateBusy = { selectedDate ->
+                lessons.any { it.date == selectedDate }
+            },
             onDismiss = { showAddDialog = false },
             onConfirm = { date, topic ->
                 viewModel.addLesson(groupId, subjectId, lessonTypeId, date, topic)
@@ -161,6 +184,9 @@ fun LessonTopicsScreen(
             title = stringResource(R.string.lesson_topics_edit),
             initialDate = lesson.date,
             initialTopic = lesson.topic,
+            isDateBusy = { selectedDate ->
+                lessons.any { it.id != lesson.id && it.date == selectedDate }
+            },
             onDismiss = { lessonToEdit = null },
             onConfirm = { date, topic ->
                 viewModel.updateLesson(lesson.copy(date = date, topic = topic))
@@ -200,18 +226,28 @@ fun LessonTopicsScreen(
     }
 }
 
+private fun formatHoursValue(hours: Double): String {
+    return BigDecimal.valueOf(hours)
+        .stripTrailingZeros()
+        .toPlainString()
+        .replace('.', ',')
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LessonTopicDialog(
     title: String,
     initialDate: LocalDate = LocalDate.now(),
     initialTopic: String = "",
+    isDateBusy: (LocalDate) -> Boolean = { false },
     onDismiss: () -> Unit,
     onConfirm: (LocalDate, String) -> Unit
 ) {
     var topic by remember { mutableStateOf(initialTopic) }
     var selectedDate by remember { mutableStateOf(initialDate) }
     var showDatePicker by remember { mutableStateOf(false) }
+    val dateBusy = isDateBusy(selectedDate)
+    val canSave = topic.isNotBlank() && !dateBusy
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -240,12 +276,20 @@ private fun LessonTopicDialog(
                     label = { Text(stringResource(R.string.lesson_topics_topic_label)) },
                     modifier = Modifier.fillMaxWidth()
                 )
+                if (dateBusy) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.lesson_topics_duplicate_date_error),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = { onConfirm(selectedDate, topic.trim()) },
-                enabled = topic.isNotBlank()
+                enabled = canSave
             ) {
                 Text(stringResource(R.string.common_save))
             }

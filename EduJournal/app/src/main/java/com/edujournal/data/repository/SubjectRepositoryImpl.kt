@@ -18,8 +18,8 @@ class SubjectRepositoryImpl(
             .map{list -> list.map { it.toDomain() } }
     }
 
-    override suspend fun createSubject(subject: Subject) {
-        localDataSource.insertSubject(subject.toEntity())
+    override suspend fun createSubject(subject: Subject): Long {
+        return localDataSource.insertSubject(subject.toEntity())
     }
 
     override suspend fun updateSubject(subject: Subject) {
