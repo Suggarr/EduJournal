@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.GradeType
@@ -54,14 +56,16 @@ fun JournalScreen(
     onTopicsClick: () -> Unit,
     viewModel: JournalViewModel = hiltViewModel()
 ) {
-    val state by viewModel
-        .observeJournal(groupId, subjectId, lessonTypeId)
-        .collectAsState()
+    val journalFlow = remember(groupId, subjectId, lessonTypeId) {
+        viewModel.observeJournal(groupId, subjectId, lessonTypeId)
+    }
+    val state by journalFlow.collectAsState()
 
     val horizontalScrollState = rememberScrollState()
     var selectedCell by remember { mutableStateOf<Pair<JournalRow, JournalCell>?>(null) }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.journal_title)) },
@@ -81,7 +85,17 @@ fun JournalScreen(
             )
         }
     ) { paddingValues ->
-        if (state.rows.isEmpty() || state.lessons.isEmpty()) {
+        val currentState = state
+        if (currentState == null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else if (currentState.rows.isEmpty() || currentState.lessons.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -97,12 +111,12 @@ fun JournalScreen(
                     .padding(paddingValues)
             ) {
                 JournalHeader(
-                    lessons = state.lessons,
+                    lessons = currentState.lessons,
                     scrollState = horizontalScrollState
                 )
 
                 LazyColumn(modifier = Modifier.weight(1f)) {
-                    itemsIndexed(state.rows) { rowIndex, row ->
+                    itemsIndexed(currentState.rows) { rowIndex, row ->
                         JournalRowView(
                             row = row,
                             rowIndex = rowIndex,

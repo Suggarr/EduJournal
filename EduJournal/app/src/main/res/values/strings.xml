@@ -21,6 +21,8 @@
     <string name="subject_empty">Список пуст. Добавьте первый предмет!</string>
     <string name="subject_new">Новый предмет</string>
     <string name="subject_edit">Редактировать</string>
+    <string name="subject_delete_title">Удалить предмет?</string>
+    <string name="subject_delete_message">Удалить предмет "%1$s"? Это действие нельзя отменить.</string>
     <string name="subject_name_label">Название предмета</string>
     <string name="subject_abbreviation_label">Сокращение</string>
     <string name="subject_hours_button">Часы по типам: %1$d из %2$d</string>
@@ -32,6 +34,8 @@
     <string name="lesson_type_empty">Типы занятий не найдены</string>
     <string name="lesson_type_new">Новый тип занятия</string>
     <string name="lesson_type_edit">Редактировать</string>
+    <string name="lesson_type_delete_title">Удалить тип занятия?</string>
+    <string name="lesson_type_delete_message">Удалить тип занятия "%1$s"? Это действие нельзя отменить.</string>
     <string name="lesson_type_name_label">Название (например, Лекция)</string>
 
     <string name="group_select">Выберите группу</string>
@@ -51,6 +55,13 @@
     <string name="student_new">Новый студент</string>
     <string name="student_edit">Редактировать</string>
     <string name="student_add_desc">Добавить студента</string>
+    <string name="student_import_action">Импорт</string>
+    <string name="student_import_title">Импорт студентов</string>
+    <string name="student_import_choose_file">Выбрать файл</string>
+    <string name="student_import_empty">В файле не найдено студентов для импорта.</string>
+    <string name="student_import_result">Импорт завершен: добавлено %1$d, пропущено %2$d.</string>
+    <string name="student_import_parse_error">Ошибка импорта: %1$s</string>
+    <string name="student_import_instructions">Поддерживаются файлы CSV и Excel (.csv, .xlsx).\n\nРекомендуемые колонки:\n1) Фамилия\n2) Имя\n3) Отчество\n\nМожно использовать и английские названия: LastName, FirstName, MiddleName.\n\nПример строки CSV:\nИванов;Иван;Иванович\n\nЕсли заголовков нет, берется порядок: Фамилия, Имя, Отчество.</string>
     <string name="student_last_name">Фамилия</string>
     <string name="student_first_name">Имя</string>
     <string name="student_middle_name">Отчество</string>

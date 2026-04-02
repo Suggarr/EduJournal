@@ -64,6 +64,7 @@ fun SubjectScreen(
     val subjectHoursBySubjectId by viewModel.subjectHoursBySubjectId.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var subjectToEdit by remember { mutableStateOf<Subject?>(null) }
+    var subjectToDelete by remember { mutableStateOf<Subject?>(null) }
 
     Scaffold(
         topBar = {
@@ -107,7 +108,7 @@ fun SubjectScreen(
                             subject = subject,
                             onClick = { onSubjectClick(subject.id) },
                             onEditClick = { subjectToEdit = subject },
-                            onDeleteClick = { viewModel.deleteSubject(subject.id) }
+                            onDeleteClick = { subjectToDelete = subject }
                         )
                     }
                 }
@@ -141,6 +142,29 @@ fun SubjectScreen(
                     lessonTypeHours = lessonTypeHours
                 )
                 subjectToEdit = null
+            }
+        )
+    }
+
+    subjectToDelete?.let { subject ->
+        AlertDialog(
+            onDismissRequest = { subjectToDelete = null },
+            title = { Text(stringResource(R.string.subject_delete_title)) },
+            text = { Text(stringResource(R.string.subject_delete_message, subject.name)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteSubject(subject.id)
+                        subjectToDelete = null
+                    }
+                ) {
+                    Text(stringResource(R.string.common_delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { subjectToDelete = null }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
             }
         )
     }

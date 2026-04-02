@@ -8,6 +8,7 @@ import com.edujournal.domain.usecase.DeleteStudentUseCase
 import com.edujournal.domain.usecase.GetGroupsUseCase
 import com.edujournal.domain.usecase.ObserveStudentsUseCase
 import com.edujournal.domain.usecase.UpdateStudentUseCase
+import com.edujournal.presentation.studentimport.ImportStudentRow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -61,6 +62,51 @@ class StudentViewModel @Inject constructor(
         }
     }
 
+    fun importStudents(
+        groupId: Long,
+        importedStudents: List<ImportStudentRow>,
+        onCompleted: (added: Int, skipped: Int) -> Unit
+    ) {
+        viewModelScope.launch {
+            val existingKeys = students.value
+                .map { student ->
+                    studentKey(
+                        lastName = student.lastName,
+                        firstName = student.firstName,
+                        middleName = student.middleName
+                    )
+                }
+                .toMutableSet()
+
+            var added = 0
+            var skipped = 0
+
+            importedStudents.forEach { student ->
+                val key = studentKey(
+                    lastName = student.lastName,
+                    firstName = student.firstName,
+                    middleName = student.middleName
+                )
+
+                if (key in existingKeys) {
+                    skipped++
+                    return@forEach
+                }
+
+                createStudentUseCase(
+                    firstName = student.firstName,
+                    lastName = student.lastName,
+                    middleName = student.middleName,
+                    groupId = groupId
+                )
+                existingKeys += key
+                added++
+            }
+
+            onCompleted(added, skipped)
+        }
+    }
+
     fun updateStudent(student: Student) {
         viewModelScope.launch {
             updateStudentUseCase(student)
@@ -71,5 +117,10 @@ class StudentViewModel @Inject constructor(
         viewModelScope.launch {
             deleteStudentUseCase(studentId)
         }
+    }
+
+    private fun studentKey(lastName: String, firstName: String, middleName: String): String {
+        return listOf(lastName, firstName, middleName)
+            .joinToString("|") { it.trim().lowercase() }
     }
 }

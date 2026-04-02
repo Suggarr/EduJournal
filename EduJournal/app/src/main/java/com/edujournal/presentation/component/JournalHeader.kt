@@ -43,6 +43,7 @@ fun JournalHeader(
                 text = stringResource(R.string.student_column),
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyMedium,
+                color = Color.Black,
                 modifier = Modifier
                     .align(Alignment.CenterStart)
                     .padding(start = 8.dp)
@@ -63,7 +64,8 @@ fun JournalHeader(
                         text = lesson.date.format(journalHeaderDateFormatter),
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Black
                     )
                 }
             }

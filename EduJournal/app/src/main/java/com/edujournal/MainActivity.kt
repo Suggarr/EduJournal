@@ -1,5 +1,7 @@
 ﻿package com.edujournal
 
+import android.app.KeyguardManager
+import android.os.Build
 import android.os.Bundle
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
@@ -64,12 +66,7 @@ class MainActivity : FragmentActivity() {
         if (userPreferences.getUserName().isNullOrBlank()) return
         if (isBiometricAuthenticated || isPromptInProgress) return
 
-        val authenticators =
-            BiometricManager.Authenticators.BIOMETRIC_WEAK or
-                BiometricManager.Authenticators.DEVICE_CREDENTIAL
-
-        val biometricManager = BiometricManager.from(this)
-        if (biometricManager.canAuthenticate(authenticators) != BiometricManager.BIOMETRIC_SUCCESS) {
+        if (!canAuthenticateBiometricOrCredential()) {
             userPreferences.setBiometricEnabled(false)
             return
         }
@@ -94,13 +91,38 @@ class MainActivity : FragmentActivity() {
             }
         )
 
-        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+        val promptInfoBuilder = BiometricPrompt.PromptInfo.Builder()
             .setTitle(getString(R.string.biometric_prompt_title))
             .setSubtitle(getString(R.string.biometric_prompt_subtitle))
-            .setAllowedAuthenticators(authenticators)
-            .build()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val authenticators =
+                BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                    BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            promptInfoBuilder.setAllowedAuthenticators(authenticators)
+        } else {
+            @Suppress("DEPRECATION")
+            promptInfoBuilder.setDeviceCredentialAllowed(true)
+        }
+
+        val promptInfo = promptInfoBuilder.build()
 
         isPromptInProgress = true
         biometricPrompt.authenticate(promptInfo)
+    }
+
+    private fun canAuthenticateBiometricOrCredential(): Boolean {
+        val biometricManager = BiometricManager.from(this)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val authenticators =
+                BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                    BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS
+        } else {
+            @Suppress("DEPRECATION")
+            val biometricResult = biometricManager.canAuthenticate()
+            val keyguardManager = getSystemService(KeyguardManager::class.java)
+            biometricResult == BiometricManager.BIOMETRIC_SUCCESS || keyguardManager?.isDeviceSecure == true
+        }
     }
 }

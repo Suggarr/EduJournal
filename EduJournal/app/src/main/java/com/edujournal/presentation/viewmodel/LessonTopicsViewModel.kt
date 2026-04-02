@@ -30,9 +30,9 @@ class LessonTopicsViewModel @Inject constructor(
         groupId: Long,
         subjectId: Long,
         lessonTypeId: Long
-    ): StateFlow<List<Lesson>> {
+    ): StateFlow<List<Lesson>?> {
         return getLessonsUseCase(groupId, subjectId, lessonTypeId)
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
     }
 
     fun observeRequiredHours(

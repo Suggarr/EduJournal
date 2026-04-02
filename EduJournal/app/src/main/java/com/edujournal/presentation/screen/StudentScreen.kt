@@ -1,5 +1,8 @@
 ﻿package com.edujournal.presentation.screen
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +28,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -37,15 +41,21 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.Student
+import com.edujournal.presentation.studentimport.StudentImportFileParser
+import com.edujournal.presentation.studentimport.StudentImportInstructionDialog
+import com.edujournal.presentation.studentimport.StudentImportParseResult
 import com.edujournal.presentation.viewmodel.StudentViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,17 +71,76 @@ fun StudentScreen(
     val students by viewModel.students.collectAsState()
     val groupName by viewModel.groupName.collectAsState()
 
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
     var showAddDialog by remember { mutableStateOf(false) }
+    var showImportDialog by remember { mutableStateOf(false) }
+    var isImporting by remember { mutableStateOf(false) }
     var studentToEdit by remember { mutableStateOf<Student?>(null) }
     var studentToDelete by remember { mutableStateOf<Student?>(null) }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+
+        isImporting = true
+        scope.launch {
+            when (val result = StudentImportFileParser.parse(context, uri)) {
+                is StudentImportParseResult.Success -> {
+                    if (result.students.isEmpty()) {
+                        isImporting = false
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.student_import_empty),
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return@launch
+                    }
+
+                    viewModel.importStudents(
+                        groupId = groupId,
+                        importedStudents = result.students
+                    ) { added, skipped ->
+                        isImporting = false
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.student_import_result, added, skipped),
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+
+                is StudentImportParseResult.Error -> {
+                    isImporting = false
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.student_import_parse_error, result.reason),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.student_group_title, groupName ?: groupId.toString())) },
+                title = {
+                    Text(stringResource(R.string.student_group_title, groupName ?: groupId.toString()))
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.common_back)
+                        )
+                    }
+                },
+                actions = {
+                    TextButton(onClick = { showImportDialog = true }) {
+                        Text(stringResource(R.string.student_import_action))
                     }
                 }
             )
@@ -87,31 +156,48 @@ fun StudentScreen(
                 .padding(padding)
                 .padding(horizontal = 16.dp)
         ) {
-            if (students.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        stringResource(R.string.student_empty),
-                        color = MaterialTheme.colorScheme.outline
-                    )
+            Column(modifier = Modifier.fillMaxSize()) {
+                if (isImporting) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(students) { student ->
-                        StudentCard(
-                            student = student,
-                            onEditClick = { studentToEdit = student },
-                            onDeleteClick = { studentToDelete = student }
+
+                if (students.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            stringResource(R.string.student_empty),
+                            color = MaterialTheme.colorScheme.outline
                         )
+                    }
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(students) { student ->
+                            StudentCard(
+                                student = student,
+                                onEditClick = { studentToEdit = student },
+                                onDeleteClick = { studentToDelete = student }
+                            )
+                        }
                     }
                 }
             }
         }
+    }
+
+    if (showImportDialog) {
+        StudentImportInstructionDialog(
+            onDismiss = { showImportDialog = false },
+            onPickFile = {
+                showImportDialog = false
+                importLauncher.launch(StudentImportFileParser.supportedMimeTypes)
+            }
+        )
     }
 
     studentToDelete?.let { student ->

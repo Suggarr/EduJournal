@@ -3,7 +3,6 @@
 import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.edujournal.data.local.dao.GradeDao
 import com.edujournal.data.local.dao.GroupDao
@@ -67,98 +66,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
-    private val migration1to2 = object : Migration(1, 2) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            database.execSQL("PRAGMA foreign_keys=OFF")
-
-            database.execSQL(
-                """
-                CREATE TABLE IF NOT EXISTS lessons_new (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                    groupId INTEGER NOT NULL,
-                    subjectId INTEGER NOT NULL,
-                    lessonTypeId INTEGER NOT NULL,
-                    date TEXT NOT NULL,
-                    topic TEXT NOT NULL,
-                    FOREIGN KEY(groupId) REFERENCES `groups`(id) ON DELETE CASCADE,
-                    FOREIGN KEY(subjectId) REFERENCES subjects(id) ON DELETE CASCADE,
-                    FOREIGN KEY(lessonTypeId) REFERENCES lesson_types(id) ON DELETE CASCADE
-                )
-                """.trimIndent()
-            )
-            database.execSQL(
-                """
-                INSERT INTO lessons_new (id, groupId, subjectId, lessonTypeId, date, topic)
-                SELECT id, groupId, subjectId, lessonTypeId, date, topic FROM lessons
-                """.trimIndent()
-            )
-            database.execSQL("DROP TABLE lessons")
-            database.execSQL("ALTER TABLE lessons_new RENAME TO lessons")
-            database.execSQL("CREATE INDEX IF NOT EXISTS index_lessons_groupId ON lessons(groupId)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS index_lessons_subjectId ON lessons(subjectId)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS index_lessons_lessonTypeId ON lessons(lessonTypeId)")
-            database.execSQL(
-                "CREATE UNIQUE INDEX IF NOT EXISTS index_lessons_groupId_subjectId_date ON lessons(groupId, subjectId, date)"
-            )
-
-            database.execSQL(
-                """
-                CREATE TABLE IF NOT EXISTS grades_new (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                    studentId INTEGER NOT NULL,
-                    lessonId INTEGER NOT NULL,
-                    value INTEGER,
-                    type TEXT NOT NULL,
-                    comment TEXT,
-                    FOREIGN KEY(studentId) REFERENCES students(id) ON DELETE CASCADE,
-                    FOREIGN KEY(lessonId) REFERENCES lessons(id) ON DELETE CASCADE
-                )
-                """.trimIndent()
-            )
-            database.execSQL(
-                """
-                INSERT INTO grades_new (id, studentId, lessonId, value, type, comment)
-                SELECT id, studentId, lessonId, value, type, comment FROM grades
-                """.trimIndent()
-            )
-            database.execSQL("DROP TABLE grades")
-            database.execSQL("ALTER TABLE grades_new RENAME TO grades")
-            database.execSQL("CREATE INDEX IF NOT EXISTS index_grades_studentId ON grades(studentId)")
-            database.execSQL("CREATE INDEX IF NOT EXISTS index_grades_lessonId ON grades(lessonId)")
-            database.execSQL(
-                "CREATE UNIQUE INDEX IF NOT EXISTS index_grades_studentId_lessonId ON grades(studentId, lessonId)"
-            )
-
-            database.execSQL("PRAGMA foreign_keys=ON")
-        }
-    }
-
-    private val migration2to3 = object : Migration(2, 3) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-            database.execSQL(
-                """
-                CREATE TABLE IF NOT EXISTS subject_lesson_type_hours (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                    subjectId INTEGER NOT NULL,
-                    lessonTypeId INTEGER NOT NULL,
-                    hours REAL,
-                    FOREIGN KEY(subjectId) REFERENCES subjects(id) ON DELETE CASCADE,
-                    FOREIGN KEY(lessonTypeId) REFERENCES lesson_types(id) ON DELETE CASCADE
-                )
-                """.trimIndent()
-            )
-            database.execSQL(
-                "CREATE UNIQUE INDEX IF NOT EXISTS index_subject_lesson_type_hours_subjectId_lessonTypeId ON subject_lesson_type_hours(subjectId, lessonTypeId)"
-            )
-            database.execSQL(
-                "CREATE INDEX IF NOT EXISTS index_subject_lesson_type_hours_subjectId ON subject_lesson_type_hours(subjectId)"
-            )
-            database.execSQL(
-                "CREATE INDEX IF NOT EXISTS index_subject_lesson_type_hours_lessonTypeId ON subject_lesson_type_hours(lessonTypeId)"
-            )
-        }
-    }
-
     @Provides
     @Singleton
     fun provideDatabase(
@@ -168,19 +75,9 @@ object DatabaseModule {
             AppDatabase::class.java,
             "edujournal_db"
         )
-        .addMigrations(migration1to2, migration2to3)
         .addCallback(object : RoomDatabase.Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
-
-                db.execSQL("INSERT INTO lesson_types (name) VALUES ('Лекция')")
-                db.execSQL("INSERT INTO lesson_types (name) VALUES ('Практика')")
-                db.execSQL("INSERT INTO lesson_types (name) VALUES ('Лабораторная')")
-                db.execSQL("INSERT INTO lesson_types (name) VALUES ('Контрольная')")
-            }
-
-            override fun onOpen(db: SupportSQLiteDatabase) {
-                super.onOpen(db)
 
                 val firstNames = listOf(
                     "Александр", "Алексей", "Андрей", "Антон", "Артем", "Богдан",
@@ -220,71 +117,45 @@ object DatabaseModule {
                 db.beginTransaction()
                 try {
                     val usedFullNames = mutableSetOf<String>()
-                    db.query("SELECT lastName, firstName, middleName FROM students").use { cursor ->
-                        while (cursor.moveToNext()) {
-                            usedFullNames += "${cursor.getString(0)} ${cursor.getString(1)} ${cursor.getString(2)}"
-                        }
-                    }
 
-                    val lessonTypesCount = db.query("SELECT COUNT(*) FROM lesson_types").use { cursor ->
-                        if (cursor.moveToFirst()) cursor.getInt(0) else 0
-                    }
-                    if (lessonTypesCount == 0) {
-                        db.execSQL("INSERT INTO lesson_types (name) VALUES ('Лекция')")
-                        db.execSQL("INSERT INTO lesson_types (name) VALUES ('Практика')")
-                        db.execSQL("INSERT INTO lesson_types (name) VALUES ('Лабораторная')")
-                        db.execSQL("INSERT INTO lesson_types (name) VALUES ('Контрольная')")
-                    }
+                    db.execSQL("INSERT INTO lesson_types (name) VALUES ('Лекция')")
+                    db.execSQL("INSERT INTO lesson_types (name) VALUES ('Практика')")
+                    db.execSQL("INSERT INTO lesson_types (name) VALUES ('Лабораторная')")
+                    db.execSQL("INSERT INTO lesson_types (name) VALUES ('Контрольная')")
 
-                    val groupsCount = db.query("SELECT COUNT(*) FROM `groups`").use { cursor ->
-                        if (cursor.moveToFirst()) cursor.getInt(0) else 0
-                    }
-                    if (groupsCount == 0) {
-                        db.execSQL("INSERT INTO `groups` (name) VALUES ('10701322')")
-                        db.execSQL("INSERT INTO `groups` (name) VALUES ('10701222')")
-                        db.execSQL("INSERT INTO `groups` (name) VALUES ('10701122')")
-                    }
+                    db.execSQL("INSERT INTO `groups` (name) VALUES ('10701322')")
+                    db.execSQL("INSERT INTO `groups` (name) VALUES ('10701222')")
+                    db.execSQL("INSERT INTO `groups` (name) VALUES ('10701122')")
 
-                    val subjectsCount = db.query("SELECT COUNT(*) FROM subjects").use { cursor ->
-                        if (cursor.moveToFirst()) cursor.getInt(0) else 0
-                    }
-                    if (subjectsCount == 0) {
-                        db.execSQL("INSERT INTO subjects (name, abbreviation) VALUES ('Основы программной инженерии', 'ОПИ')")
-                        db.execSQL("INSERT INTO subjects (name, abbreviation) VALUES ('Компьютерные системы и сети', 'КСиС')")
-                        db.execSQL("INSERT INTO subjects (name, abbreviation) VALUES ('Базы данных', 'БД')")
-                    }
+                    db.execSQL("INSERT INTO subjects (name, abbreviation) VALUES ('Основы программной инженерии', 'ОПИ')")
+                    db.execSQL("INSERT INTO subjects (name, abbreviation) VALUES ('Компьютерные системы и сети', 'КСиС')")
+                    db.execSQL("INSERT INTO subjects (name, abbreviation) VALUES ('Базы данных', 'БД')")
 
                     val groupsCursor = db.query("SELECT id FROM `groups` ORDER BY id")
                     groupsCursor.use { cursor ->
                         while (cursor.moveToNext()) {
                             val groupId = cursor.getLong(0)
-                            val countCursor = db.query("SELECT COUNT(*) FROM students WHERE groupId = $groupId")
-                            val studentsCount = countCursor.use { count ->
-                                if (count.moveToFirst()) count.getInt(0) else 0
-                            }
-                            if (studentsCount == 0) {
-                                val groupSeed = (groupId % 1_000_003L).toInt()
-                                for (i in 0 until 30) {
-                                    var step = 0
-                                    var firstName: String
-                                    var lastName: String
-                                    var middleName: String
-                                    var fullName: String
-                                    do {
-                                        val base = i + step
-                                        firstName = firstNames[(groupSeed + base * 7) % firstNames.size]
-                                        lastName = lastNames[(groupSeed * 3 + base * 11) % lastNames.size]
-                                        middleName = middleNames[(groupSeed * 5 + base * 13) % middleNames.size]
-                                        fullName = "$lastName $firstName $middleName"
-                                        step++
-                                    } while (fullName in usedFullNames)
+                            val groupSeed = (groupId % 1_000_003L).toInt()
+                            for (i in 0 until 30) {
+                                var step = 0
+                                var firstName: String
+                                var lastName: String
+                                var middleName: String
+                                var fullName: String
+                                do {
+                                    val base = i + step
+                                    firstName = firstNames[(groupSeed + base * 7) % firstNames.size]
+                                    lastName = lastNames[(groupSeed * 3 + base * 11) % lastNames.size]
+                                    middleName = middleNames[(groupSeed * 5 + base * 13) % middleNames.size]
+                                    fullName = "$lastName $firstName $middleName"
+                                    step++
+                                } while (fullName in usedFullNames)
 
-                                    usedFullNames += fullName
-                                    db.execSQL(
-                                        "INSERT INTO students (firstName, lastName, middleName, groupId) VALUES (?, ?, ?, ?)",
-                                        arrayOf(firstName, lastName, middleName, groupId)
-                                    )
-                                }
+                                usedFullNames += fullName
+                                db.execSQL(
+                                    "INSERT INTO students (firstName, lastName, middleName, groupId) VALUES (?, ?, ?, ?)",
+                                    arrayOf(firstName, lastName, middleName, groupId)
+                                )
                             }
                         }
                     }
@@ -303,27 +174,18 @@ object DatabaseModule {
                             val subjectId = cursor.getLong(1)
                             val lessonTypeId = cursor.getLong(2)
 
-                            val lessonCountCursor = db.query(
-                                "SELECT COUNT(*) FROM lessons WHERE groupId = $groupId AND subjectId = $subjectId AND lessonTypeId = $lessonTypeId"
-                            )
-                            val lessonsCount = lessonCountCursor.use { count ->
-                                if (count.moveToFirst()) count.getInt(0) else 0
-                            }
-
-                            if (lessonsCount == 0) {
-                                val baseDate = LocalDate.of(2026, 9, 1)
-                                val typeOffset = ((lessonTypeId - 1L).coerceAtLeast(0L) * 40L).toInt()
-                                for (i in 0 until 18) {
-                                    val date = baseDate.plusDays((typeOffset + i).toLong()).toString()
-                                    val topic = "Тема ${i + 1}"
-                                    db.execSQL(
-                                        """
-                                        INSERT OR IGNORE INTO lessons (groupId, subjectId, lessonTypeId, date, topic)
-                                        VALUES (?, ?, ?, ?, ?)
-                                        """.trimIndent(),
-                                        arrayOf(groupId, subjectId, lessonTypeId, date, topic)
-                                    )
-                                }
+                            val baseDate = LocalDate.of(2026, 9, 1)
+                            val typeOffset = ((lessonTypeId - 1L).coerceAtLeast(0L) * 40L).toInt()
+                            for (i in 0 until 18) {
+                                val date = baseDate.plusDays((typeOffset + i).toLong()).toString()
+                                val topic = "Тема ${i + 1}"
+                                db.execSQL(
+                                    """
+                                    INSERT OR IGNORE INTO lessons (groupId, subjectId, lessonTypeId, date, topic)
+                                    VALUES (?, ?, ?, ?, ?)
+                                    """.trimIndent(),
+                                    arrayOf(groupId, subjectId, lessonTypeId, date, topic)
+                                )
                             }
                         }
                     }

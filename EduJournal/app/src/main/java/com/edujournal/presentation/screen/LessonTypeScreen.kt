@@ -52,6 +52,7 @@ fun LessonTypeScreen(
     val types by viewModel.lessonTypes.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var typeToEdit by remember { mutableStateOf<LessonType?>(null) }
+    var typeToDelete by remember { mutableStateOf<LessonType?>(null) }
 
     Scaffold(
         topBar = {
@@ -85,7 +86,7 @@ fun LessonTypeScreen(
                             type = type,
                             onClick = { onTypeClick(type.id) },
                             onEditClick = { typeToEdit = type },
-                            onDeleteClick = { viewModel.deleteLessonType(type.id) }
+                            onDeleteClick = { typeToDelete = type }
                         )
                     }
                 }
@@ -112,6 +113,29 @@ fun LessonTypeScreen(
             onConfirm = { newName ->
                 viewModel.updateLessonType(type.copy(name = newName))
                 typeToEdit = null
+            }
+        )
+    }
+
+    typeToDelete?.let { type ->
+        AlertDialog(
+            onDismissRequest = { typeToDelete = null },
+            title = { Text(stringResource(R.string.lesson_type_delete_title)) },
+            text = { Text(stringResource(R.string.lesson_type_delete_message, type.name)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.deleteLessonType(type.id)
+                        typeToDelete = null
+                    }
+                ) {
+                    Text(stringResource(R.string.common_delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { typeToDelete = null }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
             }
         )
     }

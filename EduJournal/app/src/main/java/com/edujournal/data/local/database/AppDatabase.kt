@@ -29,7 +29,7 @@ import com.edujournal.utils.Converters
         LessonEntity::class,
         GradeEntity:: class
     ],
-    version = 3,
+    version = 1,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -21,6 +21,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -65,7 +66,11 @@ fun LessonTopicsScreen(
     onBack: () -> Unit,
     viewModel: LessonTopicsViewModel = hiltViewModel()
 ) {
-    val lessons by viewModel.observeLessons(groupId, subjectId, lessonTypeId).collectAsState()
+    val lessonsFlow = remember(groupId, subjectId, lessonTypeId) {
+        viewModel.observeLessons(groupId, subjectId, lessonTypeId)
+    }
+    val lessons by lessonsFlow.collectAsState()
+    val currentLessons = lessons
     val requiredHours by viewModel.observeRequiredHours(subjectId, lessonTypeId).collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var lessonToEdit by remember { mutableStateOf<Lesson?>(null) }
@@ -108,7 +113,16 @@ fun LessonTopicsScreen(
                 )
             }
 
-            if (lessons.isEmpty()) {
+            if (currentLessons == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else if (currentLessons.isEmpty()) {
                 Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -125,7 +139,7 @@ fun LessonTopicsScreen(
                     contentPadding = PaddingValues(bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(lessons) { lesson ->
+                    items(currentLessons) { lesson ->
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -169,7 +183,7 @@ fun LessonTopicsScreen(
         LessonTopicDialog(
             title = stringResource(R.string.lesson_topics_add),
             isDateBusy = { selectedDate ->
-                lessons.any { it.date == selectedDate }
+                currentLessons.orEmpty().any { it.date == selectedDate }
             },
             onDismiss = { showAddDialog = false },
             onConfirm = { date, topic ->
@@ -185,7 +199,7 @@ fun LessonTopicsScreen(
             initialDate = lesson.date,
             initialTopic = lesson.topic,
             isDateBusy = { selectedDate ->
-                lessons.any { it.id != lesson.id && it.date == selectedDate }
+                currentLessons.orEmpty().any { it.id != lesson.id && it.date == selectedDate }
             },
             onDismiss = { lessonToEdit = null },
             onConfirm = { date, topic ->

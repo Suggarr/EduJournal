@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         applicationId = "com.edujournal"
-        minSdk = 31
+        minSdk = 29
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -74,4 +74,5 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.biometric:biometric:1.1.0")
+    implementation("org.apache.commons:commons-csv:1.11.0")
 }

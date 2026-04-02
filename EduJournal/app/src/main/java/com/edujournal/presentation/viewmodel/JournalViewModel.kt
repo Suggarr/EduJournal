@@ -29,7 +29,7 @@ class JournalViewModel @Inject constructor(
         groupId: Long,
         subjectId: Long,
         lessonTypeId: Long
-    ): StateFlow<JournalState> {
+    ): StateFlow<JournalState?> {
 
         return combine(
             getJournalUseCase(groupId, subjectId, lessonTypeId),
@@ -63,7 +63,7 @@ class JournalViewModel @Inject constructor(
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
-            JournalState()
+            null
         )
     }
 

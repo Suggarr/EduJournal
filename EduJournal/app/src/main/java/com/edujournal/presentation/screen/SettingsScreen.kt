@@ -1,5 +1,7 @@
 ﻿package com.edujournal.presentation.screen
 
+import android.app.KeyguardManager
+import android.os.Build
 import android.widget.Toast
 import androidx.biometric.BiometricManager
 import androidx.compose.foundation.layout.Arrangement
@@ -9,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -91,33 +92,53 @@ fun SettingsScreen(
                             return@Switch
                         }
 
-                        val authenticators =
-                            BiometricManager.Authenticators.BIOMETRIC_WEAK or
-                                BiometricManager.Authenticators.DEVICE_CREDENTIAL
-                        val biometricManager = BiometricManager.from(context)
-
-                        when (biometricManager.canAuthenticate(authenticators)) {
-                            BiometricManager.BIOMETRIC_SUCCESS -> onBiometricToggle(true)
-                            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
-                                Toast.makeText(
-                                    context,
-                                    biometricEnrollText,
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                onBiometricToggle(false)
-                            }
-                            else -> {
-                                Toast.makeText(
-                                    context,
-                                    biometricUnavailableText,
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                onBiometricToggle(false)
-                            }
+                        val isAvailable = canAuthenticateBiometricOrCredential(context)
+                        if (isAvailable) {
+                            onBiometricToggle(true)
+                            return@Switch
                         }
+
+                        val hasDeviceCredential = hasDeviceCredential(context)
+                        val biometricManager = BiometricManager.from(context)
+                        val biometricNoneEnrolled =
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                val authenticators =
+                                    BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                                        BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                                biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
+                            } else {
+                                @Suppress("DEPRECATION")
+                                biometricManager.canAuthenticate() == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
+                            }
+
+                        Toast.makeText(
+                            context,
+                            if (biometricNoneEnrolled && !hasDeviceCredential) biometricEnrollText else biometricUnavailableText,
+                            Toast.LENGTH_LONG
+                        ).show()
+                        onBiometricToggle(false)
                     }
                 )
             }
         }
     }
+}
+
+private fun canAuthenticateBiometricOrCredential(context: android.content.Context): Boolean {
+    val biometricManager = BiometricManager.from(context)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val authenticators =
+            BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS
+    } else {
+        @Suppress("DEPRECATION")
+        val biometricResult = biometricManager.canAuthenticate()
+        biometricResult == BiometricManager.BIOMETRIC_SUCCESS || hasDeviceCredential(context)
+    }
+}
+
+private fun hasDeviceCredential(context: android.content.Context): Boolean {
+    val keyguardManager = context.getSystemService(KeyguardManager::class.java)
+    return keyguardManager?.isDeviceSecure == true
 }
