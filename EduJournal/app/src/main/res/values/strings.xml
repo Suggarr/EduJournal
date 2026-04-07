@@ -11,6 +11,9 @@
     <string name="bottom_home">Главная</string>
     <string name="bottom_groups">Группы</string>
     <string name="bottom_settings">Настройки</string>
+    <string name="semester_label">Семестр</string>
+    <string name="semester_select">Выберите семестр</string>
+    <string name="semester_required_for_navigation">Сначала создайте хотя бы один семестр в настройках</string>
 
     <string name="welcome_title">Как к вам обращаться?</string>
     <string name="welcome_name_label">Ваше имя</string>
@@ -70,6 +73,7 @@
     <string name="journal_empty">Нет данных для отображения. Добавьте темы занятий и проверьте студентов.</string>
     <string name="journal_set_grade">Поставить оценку</string>
     <string name="journal_topics_button">Темы занятий</string>
+    <string name="journal_context_line">Предмет: %1$s | Тип: %2$s | Группа: %3$s</string>
     <string name="journal_grade_legend">Оценки 1-10, Н - отсутствовал, З - болел, О - освобожден.</string>
     <string name="journal_clear_grade">Очистить оценку</string>
 
@@ -92,6 +96,19 @@
     <string name="settings_biometric">Биометрия или код</string>
     <string name="settings_biometric_enroll">Настройте биометрию или код экрана блокировки в устройстве</string>
     <string name="settings_biometric_unavailable">Биометрия/код недоступны на этом устройстве</string>
+    <string name="settings_manage_semesters">Управление семестрами</string>
+    <string name="settings_semesters_title">Семестры</string>
+    <string name="settings_semester_add">Добавить семестр</string>
+    <string name="settings_semester_edit">Изменить семестр</string>
+    <string name="settings_semester_season_label">Сезон</string>
+    <string name="settings_semester_year_label">Год</string>
+    <string name="settings_semester_autumn">Осень</string>
+    <string name="settings_semester_spring">Весна</string>
+    <string name="settings_semester_delete_title">Удалить семестр?</string>
+    <string name="settings_semester_delete_message">Удалить семестр "%1$s"? Связанные занятия и оценки тоже будут удалены.</string>
+    <string name="settings_semester_last_delete_error">Нельзя удалить последний семестр</string>
+    <string name="settings_semester_invalid_year">Введите корректный год (4 цифры)</string>
+    <string name="settings_semester_duplicate_season_year">Такой семестр уже существует</string>
 
     <string name="biometric_prompt_title">Подтвердите вход</string>
     <string name="biometric_prompt_subtitle">Используйте биометрию или PIN/пароль устройства</string>

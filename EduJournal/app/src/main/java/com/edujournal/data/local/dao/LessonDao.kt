@@ -17,13 +17,15 @@ interface LessonDao {
         WHERE groupId = :groupId
         AND subjectId = :subjectId
         AND lessonTypeId = :lessonTypeId
+        AND semesterId = :semesterId
         ORDER BY date
         """
     )
     fun observeLessons(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long
+        lessonTypeId: Long,
+        semesterId: Long
     ): Flow<List<LessonEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

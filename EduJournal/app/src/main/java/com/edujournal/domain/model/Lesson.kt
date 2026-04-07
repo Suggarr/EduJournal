@@ -7,6 +7,7 @@ data class Lesson(
     val groupId: Long,
     val subjectId: Long,
     val lessonTypeId: Long,
+    val semesterId: Long = 1L,
     val date: LocalDate,
     val topic: String
 )

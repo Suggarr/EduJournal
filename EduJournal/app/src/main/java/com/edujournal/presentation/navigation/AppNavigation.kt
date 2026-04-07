@@ -1,5 +1,6 @@
 ﻿package com.edujournal.presentation.navigation
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -11,8 +12,10 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -29,6 +32,7 @@ import com.edujournal.presentation.screen.GroupScreen
 import com.edujournal.presentation.screen.JournalScreen
 import com.edujournal.presentation.screen.LessonTopicsScreen
 import com.edujournal.presentation.screen.LessonTypeScreen
+import com.edujournal.presentation.screen.SemesterManagementScreen
 import com.edujournal.presentation.screen.SettingsScreen
 import com.edujournal.presentation.screen.StudentScreen
 import com.edujournal.presentation.screen.SubjectScreen
@@ -45,11 +49,15 @@ private data class BottomNavItem(
 fun AppNavigation(
     viewModel: MainViewModel = hiltViewModel()
 ) {
+    val context = LocalContext.current
     val navController = rememberNavController()
     val userName by viewModel.userName
     val biometricEnabled by viewModel.biometricEnabled
+    val semesters by viewModel.semesters.collectAsState()
+    val selectedSemesterId by viewModel.selectedSemesterId
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val semesterRequiredMessage = stringResource(R.string.semester_required_for_navigation)
 
     val startDestination = if (userName == null) Routes.WELCOME else Routes.SUBJECTS
 
@@ -114,21 +122,33 @@ fun AppNavigation(
             composable(Routes.SUBJECTS) {
                 SubjectScreen(
                     userName = userName ?: "",
+                    semesters = semesters,
+                    selectedSemesterId = selectedSemesterId,
+                    onSemesterSelected = { viewModel.selectSemester(it) },
                     onSubjectClick = { subjectId ->
-                        navController.navigate(Routes.lessonTypes(subjectId))
+                        val semesterId = selectedSemesterId ?: semesters.firstOrNull()?.id
+                        if (semesterId != null) {
+                            navController.navigate(Routes.lessonTypes(semesterId, subjectId))
+                        } else {
+                            Toast.makeText(context, semesterRequiredMessage, Toast.LENGTH_SHORT).show()
+                        }
                     }
                 )
             }
 
             composable(
                 route = Routes.LESSON_TYPES,
-                arguments = listOf(navArgument("subjectId") { type = NavType.LongType })
+                arguments = listOf(
+                    navArgument("semesterId") { type = NavType.LongType },
+                    navArgument("subjectId") { type = NavType.LongType }
+                )
             ) { backStackEntry ->
+                val semesterId = backStackEntry.arguments?.getLong("semesterId") ?: 1L
                 val subjectId = backStackEntry.arguments?.getLong("subjectId") ?: 0L
                 LessonTypeScreen(
                     subjectId = subjectId,
                     onTypeClick = { typeId ->
-                        navController.navigate(Routes.groups(subjectId, typeId))
+                        navController.navigate(Routes.groups(semesterId, subjectId, typeId))
                     },
                     onBackClick = { navController.popBackStack() }
                 )
@@ -137,15 +157,17 @@ fun AppNavigation(
             composable(
                 route = Routes.GROUPS,
                 arguments = listOf(
+                    navArgument("semesterId") { type = NavType.LongType },
                     navArgument("subjectId") { type = NavType.LongType },
                     navArgument("typeId") { type = NavType.LongType }
                 )
             ) { backStackEntry ->
+                val semesterId = backStackEntry.arguments?.getLong("semesterId") ?: 1L
                 val subjectId = backStackEntry.arguments?.getLong("subjectId") ?: 0L
                 val typeId = backStackEntry.arguments?.getLong("typeId") ?: 0L
                 GroupScreen(
                     onGroupClick = { groupId ->
-                        navController.navigate(Routes.journal(groupId, subjectId, typeId))
+                        navController.navigate(Routes.journal(semesterId, groupId, subjectId, typeId))
                     },
                     onBackClick = { navController.popBackStack() }
                 )
@@ -180,11 +202,13 @@ fun AppNavigation(
             composable(
                 route = Routes.JOURNAL,
                 arguments = listOf(
+                    navArgument("semesterId") { type = NavType.LongType },
                     navArgument("groupId") { type = NavType.LongType },
                     navArgument("subjectId") { type = NavType.LongType },
                     navArgument("typeId") { type = NavType.LongType }
                 )
             ) { backStackEntry ->
+                val semesterId = backStackEntry.arguments?.getLong("semesterId") ?: 1L
                 val groupId = backStackEntry.arguments?.getLong("groupId") ?: 0L
                 val subjectId = backStackEntry.arguments?.getLong("subjectId") ?: 0L
                 val typeId = backStackEntry.arguments?.getLong("typeId") ?: 0L
@@ -192,9 +216,10 @@ fun AppNavigation(
                     groupId = groupId,
                     subjectId = subjectId,
                     lessonTypeId = typeId,
+                    semesterId = semesterId,
                     onBack = { navController.popBackStack() },
                     onTopicsClick = {
-                        navController.navigate(Routes.lessonTopics(groupId, subjectId, typeId))
+                        navController.navigate(Routes.lessonTopics(semesterId, groupId, subjectId, typeId))
                     }
                 )
             }
@@ -202,11 +227,13 @@ fun AppNavigation(
             composable(
                 route = Routes.LESSON_TOPICS,
                 arguments = listOf(
+                    navArgument("semesterId") { type = NavType.LongType },
                     navArgument("groupId") { type = NavType.LongType },
                     navArgument("subjectId") { type = NavType.LongType },
                     navArgument("typeId") { type = NavType.LongType }
                 )
             ) { backStackEntry ->
+                val semesterId = backStackEntry.arguments?.getLong("semesterId") ?: 1L
                 val groupId = backStackEntry.arguments?.getLong("groupId") ?: 0L
                 val subjectId = backStackEntry.arguments?.getLong("subjectId") ?: 0L
                 val typeId = backStackEntry.arguments?.getLong("typeId") ?: 0L
@@ -214,6 +241,7 @@ fun AppNavigation(
                     groupId = groupId,
                     subjectId = subjectId,
                     lessonTypeId = typeId,
+                    semesterId = semesterId,
                     onBack = { navController.popBackStack() }
                 )
             }
@@ -223,7 +251,14 @@ fun AppNavigation(
                     userName = userName.orEmpty(),
                     biometricEnabled = biometricEnabled,
                     onSaveUserName = { viewModel.updateUserName(it) },
-                    onBiometricToggle = { viewModel.setBiometricEnabled(it) }
+                    onBiometricToggle = { viewModel.setBiometricEnabled(it) },
+                    onManageSemesters = { navController.navigate(Routes.SEMESTERS) }
+                )
+            }
+
+            composable(Routes.SEMESTERS) {
+                SemesterManagementScreen(
+                    onBackClick = { navController.popBackStack() }
                 )
             }
         }
@@ -235,7 +270,8 @@ private fun currentTopLevelRoute(destination: NavDestination?): String {
 
     return when {
         route == Routes.GROUPS_TAB || route == Routes.STUDENTS -> Routes.GROUPS_TAB
-        route == Routes.SETTINGS_TAB -> Routes.SETTINGS_TAB
+        route == Routes.SETTINGS_TAB || route == Routes.SEMESTERS -> Routes.SETTINGS_TAB
         else -> Routes.SUBJECTS
     }
 }
+

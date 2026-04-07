@@ -32,14 +32,9 @@ import androidx.room.PrimaryKey
 data class GradeEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-
     val studentId: Long,
-
     val lessonId: Long,
-
     val value: Int?,
-
     val type: String,
-
     val comment: String?
 )

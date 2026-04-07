@@ -16,10 +16,11 @@ class LessonRepositoryImpl @Inject constructor(
     override fun observeLessons(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long
+        lessonTypeId: Long,
+        semesterId: Long
     ): Flow<List<Lesson>> {
         return lessonLocalDataSource
-            .observeLessons(groupId, subjectId, lessonTypeId)
+            .observeLessons(groupId, subjectId, lessonTypeId, semesterId)
             .map { list -> list.map { it.toDomain() }
         }
 

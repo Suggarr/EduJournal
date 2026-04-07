@@ -6,7 +6,8 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.time.LocalDate
 
-@Entity(tableName="lessons",
+@Entity(
+    tableName = "lessons",
     foreignKeys = [
         ForeignKey(
             entity = GroupEntity::class,
@@ -18,19 +19,26 @@ import java.time.LocalDate
             entity = SubjectEntity::class,
             parentColumns = ["id"],
             childColumns = ["subjectId"],
-            onDelete = ForeignKey.CASCADE //В будущем можно будет поменять на Restrict
+            onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = LessonTypeEntity::class,
             parentColumns = ["id"],
             childColumns = ["lessonTypeId"],
-            onDelete = ForeignKey.CASCADE //В будущем также можно будет поменять на Restrict
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = SemesterEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["semesterId"],
+            onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [
         Index("groupId"),
         Index("subjectId"),
         Index("lessonTypeId"),
+        Index("semesterId"),
         Index(
             value = ["groupId", "subjectId", "date"],
             unique = true
@@ -40,10 +48,10 @@ import java.time.LocalDate
 data class LessonEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-
     val groupId: Long,
     val subjectId: Long,
     val lessonTypeId: Long,
+    val semesterId: Long = 1L,
     val date: LocalDate,
     val topic: String
 )

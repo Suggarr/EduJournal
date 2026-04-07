@@ -4,10 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edujournal.domain.model.Grade
 import com.edujournal.domain.model.GradeType
+import com.edujournal.domain.usecase.GetGroupsUseCase
 import com.edujournal.domain.usecase.GetJournalUseCase
 import com.edujournal.domain.usecase.GetLessonsUseCase
+import com.edujournal.domain.usecase.ObserveLessonTypesUseCase
+import com.edujournal.domain.usecase.ObserveSubjectsUseCase
 import com.edujournal.domain.usecase.SetGradeUseCase
 import com.edujournal.presentation.state.JournalCell
+import com.edujournal.presentation.state.JournalMetaState
 import com.edujournal.presentation.state.JournalRow
 import com.edujournal.presentation.state.JournalState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,18 +26,22 @@ import javax.inject.Inject
 class JournalViewModel @Inject constructor(
     private val getJournalUseCase: GetJournalUseCase,
     private val getLessonsUseCase: GetLessonsUseCase,
-    private val setGradeUseCase: SetGradeUseCase
+    private val setGradeUseCase: SetGradeUseCase,
+    private val observeSubjectsUseCase: ObserveSubjectsUseCase,
+    private val observeLessonTypesUseCase: ObserveLessonTypesUseCase,
+    private val getGroupsUseCase: GetGroupsUseCase
 ) : ViewModel() {
 
     fun observeJournal(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long
+        lessonTypeId: Long,
+        semesterId: Long
     ): StateFlow<JournalState?> {
 
         return combine(
-            getJournalUseCase(groupId, subjectId, lessonTypeId),
-            getLessonsUseCase(groupId, subjectId, lessonTypeId)
+            getJournalUseCase(groupId, subjectId, lessonTypeId, semesterId),
+            getLessonsUseCase(groupId, subjectId, lessonTypeId, semesterId)
         ) { journalRows, lessons ->
             val grouped = journalRows.groupBy { it.studentId }
 
@@ -59,6 +67,32 @@ class JournalViewModel @Inject constructor(
             JournalState(
                 lessons = lessons,
                 rows = rows
+            )
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            null
+        )
+    }
+
+    fun observeJournalMeta(
+        groupId: Long,
+        subjectId: Long,
+        lessonTypeId: Long
+    ): StateFlow<JournalMetaState?> {
+        return combine(
+            observeSubjectsUseCase(),
+            observeLessonTypesUseCase(),
+            getGroupsUseCase()
+        ) { subjects, lessonTypes, groups ->
+            val subject = subjects.firstOrNull { it.id == subjectId }
+            val lessonType = lessonTypes.firstOrNull { it.id == lessonTypeId }
+            val group = groups.firstOrNull { it.id == groupId }
+
+            JournalMetaState(
+                subjectLabel = subject?.abbreviation?.takeIf { it.isNotBlank() } ?: subject?.name.orEmpty(),
+                lessonTypeLabel = lessonType?.name.orEmpty(),
+                groupLabel = group?.name.orEmpty()
             )
         }.stateIn(
             viewModelScope,

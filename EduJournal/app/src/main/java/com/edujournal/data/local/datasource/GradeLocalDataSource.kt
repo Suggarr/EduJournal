@@ -21,8 +21,9 @@ class GradeLocalDataSource @Inject constructor(
     fun getJournal(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long
+        lessonTypeId: Long,
+        semesterId: Long
     ): Flow<List<JournalRow>> {
-        return gradeDao.getJournal(groupId, subjectId, lessonTypeId)
+        return gradeDao.getJournal(groupId, subjectId, lessonTypeId, semesterId)
     }
 }

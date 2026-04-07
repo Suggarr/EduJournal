@@ -9,17 +9,19 @@ object Routes {
     // Экраны
     const val WELCOME = "welcome"
     const val SUBJECTS = "subjects"
-    const val LESSON_TYPES = "lesson_types/{subjectId}"
-    const val GROUPS = "groups/{subjectId}/{typeId}"
+    const val LESSON_TYPES = "lesson_types/{semesterId}/{subjectId}"
+    const val GROUPS = "groups/{semesterId}/{subjectId}/{typeId}"
     const val STUDENTS = "students/{groupId}"
-    const val JOURNAL = "journal/{groupId}/{subjectId}/{typeId}"
-    const val LESSON_TOPICS = "lesson_topics/{groupId}/{subjectId}/{typeId}"
+    const val JOURNAL = "journal/{semesterId}/{groupId}/{subjectId}/{typeId}"
+    const val LESSON_TOPICS = "lesson_topics/{semesterId}/{groupId}/{subjectId}/{typeId}"
     const val SETTINGS = "settings"
+    const val SEMESTERS = "semesters"
 
-    fun lessonTypes(subjectId: Long) = "lesson_types/$subjectId"
-    fun groups(subjectId: Long, typeId: Long) = "groups/$subjectId/$typeId"
+    fun lessonTypes(semesterId: Long, subjectId: Long) = "lesson_types/$semesterId/$subjectId"
+    fun groups(semesterId: Long, subjectId: Long, typeId: Long) = "groups/$semesterId/$subjectId/$typeId"
     fun students(groupId: Long) = "students/$groupId"
-    fun journal(groupId: Long, subjectId: Long, typeId: Long) = "journal/$groupId/$subjectId/$typeId"
-    fun lessonTopics(groupId: Long, subjectId: Long, typeId: Long) =
-        "lesson_topics/$groupId/$subjectId/$typeId"
+    fun journal(semesterId: Long, groupId: Long, subjectId: Long, typeId: Long) =
+        "journal/$semesterId/$groupId/$subjectId/$typeId"
+    fun lessonTopics(semesterId: Long, groupId: Long, subjectId: Long, typeId: Long) =
+        "lesson_topics/$semesterId/$groupId/$subjectId/$typeId"
 }

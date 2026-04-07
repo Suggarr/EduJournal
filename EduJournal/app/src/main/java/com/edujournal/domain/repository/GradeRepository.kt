@@ -12,6 +12,7 @@ interface GradeRepository {
     fun getJournal(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long
+        lessonTypeId: Long,
+        semesterId: Long
     ): Flow<List<JournalRow>>
 }

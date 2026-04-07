@@ -7,7 +7,8 @@ interface LessonRepository {
     fun observeLessons(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long
+        lessonTypeId: Long,
+        semesterId: Long
     ): Flow<List<Lesson>>
 
     suspend fun insertLesson(lesson: Lesson)

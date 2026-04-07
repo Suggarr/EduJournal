@@ -20,6 +20,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -52,14 +53,19 @@ fun JournalScreen(
     groupId: Long,
     subjectId: Long,
     lessonTypeId: Long,
+    semesterId: Long,
     onBack: () -> Unit,
     onTopicsClick: () -> Unit,
     viewModel: JournalViewModel = hiltViewModel()
 ) {
-    val journalFlow = remember(groupId, subjectId, lessonTypeId) {
-        viewModel.observeJournal(groupId, subjectId, lessonTypeId)
+    val journalFlow = remember(groupId, subjectId, lessonTypeId, semesterId) {
+        viewModel.observeJournal(groupId, subjectId, lessonTypeId, semesterId)
     }
     val state by journalFlow.collectAsState()
+    val journalMetaFlow = remember(groupId, subjectId, lessonTypeId) {
+        viewModel.observeJournalMeta(groupId, subjectId, lessonTypeId)
+    }
+    val journalMeta by journalMetaFlow.collectAsState()
 
     val horizontalScrollState = rememberScrollState()
     var selectedCell by remember { mutableStateOf<Pair<JournalRow, JournalCell>?>(null) }
@@ -110,6 +116,19 @@ fun JournalScreen(
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
+                journalMeta?.let { meta ->
+                    Text(
+                        text = stringResource(
+                            R.string.journal_context_line,
+                            meta.subjectLabel.ifBlank { "-" },
+                            meta.lessonTypeLabel.ifBlank { "-" },
+                            meta.groupLabel.ifBlank { "-" }
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+
                 JournalHeader(
                     lessons = currentState.lessons,
                     scrollState = horizontalScrollState

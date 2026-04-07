@@ -7,6 +7,7 @@ import com.edujournal.data.local.dao.GradeDao
 import com.edujournal.data.local.dao.GroupDao
 import com.edujournal.data.local.dao.LessonDao
 import com.edujournal.data.local.dao.LessonTypeDao
+import com.edujournal.data.local.dao.SemesterDao
 import com.edujournal.data.local.dao.StudentDao
 import com.edujournal.data.local.dao.SubjectDao
 import com.edujournal.data.local.dao.SubjectLessonTypeHoursDao
@@ -14,6 +15,7 @@ import com.edujournal.data.local.database.entities.GradeEntity
 import com.edujournal.data.local.database.entities.GroupEntity
 import com.edujournal.data.local.database.entities.LessonEntity
 import com.edujournal.data.local.database.entities.LessonTypeEntity
+import com.edujournal.data.local.database.entities.SemesterEntity
 import com.edujournal.data.local.database.entities.StudentEntity
 import com.edujournal.data.local.database.entities.SubjectLessonTypeHoursEntity
 import com.edujournal.data.local.database.entities.SubjectEntity
@@ -24,6 +26,7 @@ import com.edujournal.utils.Converters
         GroupEntity::class,
         StudentEntity::class,
         SubjectEntity::class,
+        SemesterEntity::class,
         LessonTypeEntity::class,
         SubjectLessonTypeHoursEntity::class,
         LessonEntity::class,
@@ -37,6 +40,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun groupDao(): GroupDao
     abstract fun studentDao(): StudentDao
     abstract fun subjectDao(): SubjectDao
+    abstract fun semesterDao(): SemesterDao
     abstract fun lessonTypeDao(): LessonTypeDao
     abstract fun subjectLessonTypeHoursDao(): SubjectLessonTypeHoursDao
     abstract fun lessonDao(): LessonDao

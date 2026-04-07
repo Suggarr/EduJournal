@@ -10,7 +10,8 @@ class GetJournalUseCase @Inject constructor(
     operator fun invoke(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long
-    ) = repository.getJournal(groupId, subjectId, lessonTypeId)
+        lessonTypeId: Long,
+        semesterId: Long
+    ) = repository.getJournal(groupId, subjectId, lessonTypeId, semesterId)
 
 }

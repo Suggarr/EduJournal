@@ -8,6 +8,7 @@ import com.edujournal.data.local.dao.GradeDao
 import com.edujournal.data.local.dao.GroupDao
 import com.edujournal.data.local.dao.LessonDao
 import com.edujournal.data.local.dao.LessonTypeDao
+import com.edujournal.data.local.dao.SemesterDao
 import com.edujournal.data.local.dao.StudentDao
 import com.edujournal.data.local.dao.SubjectDao
 import com.edujournal.data.local.dao.SubjectLessonTypeHoursDao
@@ -16,6 +17,7 @@ import com.edujournal.data.local.datasource.GradeLocalDataSource
 import com.edujournal.data.local.datasource.GroupLocalDataSource
 import com.edujournal.data.local.datasource.LessonLocalDataSource
 import com.edujournal.data.local.datasource.LessonTypeLocalDataSource
+import com.edujournal.data.local.datasource.SemesterLocalDataSource
 import com.edujournal.data.local.datasource.StudentLocalDataSource
 import com.edujournal.data.local.datasource.SubjectLocalDataSource
 import com.edujournal.data.local.datasource.SubjectLessonTypeHoursLocalDataSource
@@ -23,6 +25,7 @@ import com.edujournal.data.repository.GradeRepositoryImpl
 import com.edujournal.data.repository.GroupRepositoryImpl
 import com.edujournal.data.repository.LessonRepositoryImpl
 import com.edujournal.data.repository.LessonTypeRepositoryImpl
+import com.edujournal.data.repository.SemesterRepositoryImpl
 import com.edujournal.data.repository.StudentRepositoryImpl
 import com.edujournal.data.repository.SubjectRepositoryImpl
 import com.edujournal.data.repository.SubjectLessonTypeHoursRepositoryImpl
@@ -30,16 +33,19 @@ import com.edujournal.domain.repository.GradeRepository
 import com.edujournal.domain.repository.GroupRepository
 import com.edujournal.domain.repository.LessonRepository
 import com.edujournal.domain.repository.LessonTypeRepository
+import com.edujournal.domain.repository.SemesterRepository
 import com.edujournal.domain.repository.StudentRepository
 import com.edujournal.domain.repository.SubjectRepository
 import com.edujournal.domain.repository.SubjectLessonTypeHoursRepository
 import com.edujournal.domain.usecase.CreateGroupUseCase
 import com.edujournal.domain.usecase.CreateLessonTypeUseCase
 import com.edujournal.domain.usecase.CreateLessonUseCase
+import com.edujournal.domain.usecase.CreateSemesterUseCase
 import com.edujournal.domain.usecase.CreateStudentUseCase
 import com.edujournal.domain.usecase.CreateSubjectUseCase
 import com.edujournal.domain.usecase.DeleteGroupUseCase
 import com.edujournal.domain.usecase.DeleteLessonTypeUseCase
+import com.edujournal.domain.usecase.DeleteSemesterUseCase
 import com.edujournal.domain.usecase.DeleteStudentUseCase
 import com.edujournal.domain.usecase.DeleteSubjectUseCase
 import com.edujournal.domain.usecase.GetGradesForLessonUseCase
@@ -47,12 +53,14 @@ import com.edujournal.domain.usecase.GetGroupsUseCase
 import com.edujournal.domain.usecase.GetJournalUseCase
 import com.edujournal.domain.usecase.GetLessonsUseCase
 import com.edujournal.domain.usecase.ObserveLessonTypesUseCase
+import com.edujournal.domain.usecase.ObserveSemestersUseCase
 import com.edujournal.domain.usecase.ObserveSubjectLessonTypeHoursUseCase
 import com.edujournal.domain.usecase.ObserveStudentsUseCase
 import com.edujournal.domain.usecase.ObserveSubjectsUseCase
 import com.edujournal.domain.usecase.SetGradeUseCase
 import com.edujournal.domain.usecase.UpdateGroupUseCase
 import com.edujournal.domain.usecase.UpdateLessonTypeUseCase
+import com.edujournal.domain.usecase.UpdateSemesterUseCase
 import com.edujournal.domain.usecase.UpdateStudentUseCase
 import com.edujournal.domain.usecase.UpdateSubjectUseCase
 import dagger.Module
@@ -75,6 +83,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "edujournal_db"
         )
+        .fallbackToDestructiveMigration()
         .addCallback(object : RoomDatabase.Callback() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
@@ -122,6 +131,11 @@ object DatabaseModule {
                     db.execSQL("INSERT INTO lesson_types (name) VALUES ('Практика')")
                     db.execSQL("INSERT INTO lesson_types (name) VALUES ('Лабораторная')")
                     db.execSQL("INSERT INTO lesson_types (name) VALUES ('Контрольная')")
+
+                    db.execSQL("INSERT INTO semesters (season, year) VALUES ('AUTUMN', 2025)")
+                    db.execSQL("INSERT INTO semesters (season, year) VALUES ('SPRING', 2026)")
+                    db.execSQL("INSERT INTO semesters (season, year) VALUES ('AUTUMN', 2026)")
+                    db.execSQL("INSERT INTO semesters (season, year) VALUES ('SPRING', 2027)")
 
                     db.execSQL("INSERT INTO `groups` (name) VALUES ('10701322')")
                     db.execSQL("INSERT INTO `groups` (name) VALUES ('10701222')")
@@ -181,10 +195,10 @@ object DatabaseModule {
                                 val topic = "Тема ${i + 1}"
                                 db.execSQL(
                                     """
-                                    INSERT OR IGNORE INTO lessons (groupId, subjectId, lessonTypeId, date, topic)
-                                    VALUES (?, ?, ?, ?, ?)
+                                    INSERT OR IGNORE INTO lessons (groupId, subjectId, lessonTypeId, semesterId, date, topic)
+                                    VALUES (?, ?, ?, ?, ?, ?)
                                     """.trimIndent(),
-                                    arrayOf(groupId, subjectId, lessonTypeId, date, topic)
+                                    arrayOf(groupId, subjectId, lessonTypeId, 1L, date, topic)
                                 )
                             }
                         }
@@ -269,6 +283,41 @@ object DatabaseModule {
         localDataSource: SubjectLocalDataSource
     ): SubjectRepository =
         SubjectRepositoryImpl(localDataSource)
+
+    @Provides
+    fun provideSemesterDao(
+        database: AppDatabase
+    ): SemesterDao = database.semesterDao()
+
+    @Provides
+    fun provideSemesterLocalDataSource(
+        dao: SemesterDao
+    ): SemesterLocalDataSource = SemesterLocalDataSource(dao)
+
+    @Provides
+    fun provideSemesterRepository(
+        localDataSource: SemesterLocalDataSource
+    ): SemesterRepository = SemesterRepositoryImpl(localDataSource)
+
+    @Provides
+    fun provideCreateSemesterUseCase(
+        repository: SemesterRepository
+    ): CreateSemesterUseCase = CreateSemesterUseCase(repository)
+
+    @Provides
+    fun provideObserveSemestersUseCase(
+        repository: SemesterRepository
+    ): ObserveSemestersUseCase = ObserveSemestersUseCase(repository)
+
+    @Provides
+    fun provideUpdateSemesterUseCase(
+        repository: SemesterRepository
+    ): UpdateSemesterUseCase = UpdateSemesterUseCase(repository)
+
+    @Provides
+    fun provideDeleteSemesterUseCase(
+        repository: SemesterRepository
+    ): DeleteSemesterUseCase = DeleteSemesterUseCase(repository)
 
     @Provides
     fun provideSubjectLessonTypeHoursDao(

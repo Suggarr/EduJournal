@@ -9,6 +9,7 @@ class GetLessonsUseCase @Inject constructor(
     operator fun invoke(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long
-    ) = lessonRepository.observeLessons(groupId, subjectId, lessonTypeId)
+        lessonTypeId: Long,
+        semesterId: Long
+    ) = lessonRepository.observeLessons(groupId, subjectId, lessonTypeId, semesterId)
 }

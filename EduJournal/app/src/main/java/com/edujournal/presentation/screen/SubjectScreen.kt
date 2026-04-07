@@ -21,11 +21,14 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -48,6 +51,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.LessonType
+import com.edujournal.domain.model.Semester
+import com.edujournal.domain.model.SemesterSeason
 import com.edujournal.domain.model.Subject
 import com.edujournal.presentation.viewmodel.SubjectViewModel
 import java.math.BigDecimal
@@ -56,6 +61,9 @@ import java.math.BigDecimal
 @Composable
 fun SubjectScreen(
     userName: String,
+    semesters: List<Semester>,
+    selectedSemesterId: Long?,
+    onSemesterSelected: (Long) -> Unit,
     onSubjectClick: (Long) -> Unit,
     viewModel: SubjectViewModel = hiltViewModel()
 ) {
@@ -65,6 +73,15 @@ fun SubjectScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var subjectToEdit by remember { mutableStateOf<Subject?>(null) }
     var subjectToDelete by remember { mutableStateOf<Subject?>(null) }
+    var semesterMenuExpanded by remember { mutableStateOf(false) }
+    val autumnLabel = stringResource(R.string.settings_semester_autumn)
+    val springLabel = stringResource(R.string.settings_semester_spring)
+    val selectedSemesterName = semesters
+        .firstOrNull { it.id == selectedSemesterId }
+        ?.let { semester ->
+            val season = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
+            "$season ${semester.year}"
+        }
 
     Scaffold(
         topBar = {
@@ -93,23 +110,52 @@ fun SubjectScreen(
             }
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues).padding(horizontal = 16.dp)) {
-            if (subjects.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(stringResource(R.string.subject_empty), color = MaterialTheme.colorScheme.outline)
-                }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+        Column(modifier = Modifier.padding(paddingValues).padding(horizontal = 16.dp)) {
+            Box(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
+                OutlinedButton(
+                    onClick = { semesterMenuExpanded = true },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    items(subjects) { subject ->
-                        SubjectCard(
-                            subject = subject,
-                            onClick = { onSubjectClick(subject.id) },
-                            onEditClick = { subjectToEdit = subject },
-                            onDeleteClick = { subjectToDelete = subject }
+                    val label = selectedSemesterName ?: stringResource(R.string.semester_select)
+                    Text("${stringResource(R.string.semester_label)}: $label")
+                }
+                DropdownMenu(
+                    expanded = semesterMenuExpanded,
+                    onDismissRequest = { semesterMenuExpanded = false }
+                ) {
+                    semesters.forEach { semester ->
+                        DropdownMenuItem(
+                            text = {
+                                val season = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
+                                Text("$season ${semester.year}")
+                            },
+                            onClick = {
+                                semesterMenuExpanded = false
+                                onSemesterSelected(semester.id)
+                            }
                         )
+                    }
+                }
+            }
+
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (subjects.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(stringResource(R.string.subject_empty), color = MaterialTheme.colorScheme.outline)
+                    }
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(subjects) { subject ->
+                            SubjectCard(
+                                subject = subject,
+                                onClick = { onSubjectClick(subject.id) },
+                                onEditClick = { subjectToEdit = subject },
+                                onDeleteClick = { subjectToDelete = subject }
+                            )
+                        }
                     }
                 }
             }

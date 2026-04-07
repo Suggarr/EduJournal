@@ -1,14 +1,15 @@
-﻿package com.edujournal.presentation.screen
+package com.edujournal.presentation.screen
 
 import android.app.KeyguardManager
 import android.os.Build
 import android.widget.Toast
 import androidx.biometric.BiometricManager
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
@@ -34,10 +35,12 @@ fun SettingsScreen(
     userName: String,
     biometricEnabled: Boolean,
     onSaveUserName: (String) -> Unit,
-    onBiometricToggle: (Boolean) -> Unit
+    onBiometricToggle: (Boolean) -> Unit,
+    onManageSemesters: () -> Unit
 ) {
     val context = LocalContext.current
     var editedName by remember(userName) { mutableStateOf(userName) }
+
     val nameSavedText = stringResource(R.string.settings_name_saved)
     val biometricEnrollText = stringResource(R.string.settings_biometric_enroll)
     val biometricUnavailableText = stringResource(R.string.settings_biometric_unavailable)
@@ -49,76 +52,91 @@ fun SettingsScreen(
             )
         }
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .padding(paddingValues)
+                .fillMaxSize()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
-            OutlinedTextField(
-                value = editedName,
-                onValueChange = { editedName = it },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.settings_user_name_label)) },
-                singleLine = true
-            )
-
-            Button(
-                onClick = {
-                    val trimmedName = editedName.trim()
-                    if (trimmedName.isNotEmpty()) {
-                        onSaveUserName(trimmedName)
-                        Toast.makeText(context, nameSavedText, Toast.LENGTH_SHORT).show()
-                    }
-                },
-                enabled = editedName.trim().isNotEmpty(),
-                modifier = Modifier.align(Alignment.End)
-            ) {
-                Text(stringResource(R.string.settings_save_name))
+            item {
+                OutlinedTextField(
+                    value = editedName,
+                    onValueChange = { editedName = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.settings_user_name_label)) },
+                    singleLine = true
+                )
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = stringResource(R.string.settings_biometric))
-                Switch(
-                    checked = biometricEnabled,
-                    onCheckedChange = { enabled ->
-                        if (!enabled) {
-                            onBiometricToggle(false)
-                            return@Switch
+            item {
+                Button(
+                    onClick = {
+                        val trimmedName = editedName.trim()
+                        if (trimmedName.isNotEmpty()) {
+                            onSaveUserName(trimmedName)
+                            Toast.makeText(context, nameSavedText, Toast.LENGTH_SHORT).show()
                         }
+                    },
+                    enabled = editedName.trim().isNotEmpty(),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.settings_save_name))
+                }
+            }
 
-                        val isAvailable = canAuthenticateBiometricOrCredential(context)
-                        if (isAvailable) {
-                            onBiometricToggle(true)
-                            return@Switch
-                        }
-
-                        val hasDeviceCredential = hasDeviceCredential(context)
-                        val biometricManager = BiometricManager.from(context)
-                        val biometricNoneEnrolled =
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                val authenticators =
-                                    BiometricManager.Authenticators.BIOMETRIC_WEAK or
-                                        BiometricManager.Authenticators.DEVICE_CREDENTIAL
-                                biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
-                            } else {
-                                @Suppress("DEPRECATION")
-                                biometricManager.canAuthenticate() == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = stringResource(R.string.settings_biometric))
+                    Switch(
+                        checked = biometricEnabled,
+                        onCheckedChange = { enabled ->
+                            if (!enabled) {
+                                onBiometricToggle(false)
+                                return@Switch
                             }
 
-                        Toast.makeText(
-                            context,
-                            if (biometricNoneEnrolled && !hasDeviceCredential) biometricEnrollText else biometricUnavailableText,
-                            Toast.LENGTH_LONG
-                        ).show()
-                        onBiometricToggle(false)
-                    }
-                )
+                            val isAvailable = canAuthenticateBiometricOrCredential(context)
+                            if (isAvailable) {
+                                onBiometricToggle(true)
+                                return@Switch
+                            }
+
+                            val hasDeviceCredential = hasDeviceCredential(context)
+                            val biometricManager = BiometricManager.from(context)
+                            val biometricNoneEnrolled =
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                    val authenticators =
+                                        BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                                            BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                                    biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
+                                } else {
+                                    @Suppress("DEPRECATION")
+                                    biometricManager.canAuthenticate() == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
+                                }
+
+                            Toast.makeText(
+                                context,
+                                if (biometricNoneEnrolled && !hasDeviceCredential) biometricEnrollText else biometricUnavailableText,
+                                Toast.LENGTH_LONG
+                            ).show()
+                            onBiometricToggle(false)
+                        }
+                    )
+                }
+            }
+
+            item {
+                Button(
+                    onClick = onManageSemesters,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.settings_manage_semesters))
+                }
             }
         }
     }

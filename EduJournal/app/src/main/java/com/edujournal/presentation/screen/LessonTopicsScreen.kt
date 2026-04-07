@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.Lesson
@@ -63,11 +64,12 @@ fun LessonTopicsScreen(
     groupId: Long,
     subjectId: Long,
     lessonTypeId: Long,
+    semesterId: Long,
     onBack: () -> Unit,
     viewModel: LessonTopicsViewModel = hiltViewModel()
 ) {
-    val lessonsFlow = remember(groupId, subjectId, lessonTypeId) {
-        viewModel.observeLessons(groupId, subjectId, lessonTypeId)
+    val lessonsFlow = remember(groupId, subjectId, lessonTypeId, semesterId) {
+        viewModel.observeLessons(groupId, subjectId, lessonTypeId, semesterId)
     }
     val lessons by lessonsFlow.collectAsState()
     val currentLessons = lessons
@@ -77,6 +79,7 @@ fun LessonTopicsScreen(
     var lessonToDelete by remember { mutableStateOf<Lesson?>(null) }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.lesson_topics_title)) },
@@ -109,15 +112,14 @@ fun LessonTopicsScreen(
                         formatHoursValue(hours)
                     ),
                     style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(top = 12.dp)
+                    modifier = Modifier
                 )
             }
 
             if (currentLessons == null) {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 12.dp),
+                        .fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
@@ -125,8 +127,7 @@ fun LessonTopicsScreen(
             } else if (currentLessons.isEmpty()) {
                 Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 12.dp),
+                    .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Text(stringResource(R.string.lesson_topics_empty))
@@ -134,9 +135,8 @@ fun LessonTopicsScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(top = 12.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp),
+                        .fillMaxSize(),
+                    contentPadding = PaddingValues(0.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(currentLessons) { lesson ->
@@ -187,7 +187,7 @@ fun LessonTopicsScreen(
             },
             onDismiss = { showAddDialog = false },
             onConfirm = { date, topic ->
-                viewModel.addLesson(groupId, subjectId, lessonTypeId, date, topic)
+                viewModel.addLesson(groupId, subjectId, lessonTypeId, semesterId, date, topic)
                 showAddDialog = false
             }
         )
