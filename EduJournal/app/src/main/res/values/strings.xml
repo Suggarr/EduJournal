@@ -32,6 +32,7 @@
     <string name="subject_hours_title">Часы по типам занятий</string>
     <string name="subject_hours_field_label">%1$s (часы)</string>
     <string name="subject_hours_optional">Необязательно</string>
+    <string name="subject_duplicate_error">Такой предмет уже существует</string>
 
     <string name="lesson_type_select">Выберите тип занятия</string>
     <string name="lesson_type_empty">Типы занятий не найдены</string>
@@ -64,7 +65,7 @@
     <string name="student_import_empty">В файле не найдено студентов для импорта.</string>
     <string name="student_import_result">Импорт завершен: добавлено %1$d, пропущено %2$d.</string>
     <string name="student_import_parse_error">Ошибка импорта: %1$s</string>
-    <string name="student_import_instructions">Поддерживаются файлы CSV и Excel (.csv, .xlsx).\n\nРекомендуемые колонки:\n1) Фамилия\n2) Имя\n3) Отчество\n\nМожно использовать и английские названия: LastName, FirstName, MiddleName.\n\nПример строки CSV:\nИванов;Иван;Иванович\n\nЕсли заголовков нет, берется порядок: Фамилия, Имя, Отчество.</string>
+    <string name="student_import_instructions">Поддерживаются файлы CSV и Excel (.csv, .xlsx).\n\nОбязательные колонки в первой строке:\n1) Фамилия\n2) Имя\n3) Отчество\n\nИмена колонок должны быть именно такими.\n\nПример строки CSV:\nФамилия;Имя;Отчество\nИванов;Иван;Иванович</string>
     <string name="student_last_name">Фамилия</string>
     <string name="student_first_name">Имя</string>
     <string name="student_middle_name">Отчество</string>
@@ -73,6 +74,12 @@
     <string name="journal_empty">Нет данных для отображения. Добавьте темы занятий и проверьте студентов.</string>
     <string name="journal_set_grade">Поставить оценку</string>
     <string name="journal_topics_button">Темы занятий</string>
+    <string name="journal_export_button">Экспорт</string>
+    <string name="journal_export_title">Экспорт журнала</string>
+    <string name="journal_export_description">Выберите формат файла для экспорта журнала.</string>
+    <string name="journal_export_success">Файл журнала успешно сохранен</string>
+    <string name="journal_export_failed">Не удалось экспортировать журнал</string>
+    <string name="journal_export_no_data">Нет данных для экспорта</string>
     <string name="journal_context_line">Предмет: %1$s | Тип: %2$s | Группа: %3$s</string>
     <string name="journal_grade_legend">Оценки 1-10, Н - отсутствовал, З - болел, О - освобожден.</string>
     <string name="journal_clear_grade">Очистить оценку</string>
@@ -86,6 +93,7 @@
     <string name="lesson_topics_selected_date">Дата: %1$s</string>
     <string name="lesson_topics_required_hours">Необходимо часов: %1$s</string>
     <string name="lesson_topics_duplicate_date_error">Тема с этой датой уже существует. Выберите другую дату.</string>
+    <string name="lesson_topics_invalid_date_error">Некорректная дата: тема на выбранную дату уже существует.</string>
     <string name="lesson_topics_delete_title">Удалить тему?</string>
     <string name="lesson_topics_delete_message">Удалить тему занятия от %1$s? Это действие нельзя отменить.</string>
 

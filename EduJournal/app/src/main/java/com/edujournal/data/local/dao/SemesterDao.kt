@@ -23,7 +23,7 @@ interface SemesterDao {
     )
     fun observeSemesters(): Flow<List<SemesterEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(semester: SemesterEntity): Long
 
     @Update

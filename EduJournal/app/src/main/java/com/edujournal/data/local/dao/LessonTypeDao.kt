@@ -14,10 +14,10 @@ interface LessonTypeDao {
     @Query("SELECT * FROM lesson_types")
     fun observeLessonTypes(): Flow<List<LessonTypeEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(lessonType: LessonTypeEntity)
 
-    @Update
+    @Update(onConflict = OnConflictStrategy.IGNORE)
     suspend fun update(lessonType: LessonTypeEntity)
 
     @Query("DELETE FROM lesson_types WHERE id = :typeId")

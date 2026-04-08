@@ -14,10 +14,10 @@ interface SubjectDao {
     @Query("SELECT * FROM subjects")
     fun observeSubjects(): Flow<List<SubjectEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(subject: SubjectEntity): Long
 
-    @Update
+    @Update(onConflict = OnConflictStrategy.IGNORE)
     suspend fun update(subject: SubjectEntity)
 
     @Query("DELETE FROM subjects WHERE id = :subjectId")

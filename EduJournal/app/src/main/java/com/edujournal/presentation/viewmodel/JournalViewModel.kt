@@ -7,6 +7,7 @@ import com.edujournal.domain.model.GradeType
 import com.edujournal.domain.usecase.GetGroupsUseCase
 import com.edujournal.domain.usecase.GetJournalUseCase
 import com.edujournal.domain.usecase.GetLessonsUseCase
+import com.edujournal.domain.usecase.ObserveSemestersUseCase
 import com.edujournal.domain.usecase.ObserveLessonTypesUseCase
 import com.edujournal.domain.usecase.ObserveSubjectsUseCase
 import com.edujournal.domain.usecase.SetGradeUseCase
@@ -29,7 +30,8 @@ class JournalViewModel @Inject constructor(
     private val setGradeUseCase: SetGradeUseCase,
     private val observeSubjectsUseCase: ObserveSubjectsUseCase,
     private val observeLessonTypesUseCase: ObserveLessonTypesUseCase,
-    private val getGroupsUseCase: GetGroupsUseCase
+    private val getGroupsUseCase: GetGroupsUseCase,
+    private val observeSemestersUseCase: ObserveSemestersUseCase
 ) : ViewModel() {
 
     fun observeJournal(
@@ -78,21 +80,26 @@ class JournalViewModel @Inject constructor(
     fun observeJournalMeta(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long
+        lessonTypeId: Long,
+        semesterId: Long
     ): StateFlow<JournalMetaState?> {
         return combine(
             observeSubjectsUseCase(),
             observeLessonTypesUseCase(),
-            getGroupsUseCase()
-        ) { subjects, lessonTypes, groups ->
+            getGroupsUseCase(),
+            observeSemestersUseCase()
+        ) { subjects, lessonTypes, groups, semesters ->
             val subject = subjects.firstOrNull { it.id == subjectId }
             val lessonType = lessonTypes.firstOrNull { it.id == lessonTypeId }
             val group = groups.firstOrNull { it.id == groupId }
+            val semester = semesters.firstOrNull { it.id == semesterId }
 
             JournalMetaState(
                 subjectLabel = subject?.abbreviation?.takeIf { it.isNotBlank() } ?: subject?.name.orEmpty(),
                 lessonTypeLabel = lessonType?.name.orEmpty(),
-                groupLabel = group?.name.orEmpty()
+                groupLabel = group?.name.orEmpty(),
+                semesterSeason = semester?.season?.name,
+                semesterYear = semester?.year
             )
         }.stateIn(
             viewModelScope,

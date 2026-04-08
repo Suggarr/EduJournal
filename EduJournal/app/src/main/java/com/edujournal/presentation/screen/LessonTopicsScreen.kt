@@ -1,5 +1,6 @@
 package com.edujournal.presentation.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.WindowInsets
@@ -257,11 +259,13 @@ private fun LessonTopicDialog(
     onDismiss: () -> Unit,
     onConfirm: (LocalDate, String) -> Unit
 ) {
+    val context = LocalContext.current
     var topic by remember { mutableStateOf(initialTopic) }
     var selectedDate by remember { mutableStateOf(initialDate) }
     var showDatePicker by remember { mutableStateOf(false) }
+    val duplicateDateMessage = stringResource(R.string.lesson_topics_duplicate_date_error)
     val dateBusy = isDateBusy(selectedDate)
-    val canSave = topic.isNotBlank() && !dateBusy
+    val canSave = topic.isNotBlank()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -290,19 +294,17 @@ private fun LessonTopicDialog(
                     label = { Text(stringResource(R.string.lesson_topics_topic_label)) },
                     modifier = Modifier.fillMaxWidth()
                 )
-                if (dateBusy) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.lesson_topics_duplicate_date_error),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
             }
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(selectedDate, topic.trim()) },
+                onClick = {
+                    if (dateBusy) {
+                        Toast.makeText(context, duplicateDateMessage, Toast.LENGTH_LONG).show()
+                    } else {
+                        onConfirm(selectedDate, topic.trim())
+                    }
+                },
                 enabled = canSave
             ) {
                 Text(stringResource(R.string.common_save))
@@ -330,9 +332,14 @@ private fun LessonTopicDialog(
                     onClick = {
                         val millis = pickerState.selectedDateMillis
                         if (millis != null) {
-                            selectedDate = Instant.ofEpochMilli(millis)
+                            val pickedDate = Instant.ofEpochMilli(millis)
                                 .atZone(ZoneId.systemDefault())
                                 .toLocalDate()
+                            if (isDateBusy(pickedDate)) {
+                                Toast.makeText(context, duplicateDateMessage, Toast.LENGTH_LONG).show()
+                            } else {
+                                selectedDate = pickedDate
+                            }
                         }
                         showDatePicker = false
                     }

@@ -2,6 +2,7 @@ package com.edujournal.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.edujournal.data.local.database.entities.StudentEntity
@@ -17,10 +18,10 @@ interface StudentDao {
     """)
     fun getByGroup(groupId: Long): Flow<List<StudentEntity>>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(student: StudentEntity)
 
-    @Update
+    @Update(onConflict = OnConflictStrategy.IGNORE)
     suspend fun update(student: StudentEntity)
 
     @Query("DELETE FROM students WHERE id = :id")

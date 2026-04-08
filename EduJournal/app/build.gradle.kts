@@ -75,4 +75,5 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("androidx.biometric:biometric:1.1.0")
     implementation("org.apache.commons:commons-csv:1.11.0")
+    implementation("org.apache.poi:poi-ooxml:5.4.1")
 }

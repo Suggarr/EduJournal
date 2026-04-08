@@ -28,7 +28,7 @@ interface LessonDao {
         semesterId: Long
     ): Flow<List<LessonEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertLesson(lesson: LessonEntity)
 
     @Update

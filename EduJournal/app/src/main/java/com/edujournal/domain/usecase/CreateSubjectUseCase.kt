@@ -22,6 +22,9 @@ class CreateSubjectUseCase @Inject constructor(
         )
 
         val subjectId = subjectRepository.createSubject(subject)
+        if (subjectId <= 0L) {
+            return
+        }
         val hourItems = lessonTypeHours.map { (lessonTypeId, hours) ->
             SubjectLessonTypeHours(
                 subjectId = subjectId,

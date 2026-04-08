@@ -14,10 +14,10 @@ interface GroupDao {
     @Query("SELECT * FROM 'groups'")
     fun getGroups(): Flow<List<GroupEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertGroup(group: GroupEntity)
 
-    @Update
+    @Update(onConflict = OnConflictStrategy.IGNORE)
     suspend fun updateGroup(group: GroupEntity)
 
     @Query("DELETE FROM 'groups' WHERE id = :id")

@@ -17,7 +17,7 @@ interface SubjectLessonTypeHoursDao {
     @Query("SELECT * FROM subject_lesson_type_hours WHERE subjectId = :subjectId")
     suspend fun getBySubjectId(subjectId: Long): List<SubjectLessonTypeHoursEntity>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(items: List<SubjectLessonTypeHoursEntity>)
 
     @Query("DELETE FROM subject_lesson_type_hours WHERE subjectId = :subjectId")

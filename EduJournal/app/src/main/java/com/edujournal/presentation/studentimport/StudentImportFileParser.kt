@@ -254,58 +254,20 @@ object StudentImportFileParser {
     private fun mapRowsToStudents(rows: List<List<String>>): List<ImportStudentRow> {
         if (rows.isEmpty()) return emptyList()
 
-        val header = rows.first().map { normalizeHeader(it) }
-        val lastNameIndex = header.indexOfFirst { it in LAST_NAME_HEADERS }
-        val firstNameIndex = header.indexOfFirst { it in FIRST_NAME_HEADERS }
-        val middleNameIndex = header.indexOfFirst { it in MIDDLE_NAME_HEADERS }
+        val header = rows.first().map { normalizeStrictHeader(it) }
+        val lastNameIndex = header.indexOf(REQUIRED_LAST_NAME_HEADER)
+        val firstNameIndex = header.indexOf(REQUIRED_FIRST_NAME_HEADER)
+        val middleNameIndex = header.indexOf(REQUIRED_MIDDLE_NAME_HEADER)
 
-        val hasHeader = lastNameIndex >= 0 && firstNameIndex >= 0
-        val dataRows = if (hasHeader) rows.drop(1) else rows
-
-        return dataRows.mapNotNull { cells ->
-            if (hasHeader) {
-                val lastName = cells.getOrNull(lastNameIndex).orEmpty().trim()
-                val firstName = cells.getOrNull(firstNameIndex).orEmpty().trim()
-                val middleName = cells.getOrNull(middleNameIndex).orEmpty().trim()
-                buildRow(firstName = firstName, lastName = lastName, middleName = middleName)
-            } else {
-                val nonBlankCells = cells.map { it.trim() }.filter { it.isNotBlank() }
-                when {
-                    nonBlankCells.size >= 3 -> buildRow(
-                        firstName = nonBlankCells[1],
-                        lastName = nonBlankCells[0],
-                        middleName = nonBlankCells[2]
-                    )
-
-                    nonBlankCells.size == 2 -> buildRow(
-                        firstName = nonBlankCells[1],
-                        lastName = nonBlankCells[0],
-                        middleName = ""
-                    )
-
-                    nonBlankCells.size == 1 -> parseFullNameCell(nonBlankCells.first())
-                    else -> null
-                }
-            }
+        if (lastNameIndex < 0 || firstNameIndex < 0 || middleNameIndex < 0) {
+            throw IllegalArgumentException("Обязательные колонки: Фамилия, Имя, Отчество")
         }
-    }
 
-    private fun parseFullNameCell(value: String): ImportStudentRow? {
-        val parts = value.split(Regex("\\s+")).filter { it.isNotBlank() }
-        return when {
-            parts.size >= 3 -> buildRow(
-                firstName = parts[1],
-                lastName = parts[0],
-                middleName = parts[2]
-            )
-
-            parts.size == 2 -> buildRow(
-                firstName = parts[1],
-                lastName = parts[0],
-                middleName = ""
-            )
-
-            else -> null
+        return rows.drop(1).mapNotNull { cells ->
+            val lastName = cells.getOrNull(lastNameIndex).orEmpty().trim()
+            val firstName = cells.getOrNull(firstNameIndex).orEmpty().trim()
+            val middleName = cells.getOrNull(middleNameIndex).orEmpty().trim()
+            buildRow(firstName = firstName, lastName = lastName, middleName = middleName)
         }
     }
 
@@ -336,11 +298,11 @@ object StudentImportFileParser {
         } ?: ';'
     }
 
-    private fun normalizeHeader(value: String): String {
+    private fun normalizeStrictHeader(value: String): String {
         return value
+            .trim()
             .lowercase()
             .replace("\u0451", "\u0435")
-            .replace(Regex("[^a-z\\u0430-\\u044f]"), "")
     }
 
     private fun ContentResolver.queryDisplayName(uri: Uri): String? {
@@ -361,7 +323,7 @@ object StudentImportFileParser {
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-    private val LAST_NAME_HEADERS = setOf("\u0444\u0430\u043c\u0438\u043b\u0438\u044f", "lastname", "surname")
-    private val FIRST_NAME_HEADERS = setOf("\u0438\u043c\u044f", "firstname", "name")
-    private val MIDDLE_NAME_HEADERS = setOf("\u043e\u0442\u0447\u0435\u0441\u0442\u0432\u043e", "middlename", "patronymic")
+    private const val REQUIRED_LAST_NAME_HEADER = "\u0444\u0430\u043c\u0438\u043b\u0438\u044f"
+    private const val REQUIRED_FIRST_NAME_HEADER = "\u0438\u043c\u044f"
+    private const val REQUIRED_MIDDLE_NAME_HEADER = "\u043e\u0442\u0447\u0435\u0441\u0442\u0432\u043e"
 }
