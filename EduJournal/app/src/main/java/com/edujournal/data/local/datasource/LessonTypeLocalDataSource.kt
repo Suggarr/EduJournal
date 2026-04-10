@@ -11,12 +11,24 @@ class LessonTypeLocalDataSource(
         return lessonTypeDao.observeLessonTypes()
     }
 
-    suspend fun insertLessonType(lessonType: LessonTypeEntity) {
-        lessonTypeDao.insert(lessonType)
+    suspend fun insertLessonType(lessonType: LessonTypeEntity): Long {
+        return lessonTypeDao.insert(lessonType)
     }
 
-    suspend fun updateLessonType(lessonType: LessonTypeEntity) {
-        lessonTypeDao.update(lessonType)
+    suspend fun updateLessonType(lessonType: LessonTypeEntity): Int {
+        return lessonTypeDao.update(lessonType)
+    }
+
+    suspend fun existsById(id: Long): Boolean {
+        return lessonTypeDao.existsById(id)
+    }
+
+    suspend fun existsByName(name: String): Boolean {
+        return lessonTypeDao.existsByName(name)
+    }
+
+    suspend fun existsByNameExceptId(name: String, id: Long): Boolean {
+        return lessonTypeDao.existsByNameExceptId(name, id)
     }
 
     suspend fun deleteLessonType(typeId: Long) {

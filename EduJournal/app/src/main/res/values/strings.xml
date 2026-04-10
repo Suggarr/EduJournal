@@ -33,6 +33,7 @@
     <string name="subject_hours_field_label">%1$s (часы)</string>
     <string name="subject_hours_optional">Необязательно</string>
     <string name="subject_duplicate_error">Такой предмет уже существует</string>
+    <string name="subject_not_found_error">Предмет не найден</string>
 
     <string name="lesson_type_select">Выберите тип занятия</string>
     <string name="lesson_type_empty">Типы занятий не найдены</string>
@@ -41,6 +42,8 @@
     <string name="lesson_type_delete_title">Удалить тип занятия?</string>
     <string name="lesson_type_delete_message">Удалить тип занятия "%1$s"? Это действие нельзя отменить.</string>
     <string name="lesson_type_name_label">Название (например, Лекция)</string>
+    <string name="lesson_type_duplicate_error">Такой тип занятия уже существует</string>
+    <string name="lesson_type_not_found_error">Тип занятия не найден</string>
 
     <string name="group_select">Выберите группу</string>
     <string name="group_empty">Нет групп</string>
@@ -50,6 +53,8 @@
     <string name="group_delete_message">Это действие нельзя отменить</string>
     <string name="group_name_label">Название группы (например, ПИ-101)</string>
     <string name="group_name_error">Название не может быть пустым</string>
+    <string name="group_duplicate_error">Такая группа уже существует</string>
+    <string name="group_not_found_error">Группа не найдена</string>
 
     <string name="student_column">Студент</string>
     <string name="student_group_title">Группа %1$s</string>
@@ -69,6 +74,8 @@
     <string name="student_last_name">Фамилия</string>
     <string name="student_first_name">Имя</string>
     <string name="student_middle_name">Отчество</string>
+    <string name="student_duplicate_error">Такой студент уже существует в группе</string>
+    <string name="student_not_found_error">Студент не найден</string>
 
     <string name="journal_title">Журнал</string>
     <string name="journal_empty">Нет данных для отображения. Добавьте темы занятий и проверьте студентов.</string>

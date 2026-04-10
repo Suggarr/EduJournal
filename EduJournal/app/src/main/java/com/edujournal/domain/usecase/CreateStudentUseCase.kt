@@ -12,7 +12,10 @@ class CreateStudentUseCase @Inject constructor(
         lastName: String,
         middleName: String,
         groupId: Long
-    ){
+    ): EntityWriteResult{
+        if (repository.existsByFullNameInGroup(groupId, lastName, firstName, middleName)) {
+            return EntityWriteResult.DUPLICATE
+        }
         val student = Student(
             id = 0,
             firstName = firstName,
@@ -22,5 +25,6 @@ class CreateStudentUseCase @Inject constructor(
         )
 
         repository.createStudent(student)
+        return EntityWriteResult.SUCCESS
     }
 }

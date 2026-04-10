@@ -14,7 +14,10 @@ class CreateSubjectUseCase @Inject constructor(
         name: String,
         abbreviation: String?,
         lessonTypeHours: Map<Long, Double?>
-    ){
+    ): EntityWriteResult{
+        if (subjectRepository.existsByName(name)) {
+            return EntityWriteResult.DUPLICATE
+        }
         val subject = Subject(
             id = 0,
             name = name,
@@ -23,7 +26,7 @@ class CreateSubjectUseCase @Inject constructor(
 
         val subjectId = subjectRepository.createSubject(subject)
         if (subjectId <= 0L) {
-            return
+            return EntityWriteResult.DUPLICATE
         }
         val hourItems = lessonTypeHours.map { (lessonTypeId, hours) ->
             SubjectLessonTypeHours(
@@ -33,5 +36,6 @@ class CreateSubjectUseCase @Inject constructor(
             )
         }
         subjectLessonTypeHoursRepository.replaceForSubject(subjectId, hourItems)
+        return EntityWriteResult.SUCCESS
     }
 }

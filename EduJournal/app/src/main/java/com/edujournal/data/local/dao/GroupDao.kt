@@ -15,10 +15,19 @@ interface GroupDao {
     fun getGroups(): Flow<List<GroupEntity>>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertGroup(group: GroupEntity)
+    suspend fun insertGroup(group: GroupEntity): Long
 
     @Update(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun updateGroup(group: GroupEntity)
+    suspend fun updateGroup(group: GroupEntity): Int
+
+    @Query("SELECT EXISTS(SELECT 1 FROM 'groups' WHERE id = :id)")
+    suspend fun existsById(id: Long): Boolean
+
+    @Query("SELECT EXISTS(SELECT 1 FROM 'groups' WHERE name = :name)")
+    suspend fun existsByName(name: String): Boolean
+
+    @Query("SELECT EXISTS(SELECT 1 FROM 'groups' WHERE name = :name AND id != :id)")
+    suspend fun existsByNameExceptId(name: String, id: Long): Boolean
 
     @Query("DELETE FROM 'groups' WHERE id = :id")
     suspend fun deleteGroup(id: Long)

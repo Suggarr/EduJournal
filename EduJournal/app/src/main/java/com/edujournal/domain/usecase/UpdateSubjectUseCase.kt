@@ -13,7 +13,9 @@ class UpdateSubjectUseCase @Inject constructor(
     suspend operator fun invoke(
         subject: Subject,
         lessonTypeHours: Map<Long, Double?>
-    ) {
+    ): EntityWriteResult {
+        if (!repository.existsById(subject.id)) return EntityWriteResult.NOT_FOUND
+        if (repository.existsByNameExceptId(subject.name, subject.id)) return EntityWriteResult.DUPLICATE
         repository.updateSubject(subject)
         val hourItems = lessonTypeHours.map { (lessonTypeId, hours) ->
             SubjectLessonTypeHours(
@@ -23,5 +25,6 @@ class UpdateSubjectUseCase @Inject constructor(
             )
         }
         subjectLessonTypeHoursRepository.replaceForSubject(subject.id, hourItems)
+        return EntityWriteResult.SUCCESS
     }
 }

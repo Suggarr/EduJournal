@@ -6,6 +6,7 @@ import com.edujournal.R
 import com.edujournal.domain.model.Student
 import com.edujournal.domain.usecase.CreateStudentUseCase
 import com.edujournal.domain.usecase.DeleteStudentUseCase
+import com.edujournal.domain.usecase.EntityWriteResult
 import com.edujournal.domain.usecase.GetGroupsUseCase
 import com.edujournal.domain.usecase.ObserveStudentsUseCase
 import com.edujournal.domain.usecase.UpdateStudentUseCase
@@ -34,6 +35,8 @@ class StudentViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _groupId = MutableStateFlow<Long?>(null)
+    private val _uiMessageRes = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+    val uiMessageRes: SharedFlow<Int> = _uiMessageRes.asSharedFlow()
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val students: StateFlow<List<Student>> = _groupId
@@ -60,9 +63,21 @@ class StudentViewModel @Inject constructor(
         _groupId.value = groupId
     }
 
-    fun addStudent(firstName: String, lastName: String, middleName: String, groupId: Long) {
+    fun addStudent(
+        firstName: String,
+        lastName: String,
+        middleName: String,
+        groupId: Long,
+        onResult: (EntityWriteResult) -> Unit = {}
+    ) {
         viewModelScope.launch {
-            createStudentUseCase(firstName, lastName, middleName, groupId)
+            val result = createStudentUseCase(firstName, lastName, middleName, groupId)
+            when (result) {
+                EntityWriteResult.DUPLICATE -> _uiMessageRes.emit(R.string.student_duplicate_error)
+                EntityWriteResult.NOT_FOUND -> _uiMessageRes.emit(R.string.student_not_found_error)
+                EntityWriteResult.SUCCESS -> Unit
+            }
+            onResult(result)
         }
     }
 
@@ -97,23 +112,40 @@ class StudentViewModel @Inject constructor(
                     return@forEach
                 }
 
-                createStudentUseCase(
-                    firstName = student.firstName,
-                    lastName = student.lastName,
-                    middleName = student.middleName,
-                    groupId = groupId
-                )
-                existingKeys += key
-                added++
+                when (
+                    createStudentUseCase(
+                        firstName = student.firstName,
+                        lastName = student.lastName,
+                        middleName = student.middleName,
+                        groupId = groupId
+                    )
+                ) {
+                    EntityWriteResult.SUCCESS -> {
+                        existingKeys += key
+                        added++
+                    }
+                    EntityWriteResult.DUPLICATE -> {
+                        skipped++
+                    }
+                    EntityWriteResult.NOT_FOUND -> {
+                        skipped++
+                    }
+                }
             }
 
             onCompleted(added, skipped)
         }
     }
 
-    fun updateStudent(student: Student) {
+    fun updateStudent(student: Student, onResult: (EntityWriteResult) -> Unit = {}) {
         viewModelScope.launch {
-            updateStudentUseCase(student)
+            val result = updateStudentUseCase(student)
+            when (result) {
+                EntityWriteResult.DUPLICATE -> _uiMessageRes.emit(R.string.student_duplicate_error)
+                EntityWriteResult.NOT_FOUND -> _uiMessageRes.emit(R.string.student_not_found_error)
+                EntityWriteResult.SUCCESS -> Unit
+            }
+            onResult(result)
         }
     }
 

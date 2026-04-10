@@ -1,5 +1,6 @@
-﻿package com.edujournal.presentation.screen
+package com.edujournal.presentation.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,14 +30,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.Group
+import com.edujournal.domain.usecase.EntityWriteResult
 import com.edujournal.presentation.component.GroupCard
 import com.edujournal.presentation.component.GroupDialog
 import com.edujournal.presentation.viewmodel.GroupViewModel
+import kotlinx.coroutines.flow.collect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,10 +51,17 @@ fun GroupScreen(
     viewModel: GroupViewModel = hiltViewModel()
 ) {
     val groups by viewModel.groups.collectAsState()
+    val context = LocalContext.current
 
     var showAddDialog by remember { mutableStateOf(false) }
     var groupToEdit by remember { mutableStateOf<Group?>(null) }
     var groupToDelete by remember { mutableStateOf<Group?>(null) }
+
+    LaunchedEffect(viewModel) {
+        viewModel.uiMessageRes.collect { messageRes ->
+            Toast.makeText(context, context.getString(messageRes), Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -108,8 +120,11 @@ fun GroupScreen(
             title = stringResource(R.string.group_new),
             onDismiss = { showAddDialog = false },
             onConfirm = {
-                viewModel.addGroup(it)
-                showAddDialog = false
+                viewModel.addGroup(it) { result ->
+                    if (result != EntityWriteResult.DUPLICATE) {
+                        showAddDialog = false
+                    }
+                }
             }
         )
     }
@@ -120,8 +135,11 @@ fun GroupScreen(
             initialName = group.name,
             onDismiss = { groupToEdit = null },
             onConfirm = {
-                viewModel.updateGroup(group.copy(name = it))
-                groupToEdit = null
+                viewModel.updateGroup(group.copy(name = it)) { result ->
+                    if (result != EntityWriteResult.DUPLICATE) {
+                        groupToEdit = null
+                    }
+                }
             }
         )
     }

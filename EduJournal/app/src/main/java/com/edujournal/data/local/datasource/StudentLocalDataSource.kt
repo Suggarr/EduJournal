@@ -9,12 +9,35 @@ class StudentLocalDataSource(
 ) {
     fun observeStudents(groupId: Long): Flow<List<StudentEntity>> = studentDao.getByGroup(groupId)
 
-    suspend fun insert(student: StudentEntity) {
-        studentDao.insert(student)
+    suspend fun insert(student: StudentEntity): Long {
+        return studentDao.insert(student)
     }
 
-    suspend fun update(student: StudentEntity) {
-        studentDao.update(student)
+    suspend fun update(student: StudentEntity): Int {
+        return studentDao.update(student)
+    }
+
+    suspend fun existsById(id: Long): Boolean {
+        return studentDao.existsById(id)
+    }
+
+    suspend fun existsByFullNameInGroup(
+        groupId: Long,
+        lastName: String,
+        firstName: String,
+        middleName: String
+    ): Boolean {
+        return studentDao.existsByFullNameInGroup(groupId, lastName, firstName, middleName)
+    }
+
+    suspend fun existsByFullNameInGroupExceptId(
+        id: Long,
+        groupId: Long,
+        lastName: String,
+        firstName: String,
+        middleName: String
+    ): Boolean {
+        return studentDao.existsByFullNameInGroupExceptId(id, groupId, lastName, firstName, middleName)
     }
 
     suspend fun delete(id: Long) {

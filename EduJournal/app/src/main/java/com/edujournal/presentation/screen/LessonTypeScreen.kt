@@ -1,5 +1,6 @@
-﻿package com.edujournal.presentation.screen
+package com.edujournal.presentation.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,12 +36,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.LessonType
+import com.edujournal.domain.usecase.EntityWriteResult
 import com.edujournal.presentation.viewmodel.LessonTypeViewModel
+import kotlinx.coroutines.flow.collect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,9 +55,16 @@ fun LessonTypeScreen(
     viewModel: LessonTypeViewModel = hiltViewModel()
 ) {
     val types by viewModel.lessonTypes.collectAsState()
+    val context = LocalContext.current
     var showAddDialog by remember { mutableStateOf(false) }
     var typeToEdit by remember { mutableStateOf<LessonType?>(null) }
     var typeToDelete by remember { mutableStateOf<LessonType?>(null) }
+
+    LaunchedEffect(viewModel) {
+        viewModel.uiMessageRes.collect { messageRes ->
+            Toast.makeText(context, context.getString(messageRes), Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -60,7 +72,10 @@ fun LessonTypeScreen(
                 title = { Text(stringResource(R.string.lesson_type_select)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.common_back)
+                        )
                     }
                 }
             )
@@ -99,8 +114,11 @@ fun LessonTypeScreen(
             title = stringResource(R.string.lesson_type_new),
             onDismiss = { showAddDialog = false },
             onConfirm = { name ->
-                viewModel.addLessonType(name)
-                showAddDialog = false
+                viewModel.addLessonType(name) { result ->
+                    if (result != EntityWriteResult.DUPLICATE) {
+                        showAddDialog = false
+                    }
+                }
             }
         )
     }
@@ -111,8 +129,11 @@ fun LessonTypeScreen(
             initialName = type.name,
             onDismiss = { typeToEdit = null },
             onConfirm = { newName ->
-                viewModel.updateLessonType(type.copy(name = newName))
-                typeToEdit = null
+                viewModel.updateLessonType(type.copy(name = newName)) { result ->
+                    if (result != EntityWriteResult.DUPLICATE) {
+                        typeToEdit = null
+                    }
+                }
             }
         )
     }
@@ -162,10 +183,18 @@ fun LessonTypeCard(
                 modifier = Modifier.weight(1f)
             )
             IconButton(onClick = onEditClick) {
-                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.common_edit), tint = MaterialTheme.colorScheme.primary)
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = stringResource(R.string.common_edit),
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
             IconButton(onClick = onDeleteClick) {
-                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.common_delete), tint = MaterialTheme.colorScheme.error)
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.common_delete),
+                    tint = MaterialTheme.colorScheme.error
+                )
             }
         }
     }

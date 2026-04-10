@@ -12,12 +12,24 @@ class GroupLocalDataSource(
         return groupDao.getGroups()
     }
 
-    suspend fun insertGroup(group: GroupEntity){
-        groupDao.insertGroup(group)
+    suspend fun insertGroup(group: GroupEntity): Long{
+        return groupDao.insertGroup(group)
     }
 
-    suspend fun updateGroup(group: GroupEntity){
-        groupDao.updateGroup(group)
+    suspend fun updateGroup(group: GroupEntity): Int{
+        return groupDao.updateGroup(group)
+    }
+
+    suspend fun existsById(id: Long): Boolean {
+        return groupDao.existsById(id)
+    }
+
+    suspend fun existsByName(name: String): Boolean {
+        return groupDao.existsByName(name)
+    }
+
+    suspend fun existsByNameExceptId(name: String, id: Long): Boolean {
+        return groupDao.existsByNameExceptId(name, id)
     }
 
     suspend fun deleteGroup(id: Long) {

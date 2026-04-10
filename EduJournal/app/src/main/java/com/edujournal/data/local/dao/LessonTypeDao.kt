@@ -15,10 +15,19 @@ interface LessonTypeDao {
     fun observeLessonTypes(): Flow<List<LessonTypeEntity>>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(lessonType: LessonTypeEntity)
+    suspend fun insert(lessonType: LessonTypeEntity): Long
 
     @Update(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun update(lessonType: LessonTypeEntity)
+    suspend fun update(lessonType: LessonTypeEntity): Int
+
+    @Query("SELECT EXISTS(SELECT 1 FROM lesson_types WHERE id = :id)")
+    suspend fun existsById(id: Long): Boolean
+
+    @Query("SELECT EXISTS(SELECT 1 FROM lesson_types WHERE name = :name)")
+    suspend fun existsByName(name: String): Boolean
+
+    @Query("SELECT EXISTS(SELECT 1 FROM lesson_types WHERE name = :name AND id != :id)")
+    suspend fun existsByNameExceptId(name: String, id: Long): Boolean
 
     @Query("DELETE FROM lesson_types WHERE id = :typeId")
     suspend fun deleteById(typeId: Long)

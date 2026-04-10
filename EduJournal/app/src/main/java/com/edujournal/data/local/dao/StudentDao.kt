@@ -19,10 +19,51 @@ interface StudentDao {
     fun getByGroup(groupId: Long): Flow<List<StudentEntity>>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insert(student: StudentEntity)
+    suspend fun insert(student: StudentEntity): Long
 
     @Update(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun update(student: StudentEntity)
+    suspend fun update(student: StudentEntity): Int
+
+    @Query("SELECT EXISTS(SELECT 1 FROM students WHERE id = :id)")
+    suspend fun existsById(id: Long): Boolean
+
+    @Query(
+        """
+        SELECT EXISTS(
+            SELECT 1 FROM students
+            WHERE groupId = :groupId
+              AND lastName = :lastName
+              AND firstName = :firstName
+              AND middleName = :middleName
+        )
+        """
+    )
+    suspend fun existsByFullNameInGroup(
+        groupId: Long,
+        lastName: String,
+        firstName: String,
+        middleName: String
+    ): Boolean
+
+    @Query(
+        """
+        SELECT EXISTS(
+            SELECT 1 FROM students
+            WHERE groupId = :groupId
+              AND lastName = :lastName
+              AND firstName = :firstName
+              AND middleName = :middleName
+              AND id != :id
+        )
+        """
+    )
+    suspend fun existsByFullNameInGroupExceptId(
+        id: Long,
+        groupId: Long,
+        lastName: String,
+        firstName: String,
+        middleName: String
+    ): Boolean
 
     @Query("DELETE FROM students WHERE id = :id")
     suspend fun deleteById(id: Long)

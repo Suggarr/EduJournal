@@ -51,10 +51,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.Student
+import com.edujournal.domain.usecase.EntityWriteResult
 import com.edujournal.presentation.studentimport.StudentImportFileParser
 import com.edujournal.presentation.studentimport.StudentImportInstructionDialog
 import com.edujournal.presentation.studentimport.StudentImportParseResult
 import com.edujournal.presentation.viewmodel.StudentViewModel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,6 +81,12 @@ fun StudentScreen(
     var isImporting by remember { mutableStateOf(false) }
     var studentToEdit by remember { mutableStateOf<Student?>(null) }
     var studentToDelete by remember { mutableStateOf<Student?>(null) }
+
+    LaunchedEffect(viewModel) {
+        viewModel.uiMessageRes.collect { messageRes ->
+            Toast.makeText(context, context.getString(messageRes), Toast.LENGTH_SHORT).show()
+        }
+    }
 
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
@@ -233,8 +241,11 @@ fun StudentScreen(
             title = stringResource(R.string.student_new),
             onDismiss = { showAddDialog = false },
             onConfirm = { firstName, lastName, middleName ->
-                viewModel.addStudent(firstName, lastName, middleName, groupId)
-                showAddDialog = false
+                viewModel.addStudent(firstName, lastName, middleName, groupId) { result ->
+                    if (result != EntityWriteResult.DUPLICATE) {
+                        showAddDialog = false
+                    }
+                }
             }
         )
     }
@@ -253,8 +264,11 @@ fun StudentScreen(
                         lastName = lastName,
                         middleName = middleName
                     )
-                )
-                studentToEdit = null
+                ) { result ->
+                    if (result != EntityWriteResult.DUPLICATE) {
+                        studentToEdit = null
+                    }
+                }
             }
         )
     }

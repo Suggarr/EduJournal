@@ -15,8 +15,20 @@ class SubjectLocalDataSource(
         return subjectDao.insert(subject)
     }
 
-    suspend fun updateSubject(subject: SubjectEntity) {
-        subjectDao.update(subject)
+    suspend fun updateSubject(subject: SubjectEntity): Int {
+        return subjectDao.update(subject)
+    }
+
+    suspend fun existsById(id: Long): Boolean {
+        return subjectDao.existsById(id)
+    }
+
+    suspend fun existsByName(name: String): Boolean {
+        return subjectDao.existsByName(name)
+    }
+
+    suspend fun existsByNameExceptId(name: String, id: Long): Boolean {
+        return subjectDao.existsByNameExceptId(name, id)
     }
 
     suspend fun deleteSubject(subjectId: Long) {

@@ -32,8 +32,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -59,6 +57,7 @@ import com.edujournal.domain.model.LessonType
 import com.edujournal.domain.model.Semester
 import com.edujournal.domain.model.SemesterSeason
 import com.edujournal.domain.model.Subject
+import com.edujournal.domain.usecase.EntityWriteResult
 import com.edujournal.presentation.viewmodel.SubjectViewModel
 import kotlinx.coroutines.flow.collect
 import java.math.BigDecimal
@@ -76,6 +75,7 @@ fun SubjectScreen(
     val subjects by viewModel.subjects.collectAsState()
     val lessonTypes by viewModel.lessonTypes.collectAsState()
     val subjectHoursBySubjectId by viewModel.subjectHoursBySubjectId.collectAsState()
+    val context = LocalContext.current
     var showAddDialog by remember { mutableStateOf(false) }
     var subjectToEdit by remember { mutableStateOf<Subject?>(null) }
     var subjectToDelete by remember { mutableStateOf<Subject?>(null) }
@@ -88,6 +88,12 @@ fun SubjectScreen(
             val season = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
             "$season ${semester.year}"
         }
+
+    LaunchedEffect(viewModel) {
+        viewModel.uiMessageRes.collect { messageRes ->
+            Toast.makeText(context, context.getString(messageRes), Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -174,8 +180,11 @@ fun SubjectScreen(
             lessonTypes = lessonTypes,
             onDismiss = { showAddDialog = false },
             onConfirm = { name, abbreviation, lessonTypeHours ->
-                viewModel.addSubject(name, abbreviation, lessonTypeHours)
-                showAddDialog = false
+                viewModel.addSubject(name, abbreviation, lessonTypeHours) { result ->
+                    if (result != EntityWriteResult.DUPLICATE) {
+                        showAddDialog = false
+                    }
+                }
             }
         )
     }
@@ -192,8 +201,11 @@ fun SubjectScreen(
                 viewModel.updateSubject(
                     subject = subject.copy(name = newName, abbreviation = newAbbreviation),
                     lessonTypeHours = lessonTypeHours
-                )
-                subjectToEdit = null
+                ) { result ->
+                    if (result != EntityWriteResult.DUPLICATE) {
+                        subjectToEdit = null
+                    }
+                }
             }
         )
     }

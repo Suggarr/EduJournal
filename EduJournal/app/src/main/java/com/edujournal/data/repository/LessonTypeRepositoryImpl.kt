@@ -17,12 +17,24 @@ class LessonTypeRepositoryImpl(
             .map { list -> list.map { it.toDomain() } }
     }
 
-    override suspend fun createLessonType(lessonType: LessonType) {
-        localDataSource.insertLessonType(lessonType.toEntity())
+    override suspend fun createLessonType(lessonType: LessonType): Long {
+        return localDataSource.insertLessonType(lessonType.toEntity())
     }
 
-    override suspend fun updateLessonType(lessonType: LessonType) {
-        localDataSource.updateLessonType(lessonType.toEntity())
+    override suspend fun updateLessonType(lessonType: LessonType): Int {
+        return localDataSource.updateLessonType(lessonType.toEntity())
+    }
+
+    override suspend fun existsById(id: Long): Boolean {
+        return localDataSource.existsById(id)
+    }
+
+    override suspend fun existsByName(name: String): Boolean {
+        return localDataSource.existsByName(name)
+    }
+
+    override suspend fun existsByNameExceptId(name: String, id: Long): Boolean {
+        return localDataSource.existsByNameExceptId(name, id)
     }
 
     override suspend fun deleteLessonType(typeId: Long) {

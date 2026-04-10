@@ -22,8 +22,20 @@ class SubjectRepositoryImpl(
         return localDataSource.insertSubject(subject.toEntity())
     }
 
-    override suspend fun updateSubject(subject: Subject) {
-        localDataSource.updateSubject(subject.toEntity())
+    override suspend fun updateSubject(subject: Subject): Int {
+        return localDataSource.updateSubject(subject.toEntity())
+    }
+
+    override suspend fun existsById(id: Long): Boolean {
+        return localDataSource.existsById(id)
+    }
+
+    override suspend fun existsByName(name: String): Boolean {
+        return localDataSource.existsByName(name)
+    }
+
+    override suspend fun existsByNameExceptId(name: String, id: Long): Boolean {
+        return localDataSource.existsByNameExceptId(name, id)
     }
 
     override suspend fun deleteSubject(subjectId: Long) {

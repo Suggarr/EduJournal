@@ -18,14 +18,26 @@ class GroupRepositoryImpl (
             .map{ list -> list.map { it.toDomain() }}
     }
 
-    override suspend fun createGroup(group: Group){
-        localDataSource.insertGroup(
+    override suspend fun createGroup(group: Group): Long{
+        return localDataSource.insertGroup(
             group.toEntity()
         )
     }
 
-    override suspend fun updateGroup(group: Group) {
-        localDataSource.updateGroup(group.toEntity())
+    override suspend fun updateGroup(group: Group): Int {
+        return localDataSource.updateGroup(group.toEntity())
+    }
+
+    override suspend fun existsById(id: Long): Boolean {
+        return localDataSource.existsById(id)
+    }
+
+    override suspend fun existsByName(name: String): Boolean {
+        return localDataSource.existsByName(name)
+    }
+
+    override suspend fun existsByNameExceptId(name: String, id: Long): Boolean {
+        return localDataSource.existsByNameExceptId(name, id)
     }
 
     override suspend fun deleteGroup(id: Long) {
