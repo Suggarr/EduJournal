@@ -11,6 +11,14 @@ class SubjectLocalDataSource(
         return subjectDao.observeSubjects()
     }
 
+    fun observeSubjectsBySemester(semesterId: Long): Flow<List<SubjectEntity>> {
+        return subjectDao.observeSubjectsBySemester(semesterId)
+    }
+
+    fun observeSemesterIdsBySubject(subjectId: Long): Flow<List<Long>> {
+        return subjectDao.observeSemesterIdsBySubject(subjectId)
+    }
+
     suspend fun insertSubject(subject: SubjectEntity): Long {
         return subjectDao.insert(subject)
     }
@@ -29,6 +37,10 @@ class SubjectLocalDataSource(
 
     suspend fun existsByNameExceptId(name: String, id: Long): Boolean {
         return subjectDao.existsByNameExceptId(name, id)
+    }
+
+    suspend fun replaceSemestersBySubjectId(subjectId: Long, semesterIds: List<Long>) {
+        subjectDao.replaceSemestersBySubjectId(subjectId, semesterIds)
     }
 
     suspend fun deleteSubject(subjectId: Long) {

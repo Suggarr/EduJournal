@@ -10,7 +10,12 @@ class CreateSubjectUseCase @Inject constructor(
     private val subjectRepository: SubjectRepository,
     private val lessonTypeRepository: SubjectLessonTypeRepository
 ) {
-    suspend operator fun invoke(name: String, abbreviation: String?): EntityWriteResult {
+    suspend operator fun invoke(
+        name: String,
+        abbreviation: String?,
+        semesterIds: List<Long> = emptyList()
+    ): EntityWriteResult {
+        require(semesterIds.isNotEmpty()) { "SEMESTER_REQUIRED" }
         if (subjectRepository.existsByName(name)) {
             return EntityWriteResult.DUPLICATE
         }
@@ -24,6 +29,7 @@ class CreateSubjectUseCase @Inject constructor(
         if (subjectId <= 0L) {
             return EntityWriteResult.DUPLICATE
         }
+        subjectRepository.replaceSubjectSemesters(subjectId, semesterIds)
 
         val defaultTypes = listOf(
             SubjectLessonType(id = 0, subjectId = subjectId, name = "Лекция", hours = 20.0),

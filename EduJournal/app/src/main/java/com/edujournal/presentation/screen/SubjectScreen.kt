@@ -21,6 +21,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -46,12 +48,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
-import com.edujournal.domain.model.SubjectLessonType
 import com.edujournal.domain.model.Semester
 import com.edujournal.domain.model.SemesterSeason
 import com.edujournal.domain.model.Subject
@@ -74,20 +74,32 @@ fun SubjectScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var subjectToEdit by remember { mutableStateOf<Subject?>(null) }
     var subjectToDelete by remember { mutableStateOf<Subject?>(null) }
+    var editSubjectSemesterIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
+    var yearMenuExpanded by remember { mutableStateOf(false) }
     var semesterMenuExpanded by remember { mutableStateOf(false) }
     val autumnLabel = stringResource(R.string.settings_semester_autumn)
     val springLabel = stringResource(R.string.settings_semester_spring)
-    val selectedSemesterName = semesters
-        .firstOrNull { it.id == selectedSemesterId }
-        ?.let { semester ->
-            val season = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
-            "$season ${semester.year}"
-        }
+    val semestersByOrder = semesters.mapIndexed { index, semester ->
+        semester to (index + 1)
+    }
+    val semesterNumberById = semestersByOrder.associate { (semester, number) -> semester.id to number }
+    val selectedSemester = semesters.firstOrNull { it.id == selectedSemesterId }
+    val selectedYear = selectedSemester?.year
+    val availableYears = semesters.map { it.year }.distinct().sorted()
+    val semestersOfSelectedYear = if (selectedYear == null) {
+        emptyList()
+    } else {
+        semesters.filter { it.year == selectedYear }
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.uiMessageRes.collect { messageRes ->
             Toast.makeText(context, context.getString(messageRes), Toast.LENGTH_SHORT).show()
         }
+    }
+
+    LaunchedEffect(selectedSemesterId) {
+        viewModel.setSelectedSemester(selectedSemesterId)
     }
 
     Scaffold(
@@ -112,41 +124,107 @@ fun SubjectScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.common_add))
+            if (semesters.isNotEmpty()) {
+                FloatingActionButton(
+                    onClick = { showAddDialog = true }
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.common_add))
+                }
             }
         }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues).padding(horizontal = 16.dp)) {
-            Box(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
-                OutlinedButton(
-                    onClick = { semesterMenuExpanded = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    val label = selectedSemesterName ?: stringResource(R.string.semester_select)
-                    Text("${stringResource(R.string.semester_label)}: $label")
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        onClick = { yearMenuExpanded = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val yearLabel = selectedYear?.toString() ?: stringResource(R.string.semester_select)
+                        Text("${stringResource(R.string.settings_semester_year_label)}: $yearLabel")
+                    }
+                    DropdownMenu(
+                        expanded = yearMenuExpanded,
+                        onDismissRequest = { yearMenuExpanded = false }
+                    ) {
+                        availableYears.forEach { year ->
+                            DropdownMenuItem(
+                                text = { Text(year.toString()) },
+                                onClick = {
+                                    yearMenuExpanded = false
+                                    val firstSemesterOfYear = semesters.firstOrNull { it.year == year }
+                                    if (firstSemesterOfYear != null) {
+                                        onSemesterSelected(firstSemesterOfYear.id)
+                                    }
+                                }
+                            )
+                        }
+                    }
                 }
-                DropdownMenu(
-                    expanded = semesterMenuExpanded,
-                    onDismissRequest = { semesterMenuExpanded = false }
-                ) {
-                    semesters.forEach { semester ->
-                        DropdownMenuItem(
-                            text = {
-                                val season = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
-                                Text("$season ${semester.year}")
-                            },
-                            onClick = {
-                                semesterMenuExpanded = false
-                                onSemesterSelected(semester.id)
-                            }
-                        )
+
+                Box(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        onClick = { semesterMenuExpanded = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = semestersOfSelectedYear.isNotEmpty()
+                    ) {
+                        val label = selectedSemester?.let { semester ->
+                            val number = semesterNumberById[semester.id] ?: 0
+                            val season = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
+                            stringResource(
+                                R.string.subject_semester_number_and_season,
+                                number,
+                                season
+                            )
+                        } ?: stringResource(R.string.semester_select)
+                        Text("${stringResource(R.string.semester_label)}: $label")
+                    }
+                    DropdownMenu(
+                        expanded = semesterMenuExpanded,
+                        onDismissRequest = { semesterMenuExpanded = false }
+                    ) {
+                        semestersOfSelectedYear.forEach { semester ->
+                            DropdownMenuItem(
+                                text = {
+                                    val number = semesterNumberById[semester.id] ?: 0
+                                    val season = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
+                                    Text(
+                                        stringResource(
+                                            R.string.subject_semester_number_and_season,
+                                            number,
+                                            season
+                                        )
+                                    )
+                                },
+                                onClick = {
+                                    semesterMenuExpanded = false
+                                    onSemesterSelected(semester.id)
+                                }
+                            )
+                        }
                     }
                 }
             }
 
             Box(modifier = Modifier.fillMaxSize()) {
-                if (subjects.isEmpty()) {
+                val currentSubjects = subjects
+                if (semesters.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = stringResource(R.string.subject_no_semesters),
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                } else if (currentSubjects == null) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else if (currentSubjects.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(stringResource(R.string.subject_empty), color = MaterialTheme.colorScheme.outline)
                     }
@@ -155,11 +233,16 @@ fun SubjectScreen(
                         contentPadding = PaddingValues(vertical = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(subjects) { subject ->
+                        items(currentSubjects) { subject ->
                             SubjectCard(
                                 subject = subject,
                                 onClick = { onSubjectClick(subject.id) },
-                                onEditClick = { subjectToEdit = subject },
+                                onEditClick = {
+                                    subjectToEdit = subject
+                                    viewModel.loadSubjectSemesterIds(subject.id) { ids ->
+                                        editSubjectSemesterIds = ids
+                                    }
+                                },
                                 onDeleteClick = { subjectToDelete = subject }
                             )
                         }
@@ -172,10 +255,14 @@ fun SubjectScreen(
     if (showAddDialog) {
         SubjectDialog(
             title = stringResource(R.string.subject_new),
+            semesters = semesters,
+            semesterNumberById = semesterNumberById,
+            isSemesterSelectionEnabled = true,
+            initialSelectedSemesterIds = selectedSemesterId?.let { setOf(it) } ?: emptySet(),
             onDismiss = { showAddDialog = false },
-            onConfirm = { name, abbreviation ->
-                viewModel.addSubject(name, abbreviation) { result ->
-                    if (result != EntityWriteResult.DUPLICATE) {
+            onConfirm = { name, abbreviation, semesterIds ->
+                viewModel.addSubject(name, abbreviation, semesterIds) { result ->
+                    if (result == EntityWriteResult.SUCCESS) {
                         showAddDialog = false
                     }
                 }
@@ -188,12 +275,17 @@ fun SubjectScreen(
             title = stringResource(R.string.subject_edit),
             initialName = subject.name,
             initialAbbreviation = subject.abbreviation ?: "",
+            semesters = semesters,
+            semesterNumberById = semesterNumberById,
+            isSemesterSelectionEnabled = true,
+            initialSelectedSemesterIds = editSubjectSemesterIds,
             onDismiss = { subjectToEdit = null },
-            onConfirm = { newName, newAbbreviation ->
+            onConfirm = { newName, newAbbreviation, semesterIds ->
                 viewModel.updateSubject(
-                    subject = subject.copy(name = newName, abbreviation = newAbbreviation)
+                    subject = subject.copy(name = newName, abbreviation = newAbbreviation),
+                    semesterIds = semesterIds
                 ) { result ->
-                    if (result != EntityWriteResult.DUPLICATE) {
+                    if (result == EntityWriteResult.SUCCESS) {
                         subjectToEdit = null
                     }
                 }
@@ -279,11 +371,18 @@ fun SubjectDialog(
     title: String,
     initialName: String = "",
     initialAbbreviation: String = "",
+    semesters: List<Semester>,
+    semesterNumberById: Map<Long, Int>,
+    isSemesterSelectionEnabled: Boolean,
+    initialSelectedSemesterIds: Set<Long>,
     onDismiss: () -> Unit,
-    onConfirm: (String, String?) -> Unit
+    onConfirm: (String, String?, List<Long>) -> Unit
 ) {
     var name by remember { mutableStateOf(initialName) }
     var abbreviation by remember { mutableStateOf(initialAbbreviation) }
+    var selectedSemesterIds by remember(initialSelectedSemesterIds) { mutableStateOf(initialSelectedSemesterIds) }
+    val autumnLabel = stringResource(R.string.settings_semester_autumn)
+    val springLabel = stringResource(R.string.settings_semester_spring)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -304,14 +403,50 @@ fun SubjectDialog(
                     label = { Text(stringResource(R.string.subject_abbreviation_label)) },
                     modifier = Modifier.fillMaxWidth()
                 )
+                if (isSemesterSelectionEnabled) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = stringResource(R.string.subject_semesters_label),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    semesters.forEach { semester ->
+                        val isChecked = semester.id in selectedSemesterIds
+                        val semesterNumber = semesterNumberById[semester.id] ?: 0
+                        val seasonLabel = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = isChecked,
+                                onCheckedChange = { checked ->
+                                    selectedSemesterIds = if (checked) {
+                                        selectedSemesterIds + semester.id
+                                    } else {
+                                        selectedSemesterIds - semester.id
+                                    }
+                                }
+                            )
+                            Text(
+                                text = stringResource(
+                                    R.string.subject_semester_checkbox_item,
+                                    semesterNumber,
+                                    seasonLabel,
+                                    semester.year
+                                )
+                            )
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    onConfirm(name, abbreviation.ifBlank { null })
+                    onConfirm(name, abbreviation.ifBlank { null }, selectedSemesterIds.toList())
                 },
-                enabled = name.isNotBlank()
+                enabled = name.isNotBlank() && (!isSemesterSelectionEnabled || selectedSemesterIds.isNotEmpty())
             ) { Text(stringResource(R.string.common_save)) }
         },
         dismissButton = {

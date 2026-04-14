@@ -21,6 +21,7 @@
 
     <string name="subject_greeting">Здравствуйте, %1$s!</string>
     <string name="subject_title">Ваши предметы</string>
+    <string name="subject_no_semesters">Семестры еще не созданы. Добавьте семестр в настройках.</string>
     <string name="subject_empty">Список пуст. Добавьте первый предмет!</string>
     <string name="subject_new">Новый предмет</string>
     <string name="subject_edit">Редактировать</string>
@@ -28,6 +29,11 @@
     <string name="subject_delete_message">Удалить предмет "%1$s"? Это действие нельзя отменить.</string>
     <string name="subject_name_label">Название предмета</string>
     <string name="subject_abbreviation_label">Сокращение</string>
+    <string name="subject_semesters_label">Семестры изучения</string>
+    <string name="subject_semester_checkbox_item">Семестр %1$d (%2$s %3$d)</string>
+    <string name="subject_semester_suffix">Семестр %1$d</string>
+    <string name="subject_semester_number_and_season">Семестр %1$d (%2$s)</string>
+    <string name="subject_semester_required_error">Выберите хотя бы один семестр</string>
     <string name="subject_duplicate_error">Такой предмет уже существует</string>
     <string name="subject_not_found_error">Предмет не найден</string>
 

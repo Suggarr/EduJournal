@@ -7,4 +7,5 @@ class ObserveSubjectsUseCase @Inject constructor(
     private val repository: SubjectRepository
 ) {
     operator fun invoke() = repository.observeSubjects()
+    operator fun invoke(semesterId: Long) = repository.observeSubjectsBySemester(semesterId)
 }

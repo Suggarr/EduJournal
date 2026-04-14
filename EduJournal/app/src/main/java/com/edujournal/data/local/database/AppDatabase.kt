@@ -21,6 +21,7 @@ import com.edujournal.data.local.database.entities.SubjectLessonTypeEntity
 import com.edujournal.data.local.database.entities.SemesterEntity
 import com.edujournal.data.local.database.entities.StudentEntity
 import com.edujournal.data.local.database.entities.SubjectEntity
+import com.edujournal.data.local.database.entities.SubjectSemesterEntity
 import com.edujournal.utils.Converters
 
 @Database(
@@ -29,6 +30,7 @@ import com.edujournal.utils.Converters
         StudentEntity::class,
         SubjectEntity::class,
         SemesterEntity::class,
+        SubjectSemesterEntity::class,
         SubjectLessonTypeEntity::class,
         LessonEntity::class,
         GradeEntity:: class,

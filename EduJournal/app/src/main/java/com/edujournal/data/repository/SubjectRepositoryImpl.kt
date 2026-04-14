@@ -12,10 +12,20 @@ class SubjectRepositoryImpl(
     private val localDataSource: SubjectLocalDataSource
 ) : SubjectRepository {
 
-    override fun observeSubjects(): Flow<List<Subject>>{
+    override fun observeSubjects(): Flow<List<Subject>> {
         return localDataSource
             .observeSubjects()
-            .map{list -> list.map { it.toDomain() } }
+            .map { list -> list.map { it.toDomain() } }
+    }
+
+    override fun observeSubjectsBySemester(semesterId: Long): Flow<List<Subject>> {
+        return localDataSource
+            .observeSubjectsBySemester(semesterId)
+            .map { list -> list.map { it.toDomain() } }
+    }
+
+    override fun observeSemesterIdsBySubject(subjectId: Long): Flow<List<Long>> {
+        return localDataSource.observeSemesterIdsBySubject(subjectId)
     }
 
     override suspend fun createSubject(subject: Subject): Long {
@@ -24,6 +34,10 @@ class SubjectRepositoryImpl(
 
     override suspend fun updateSubject(subject: Subject): Int {
         return localDataSource.updateSubject(subject.toEntity())
+    }
+
+    override suspend fun replaceSubjectSemesters(subjectId: Long, semesterIds: List<Long>) {
+        localDataSource.replaceSemestersBySubjectId(subjectId, semesterIds)
     }
 
     override suspend fun existsById(id: Long): Boolean {

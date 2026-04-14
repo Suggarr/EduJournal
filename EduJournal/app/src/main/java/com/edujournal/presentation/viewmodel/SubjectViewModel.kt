@@ -8,20 +8,24 @@ import com.edujournal.domain.usecase.CreateSubjectUseCase
 import com.edujournal.domain.usecase.DeleteSubjectUseCase
 import com.edujournal.domain.usecase.EntityWriteResult
 import com.edujournal.domain.usecase.ObserveSubjectsUseCase
+import com.edujournal.domain.usecase.ObserveSubjectSemesterIdsUseCase
 import com.edujournal.domain.usecase.UpdateSubjectUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class SubjectViewModel @Inject constructor(
     private val observeSubjectsUseCase: ObserveSubjectsUseCase,
+    private val observeSubjectSemesterIdsUseCase: ObserveSubjectSemesterIdsUseCase,
     private val createSubjectUseCase: CreateSubjectUseCase,
     private val updateSubjectUseCase: UpdateSubjectUseCase,
     private val deleteSubjectUseCase: DeleteSubjectUseCase
@@ -30,16 +34,55 @@ class SubjectViewModel @Inject constructor(
     private val _uiMessageRes = MutableSharedFlow<Int>(extraBufferCapacity = 1)
     val uiMessageRes: SharedFlow<Int> = _uiMessageRes.asSharedFlow()
 
-    val subjects: StateFlow<List<Subject>> = observeSubjectsUseCase()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    private val selectedSemesterId = MutableStateFlow<Long?>(null)
+    private val _subjects = MutableStateFlow<List<Subject>?>(null)
+    val subjects: StateFlow<List<Subject>?> = _subjects.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            selectedSemesterId
+                .collectLatest { semesterId ->
+                    if (semesterId == null) {
+                        // Нет выбранного семестра: не показываем бесконечный loading.
+                        _subjects.value = emptyList()
+                    } else {
+                        _subjects.value = null
+                        observeSubjectsUseCase(semesterId).collectLatest { list ->
+                            _subjects.value = list
+                        }
+                    }
+                }
+        }
+    }
+
+    fun setSelectedSemester(semesterId: Long?) {
+        selectedSemesterId.value = semesterId
+    }
+
+    fun loadSubjectSemesterIds(
+        subjectId: Long,
+        onLoaded: (Set<Long>) -> Unit
+    ) {
+        viewModelScope.launch {
+            val ids = observeSubjectSemesterIdsUseCase(subjectId).first()
+            onLoaded(ids.toSet())
+        }
+    }
 
     fun addSubject(
         name: String,
         abbreviation: String?,
+        semesterIds: List<Long>,
         onResult: (EntityWriteResult) -> Unit = {}
     ) {
         viewModelScope.launch {
-            val result = createSubjectUseCase(name, abbreviation)
+            val result = try {
+                createSubjectUseCase(name, abbreviation, semesterIds)
+            } catch (_: IllegalArgumentException) {
+                _uiMessageRes.emit(R.string.subject_semester_required_error)
+                onResult(EntityWriteResult.NOT_FOUND)
+                return@launch
+            }
             when (result) {
                 EntityWriteResult.DUPLICATE -> _uiMessageRes.emit(R.string.subject_duplicate_error)
                 EntityWriteResult.NOT_FOUND -> _uiMessageRes.emit(R.string.subject_not_found_error)
@@ -51,10 +94,17 @@ class SubjectViewModel @Inject constructor(
 
     fun updateSubject(
         subject: Subject,
+        semesterIds: List<Long>,
         onResult: (EntityWriteResult) -> Unit = {}
     ) {
         viewModelScope.launch {
-            val result = updateSubjectUseCase(subject)
+            val result = try {
+                updateSubjectUseCase(subject, semesterIds)
+            } catch (_: IllegalArgumentException) {
+                _uiMessageRes.emit(R.string.subject_semester_required_error)
+                onResult(EntityWriteResult.NOT_FOUND)
+                return@launch
+            }
             when (result) {
                 EntityWriteResult.DUPLICATE -> _uiMessageRes.emit(R.string.subject_duplicate_error)
                 EntityWriteResult.NOT_FOUND -> _uiMessageRes.emit(R.string.subject_not_found_error)
