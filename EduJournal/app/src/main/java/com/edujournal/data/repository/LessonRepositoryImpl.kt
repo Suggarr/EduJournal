@@ -1,4 +1,4 @@
-package com.edujournal.data.repository
+﻿package com.edujournal.data.repository
 
 import com.edujournal.data.local.datasource.LessonLocalDataSource
 import com.edujournal.data.mapper.toDomain
@@ -16,14 +16,19 @@ class LessonRepositoryImpl @Inject constructor(
     override fun observeLessons(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long,
+        subjectLessonTypeId: Long,
         semesterId: Long
     ): Flow<List<Lesson>> {
         return lessonLocalDataSource
-            .observeLessons(groupId, subjectId, lessonTypeId, semesterId)
+            .observeLessons(groupId, subjectId, subjectLessonTypeId, semesterId)
             .map { list -> list.map { it.toDomain() }
         }
 
+    }
+
+    override fun observeLessonById(lessonId: Long): Flow<Lesson?> {
+        return lessonLocalDataSource.observeLessonById(lessonId)
+            .map { it?.toDomain() }
     }
 
     override suspend fun insertLesson(lesson: Lesson) {
@@ -38,3 +43,4 @@ class LessonRepositoryImpl @Inject constructor(
         lessonLocalDataSource.deleteLesson(lessonId)
     }
 }
+

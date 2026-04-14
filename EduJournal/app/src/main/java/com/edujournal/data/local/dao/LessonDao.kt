@@ -1,4 +1,4 @@
-package com.edujournal.data.local.dao
+﻿package com.edujournal.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -16,7 +16,7 @@ interface LessonDao {
         SELECT * FROM lessons
         WHERE groupId = :groupId
         AND subjectId = :subjectId
-        AND lessonTypeId = :lessonTypeId
+        AND subjectLessonTypeId = :subjectLessonTypeId
         AND semesterId = :semesterId
         ORDER BY date
         """
@@ -24,9 +24,12 @@ interface LessonDao {
     fun observeLessons(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long,
+        subjectLessonTypeId: Long,
         semesterId: Long
     ): Flow<List<LessonEntity>>
+
+    @Query("SELECT * FROM lessons WHERE id = :lessonId LIMIT 1")
+    fun observeLessonById(lessonId: Long): Flow<LessonEntity?>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertLesson(lesson: LessonEntity)
@@ -37,3 +40,4 @@ interface LessonDao {
     @Query("DELETE FROM lessons WHERE id = :lessonId")
     suspend fun deleteLesson(lessonId: Long)
 }
+

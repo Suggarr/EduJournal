@@ -1,4 +1,4 @@
-package com.edujournal.presentation.screen
+﻿package com.edujournal.presentation.screen
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -65,17 +65,18 @@ private val lessonDateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern
 fun LessonTopicsScreen(
     groupId: Long,
     subjectId: Long,
-    lessonTypeId: Long,
+    subjectLessonTypeId: Long,
     semesterId: Long,
     onBack: () -> Unit,
+    onHomeworkClick: (Long) -> Unit,
     viewModel: LessonTopicsViewModel = hiltViewModel()
 ) {
-    val lessonsFlow = remember(groupId, subjectId, lessonTypeId, semesterId) {
-        viewModel.observeLessons(groupId, subjectId, lessonTypeId, semesterId)
+    val lessonsFlow = remember(groupId, subjectId, subjectLessonTypeId, semesterId) {
+        viewModel.observeLessons(groupId, subjectId, subjectLessonTypeId, semesterId)
     }
     val lessons by lessonsFlow.collectAsState()
     val currentLessons = lessons
-    val requiredHours by viewModel.observeRequiredHours(subjectId, lessonTypeId).collectAsState()
+    val requiredHours by viewModel.observeRequiredHours(subjectLessonTypeId).collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var lessonToEdit by remember { mutableStateOf<Lesson?>(null) }
     var lessonToDelete by remember { mutableStateOf<Lesson?>(null) }
@@ -166,6 +167,9 @@ fun LessonTopicsScreen(
                                         contentDescription = stringResource(R.string.common_edit)
                                     )
                                 }
+                                TextButton(onClick = { onHomeworkClick(lesson.id) }) {
+                                    Text(stringResource(R.string.lesson_topics_homework_button))
+                                }
                                 IconButton(onClick = { lessonToDelete = lesson }) {
                                     Icon(
                                         Icons.Default.Delete,
@@ -189,7 +193,7 @@ fun LessonTopicsScreen(
             },
             onDismiss = { showAddDialog = false },
             onConfirm = { date, topic ->
-                viewModel.addLesson(groupId, subjectId, lessonTypeId, semesterId, date, topic)
+                viewModel.addLesson(groupId, subjectId, subjectLessonTypeId, semesterId, date, topic)
                 showAddDialog = false
             }
         )
@@ -357,3 +361,4 @@ private fun LessonTopicDialog(
         }
     }
 }
+

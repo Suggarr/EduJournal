@@ -4,5 +4,6 @@ import com.edujournal.domain.model.Lesson
 
 data class JournalState(
     val lessons: List<Lesson> = emptyList(),
-    val rows: List<JournalRow> = emptyList()
+    val rows: List<JournalRow> = emptyList(),
+    val homeworkLessonIds: Set<Long> = emptySet()
 )

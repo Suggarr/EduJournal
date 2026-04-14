@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,13 +30,14 @@ private val journalHeaderDateFormatter: DateTimeFormatter = DateTimeFormatter.of
 @Composable
 fun JournalHeader(
     lessons: List<Lesson>,
+    homeworkLessonIds: Set<Long>,
     scrollState: ScrollState
 ) {
     Row(modifier = Modifier.fillMaxWidth()) {
         Box(
             modifier = Modifier
                 .width(180.dp)
-                .height(44.dp)
+                .height(52.dp)
                 .background(Color(0xFFECEFF1))
                 .border(1.dp, Color.Black)
         ) {
@@ -55,18 +57,27 @@ fun JournalHeader(
                 Box(
                     modifier = Modifier
                         .width(96.dp)
-                        .height(44.dp)
+                        .height(52.dp)
                         .background(Color(0xFFECEFF1))
                         .border(1.dp, Color.Black),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = lesson.date.format(journalHeaderDateFormatter),
-                        textAlign = TextAlign.Center,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Black
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = lesson.date.format(journalHeaderDateFormatter),
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Black
+                        )
+                        if (homeworkLessonIds.contains(lesson.id)) {
+                            Text(
+                                text = stringResource(R.string.journal_homework_badge),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.Black
+                            )
+                        }
+                    }
                 }
             }
         }

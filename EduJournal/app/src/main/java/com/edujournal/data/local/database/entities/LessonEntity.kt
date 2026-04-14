@@ -1,4 +1,4 @@
-package com.edujournal.data.local.database.entities
+﻿package com.edujournal.data.local.database.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -22,9 +22,9 @@ import java.time.LocalDate
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = LessonTypeEntity::class,
+            entity = SubjectLessonTypeEntity::class,
             parentColumns = ["id"],
-            childColumns = ["lessonTypeId"],
+            childColumns = ["subjectLessonTypeId"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
@@ -37,7 +37,7 @@ import java.time.LocalDate
     indices = [
         Index("groupId"),
         Index("subjectId"),
-        Index("lessonTypeId"),
+        Index("subjectLessonTypeId"),
         Index("semesterId"),
         Index(
             value = ["groupId", "subjectId", "date"],
@@ -50,8 +50,10 @@ data class LessonEntity(
     val id: Long = 0,
     val groupId: Long,
     val subjectId: Long,
-    val lessonTypeId: Long,
+    val subjectLessonTypeId: Long,
     val semesterId: Long = 1L,
     val date: LocalDate,
     val topic: String
 )
+
+

@@ -6,31 +6,31 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "subject_lesson_type_hours",
+    tableName = "homework_submissions",
     foreignKeys = [
         ForeignKey(
-            entity = SubjectEntity::class,
+            entity = HomeworkEntity::class,
             parentColumns = ["id"],
-            childColumns = ["subjectId"],
+            childColumns = ["homeworkId"],
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = LessonTypeEntity::class,
+            entity = StudentEntity::class,
             parentColumns = ["id"],
-            childColumns = ["lessonTypeId"],
+            childColumns = ["studentId"],
             onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [
-        Index(value = ["subjectId", "lessonTypeId"], unique = true),
-        Index(value = ["subjectId"]),
-        Index(value = ["lessonTypeId"])
+        Index("homeworkId"),
+        Index("studentId"),
+        Index(value = ["homeworkId", "studentId"], unique = true)
     ]
 )
-data class SubjectLessonTypeHoursEntity(
+data class HomeworkSubmissionEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val subjectId: Long,
-    val lessonTypeId: Long,
-    val hours: Double?
+    val homeworkId: Long,
+    val studentId: Long,
+    val status: String
 )

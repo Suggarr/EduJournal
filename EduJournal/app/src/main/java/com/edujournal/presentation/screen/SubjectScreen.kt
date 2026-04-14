@@ -1,4 +1,4 @@
-package com.edujournal.presentation.screen
+﻿package com.edujournal.presentation.screen
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -39,7 +38,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -53,14 +51,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
-import com.edujournal.domain.model.LessonType
+import com.edujournal.domain.model.SubjectLessonType
 import com.edujournal.domain.model.Semester
 import com.edujournal.domain.model.SemesterSeason
 import com.edujournal.domain.model.Subject
 import com.edujournal.domain.usecase.EntityWriteResult
 import com.edujournal.presentation.viewmodel.SubjectViewModel
 import kotlinx.coroutines.flow.collect
-import java.math.BigDecimal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,8 +70,6 @@ fun SubjectScreen(
     viewModel: SubjectViewModel = hiltViewModel()
 ) {
     val subjects by viewModel.subjects.collectAsState()
-    val lessonTypes by viewModel.lessonTypes.collectAsState()
-    val subjectHoursBySubjectId by viewModel.subjectHoursBySubjectId.collectAsState()
     val context = LocalContext.current
     var showAddDialog by remember { mutableStateOf(false) }
     var subjectToEdit by remember { mutableStateOf<Subject?>(null) }
@@ -177,10 +172,9 @@ fun SubjectScreen(
     if (showAddDialog) {
         SubjectDialog(
             title = stringResource(R.string.subject_new),
-            lessonTypes = lessonTypes,
             onDismiss = { showAddDialog = false },
-            onConfirm = { name, abbreviation, lessonTypeHours ->
-                viewModel.addSubject(name, abbreviation, lessonTypeHours) { result ->
+            onConfirm = { name, abbreviation ->
+                viewModel.addSubject(name, abbreviation) { result ->
                     if (result != EntityWriteResult.DUPLICATE) {
                         showAddDialog = false
                     }
@@ -192,15 +186,12 @@ fun SubjectScreen(
     subjectToEdit?.let { subject ->
         SubjectDialog(
             title = stringResource(R.string.subject_edit),
-            lessonTypes = lessonTypes,
             initialName = subject.name,
             initialAbbreviation = subject.abbreviation ?: "",
-            initialHoursByLessonTypeId = subjectHoursBySubjectId[subject.id].orEmpty(),
             onDismiss = { subjectToEdit = null },
-            onConfirm = { newName, newAbbreviation, lessonTypeHours ->
+            onConfirm = { newName, newAbbreviation ->
                 viewModel.updateSubject(
-                    subject = subject.copy(name = newName, abbreviation = newAbbreviation),
-                    lessonTypeHours = lessonTypeHours
+                    subject = subject.copy(name = newName, abbreviation = newAbbreviation)
                 ) { result ->
                     if (result != EntityWriteResult.DUPLICATE) {
                         subjectToEdit = null
@@ -286,26 +277,13 @@ fun SubjectCard(
 @Composable
 fun SubjectDialog(
     title: String,
-    lessonTypes: List<LessonType>,
     initialName: String = "",
     initialAbbreviation: String = "",
-    initialHoursByLessonTypeId: Map<Long, Double?> = emptyMap(),
     onDismiss: () -> Unit,
-    onConfirm: (String, String?, Map<Long, Double?>) -> Unit
+    onConfirm: (String, String?) -> Unit
 ) {
     var name by remember { mutableStateOf(initialName) }
     var abbreviation by remember { mutableStateOf(initialAbbreviation) }
-    var showHoursDialog by remember { mutableStateOf(false) }
-
-    val hourInputs = remember(lessonTypes, initialHoursByLessonTypeId) {
-        mutableStateMapOf<Long, String>().apply {
-            lessonTypes.forEach { lessonType ->
-                this[lessonType.id] = formatHoursInput(initialHoursByLessonTypeId[lessonType.id])
-            }
-        }
-    }
-
-    val filledHoursCount = lessonTypes.count { !hourInputs[it.id].isNullOrBlank() }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -326,30 +304,12 @@ fun SubjectDialog(
                     label = { Text(stringResource(R.string.subject_abbreviation_label)) },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = { showHoursDialog = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = stringResource(
-                            R.string.subject_hours_button,
-                            filledHoursCount,
-                            lessonTypes.size
-                        )
-                    )
-                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    val lessonTypeHours = lessonTypes.associate { lessonType ->
-                        val raw = hourInputs[lessonType.id].orEmpty().trim()
-                        val parsed = raw.replace(',', '.').toDoubleOrNull()
-                        lessonType.id to parsed
-                    }
-                    onConfirm(name, abbreviation.ifBlank { null }, lessonTypeHours)
+                    onConfirm(name, abbreviation.ifBlank { null })
                 },
                 enabled = name.isNotBlank()
             ) { Text(stringResource(R.string.common_save)) }
@@ -358,94 +318,5 @@ fun SubjectDialog(
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) }
         }
     )
-
-    if (showHoursDialog) {
-        SubjectLessonTypeHoursDialog(
-            lessonTypes = lessonTypes,
-            currentHourInputs = hourInputs,
-            onDismiss = { showHoursDialog = false },
-            onSave = { updated ->
-                hourInputs.clear()
-                hourInputs.putAll(updated)
-                showHoursDialog = false
-            }
-        )
-    }
 }
 
-private fun formatHoursInput(hours: Double?): String {
-    if (hours == null) return ""
-    return BigDecimal.valueOf(hours)
-        .stripTrailingZeros()
-        .toPlainString()
-        .replace('.', ',')
-}
-
-@Composable
-private fun SubjectLessonTypeHoursDialog(
-    lessonTypes: List<LessonType>,
-    currentHourInputs: Map<Long, String>,
-    onDismiss: () -> Unit,
-    onSave: (Map<Long, String>) -> Unit
-) {
-    val draftInputs = remember(lessonTypes, currentHourInputs) {
-        mutableStateMapOf<Long, String>().apply {
-            lessonTypes.forEach { lessonType ->
-                this[lessonType.id] = currentHourInputs[lessonType.id].orEmpty()
-            }
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.subject_hours_title)) },
-        text = {
-            if (lessonTypes.isEmpty()) {
-                Text(stringResource(R.string.lesson_type_empty))
-            } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(lessonTypes) { lessonType ->
-                        OutlinedTextField(
-                            value = draftInputs[lessonType.id].orEmpty(),
-                            onValueChange = { value ->
-                                val normalized = value.replace('.', ',')
-                                val filtered = buildString {
-                                    var hasSeparator = false
-                                    for (ch in normalized) {
-                                        when {
-                                            ch.isDigit() -> append(ch)
-                                            ch == ',' && !hasSeparator -> {
-                                                append(ch)
-                                                hasSeparator = true
-                                            }
-                                        }
-                                    }
-                                }
-                                draftInputs[lessonType.id] = filtered
-                            },
-                            label = {
-                                Text(stringResource(R.string.subject_hours_field_label, lessonType.name))
-                            },
-                            placeholder = {
-                                Text(stringResource(R.string.subject_hours_optional))
-                            },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Button(onClick = { onSave(draftInputs.toMap()) }) {
-                Text(stringResource(R.string.common_save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.common_cancel))
-            }
-        }
-    )
-}

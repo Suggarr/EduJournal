@@ -1,4 +1,4 @@
-package com.edujournal.presentation.viewmodel
+﻿package com.edujournal.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -6,7 +6,7 @@ import com.edujournal.domain.model.Lesson
 import com.edujournal.domain.usecase.CreateLessonUseCase
 import com.edujournal.domain.usecase.DeleteLessonUseCase
 import com.edujournal.domain.usecase.GetLessonsUseCase
-import com.edujournal.domain.usecase.ObserveSubjectLessonTypeHoursUseCase
+import com.edujournal.domain.usecase.ObserveSubjectLessonTypeByIdUseCase
 import com.edujournal.domain.usecase.UpdateLessonUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,7 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class LessonTopicsViewModel @Inject constructor(
     private val getLessonsUseCase: GetLessonsUseCase,
-    private val observeSubjectLessonTypeHoursUseCase: ObserveSubjectLessonTypeHoursUseCase,
+    private val observeLessonTypeByIdUseCase: ObserveSubjectLessonTypeByIdUseCase,
     private val createLessonUseCase: CreateLessonUseCase,
     private val updateLessonUseCase: UpdateLessonUseCase,
     private val deleteLessonUseCase: DeleteLessonUseCase
@@ -29,28 +29,25 @@ class LessonTopicsViewModel @Inject constructor(
     fun observeLessons(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long,
+        subjectLessonTypeId: Long,
         semesterId: Long
     ): StateFlow<List<Lesson>?> {
-        return getLessonsUseCase(groupId, subjectId, lessonTypeId, semesterId)
+        return getLessonsUseCase(groupId, subjectId, subjectLessonTypeId, semesterId)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
     }
 
     fun observeRequiredHours(
-        subjectId: Long,
-        lessonTypeId: Long
+        subjectLessonTypeId: Long
     ): StateFlow<Double?> {
-        return observeSubjectLessonTypeHoursUseCase()
-            .map { items ->
-                items.firstOrNull { it.subjectId == subjectId && it.lessonTypeId == lessonTypeId }?.hours
-            }
+        return observeLessonTypeByIdUseCase(subjectLessonTypeId)
+            .map { it?.hours }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
     }
 
     fun addLesson(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long,
+        subjectLessonTypeId: Long,
         semesterId: Long,
         date: LocalDate,
         topic: String
@@ -62,7 +59,7 @@ class LessonTopicsViewModel @Inject constructor(
                         id = 0,
                         groupId = groupId,
                         subjectId = subjectId,
-                        lessonTypeId = lessonTypeId,
+                        subjectLessonTypeId = subjectLessonTypeId,
                         semesterId = semesterId,
                         date = date,
                         topic = topic
@@ -86,3 +83,5 @@ class LessonTopicsViewModel @Inject constructor(
         }
     }
 }
+
+

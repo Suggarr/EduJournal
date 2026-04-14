@@ -29,9 +29,11 @@ import androidx.navigation.navArgument
 import androidx.compose.foundation.layout.WindowInsets
 import com.edujournal.R
 import com.edujournal.presentation.screen.GroupScreen
+import com.edujournal.presentation.screen.AnalyticsScreen
+import com.edujournal.presentation.screen.HomeworkScreen
 import com.edujournal.presentation.screen.JournalScreen
 import com.edujournal.presentation.screen.LessonTopicsScreen
-import com.edujournal.presentation.screen.LessonTypeScreen
+import com.edujournal.presentation.screen.SubjectLessonTypeScreen
 import com.edujournal.presentation.screen.SemesterManagementScreen
 import com.edujournal.presentation.screen.SettingsScreen
 import com.edujournal.presentation.screen.StudentScreen
@@ -145,7 +147,7 @@ fun AppNavigation(
             ) { backStackEntry ->
                 val semesterId = backStackEntry.arguments?.getLong("semesterId") ?: 1L
                 val subjectId = backStackEntry.arguments?.getLong("subjectId") ?: 0L
-                LessonTypeScreen(
+                SubjectLessonTypeScreen(
                     subjectId = subjectId,
                     onTypeClick = { typeId ->
                         navController.navigate(Routes.groups(semesterId, subjectId, typeId))
@@ -159,15 +161,15 @@ fun AppNavigation(
                 arguments = listOf(
                     navArgument("semesterId") { type = NavType.LongType },
                     navArgument("subjectId") { type = NavType.LongType },
-                    navArgument("typeId") { type = NavType.LongType }
+                    navArgument("subjectLessonTypeId") { type = NavType.LongType }
                 )
             ) { backStackEntry ->
                 val semesterId = backStackEntry.arguments?.getLong("semesterId") ?: 1L
                 val subjectId = backStackEntry.arguments?.getLong("subjectId") ?: 0L
-                val typeId = backStackEntry.arguments?.getLong("typeId") ?: 0L
+                val subjectLessonTypeId = backStackEntry.arguments?.getLong("subjectLessonTypeId") ?: 0L
                 GroupScreen(
                     onGroupClick = { groupId ->
-                        navController.navigate(Routes.journal(semesterId, groupId, subjectId, typeId))
+                        navController.navigate(Routes.journal(semesterId, groupId, subjectId, subjectLessonTypeId))
                     },
                     onBackClick = { navController.popBackStack() }
                 )
@@ -205,22 +207,57 @@ fun AppNavigation(
                     navArgument("semesterId") { type = NavType.LongType },
                     navArgument("groupId") { type = NavType.LongType },
                     navArgument("subjectId") { type = NavType.LongType },
-                    navArgument("typeId") { type = NavType.LongType }
+                    navArgument("subjectLessonTypeId") { type = NavType.LongType }
                 )
             ) { backStackEntry ->
                 val semesterId = backStackEntry.arguments?.getLong("semesterId") ?: 1L
                 val groupId = backStackEntry.arguments?.getLong("groupId") ?: 0L
                 val subjectId = backStackEntry.arguments?.getLong("subjectId") ?: 0L
-                val typeId = backStackEntry.arguments?.getLong("typeId") ?: 0L
+                val subjectLessonTypeId = backStackEntry.arguments?.getLong("subjectLessonTypeId") ?: 0L
                 JournalScreen(
                     groupId = groupId,
                     subjectId = subjectId,
-                    lessonTypeId = typeId,
+                    subjectLessonTypeId = subjectLessonTypeId,
                     semesterId = semesterId,
                     onBack = { navController.popBackStack() },
+                    onAnalyticsClick = {
+                        navController.navigate(Routes.analytics(semesterId, groupId, subjectId))
+                    },
                     onTopicsClick = {
-                        navController.navigate(Routes.lessonTopics(semesterId, groupId, subjectId, typeId))
+                        navController.navigate(Routes.lessonTopics(semesterId, groupId, subjectId, subjectLessonTypeId))
                     }
+                )
+            }
+
+            composable(
+                route = Routes.ANALYTICS,
+                arguments = listOf(
+                    navArgument("semesterId") { type = NavType.LongType },
+                    navArgument("groupId") { type = NavType.LongType },
+                    navArgument("subjectId") { type = NavType.LongType }
+                )
+            ) { backStackEntry ->
+                val semesterId = backStackEntry.arguments?.getLong("semesterId") ?: 1L
+                val groupId = backStackEntry.arguments?.getLong("groupId") ?: 0L
+                val subjectId = backStackEntry.arguments?.getLong("subjectId") ?: 0L
+                AnalyticsScreen(
+                    semesterId = semesterId,
+                    groupId = groupId,
+                    subjectId = subjectId,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = Routes.HOMEWORKS,
+                arguments = listOf(
+                    navArgument("lessonId") { type = NavType.LongType }
+                )
+            ) { backStackEntry ->
+                val lessonId = backStackEntry.arguments?.getLong("lessonId") ?: 0L
+                HomeworkScreen(
+                    lessonId = lessonId,
+                    onBack = { navController.popBackStack() }
                 )
             }
 
@@ -230,19 +267,22 @@ fun AppNavigation(
                     navArgument("semesterId") { type = NavType.LongType },
                     navArgument("groupId") { type = NavType.LongType },
                     navArgument("subjectId") { type = NavType.LongType },
-                    navArgument("typeId") { type = NavType.LongType }
+                    navArgument("subjectLessonTypeId") { type = NavType.LongType }
                 )
             ) { backStackEntry ->
                 val semesterId = backStackEntry.arguments?.getLong("semesterId") ?: 1L
                 val groupId = backStackEntry.arguments?.getLong("groupId") ?: 0L
                 val subjectId = backStackEntry.arguments?.getLong("subjectId") ?: 0L
-                val typeId = backStackEntry.arguments?.getLong("typeId") ?: 0L
+                val subjectLessonTypeId = backStackEntry.arguments?.getLong("subjectLessonTypeId") ?: 0L
                 LessonTopicsScreen(
                     groupId = groupId,
                     subjectId = subjectId,
-                    lessonTypeId = typeId,
+                    subjectLessonTypeId = subjectLessonTypeId,
                     semesterId = semesterId,
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onHomeworkClick = { lessonId ->
+                        navController.navigate(Routes.homeworks(lessonId))
+                    }
                 )
             }
 
@@ -274,4 +314,6 @@ private fun currentTopLevelRoute(destination: NavDestination?): String {
         else -> Routes.SUBJECTS
     }
 }
+
+
 

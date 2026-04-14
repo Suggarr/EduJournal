@@ -1,4 +1,4 @@
-package com.edujournal.domain.usecase
+﻿package com.edujournal.domain.usecase
 
 import com.edujournal.domain.repository.LessonRepository
 import javax.inject.Inject
@@ -9,7 +9,8 @@ class GetLessonsUseCase @Inject constructor(
     operator fun invoke(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long,
+        subjectLessonTypeId: Long,
         semesterId: Long
-    ) = lessonRepository.observeLessons(groupId, subjectId, lessonTypeId, semesterId)
+    ) = lessonRepository.observeLessons(groupId, subjectId, subjectLessonTypeId, semesterId)
 }
+

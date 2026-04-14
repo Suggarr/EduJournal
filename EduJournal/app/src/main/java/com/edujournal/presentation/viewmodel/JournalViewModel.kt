@@ -1,4 +1,4 @@
-package com.edujournal.presentation.viewmodel
+﻿package com.edujournal.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,8 +7,9 @@ import com.edujournal.domain.model.GradeType
 import com.edujournal.domain.usecase.GetGroupsUseCase
 import com.edujournal.domain.usecase.GetJournalUseCase
 import com.edujournal.domain.usecase.GetLessonsUseCase
+import com.edujournal.domain.usecase.ObserveHomeworkLessonIdsUseCase
+import com.edujournal.domain.usecase.ObserveSubjectLessonTypeByIdUseCase
 import com.edujournal.domain.usecase.ObserveSemestersUseCase
-import com.edujournal.domain.usecase.ObserveLessonTypesUseCase
 import com.edujournal.domain.usecase.ObserveSubjectsUseCase
 import com.edujournal.domain.usecase.SetGradeUseCase
 import com.edujournal.presentation.state.JournalCell
@@ -19,6 +20,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,49 +32,63 @@ class JournalViewModel @Inject constructor(
     private val getJournalUseCase: GetJournalUseCase,
     private val getLessonsUseCase: GetLessonsUseCase,
     private val setGradeUseCase: SetGradeUseCase,
+    private val observeHomeworkLessonIdsUseCase: ObserveHomeworkLessonIdsUseCase,
+    private val observeLessonTypeByIdUseCase: ObserveSubjectLessonTypeByIdUseCase,
     private val observeSubjectsUseCase: ObserveSubjectsUseCase,
-    private val observeLessonTypesUseCase: ObserveLessonTypesUseCase,
     private val getGroupsUseCase: GetGroupsUseCase,
     private val observeSemestersUseCase: ObserveSemestersUseCase
 ) : ViewModel() {
 
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     fun observeJournal(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long,
+        subjectLessonTypeId: Long,
         semesterId: Long
     ): StateFlow<JournalState?> {
 
         return combine(
-            getJournalUseCase(groupId, subjectId, lessonTypeId, semesterId),
-            getLessonsUseCase(groupId, subjectId, lessonTypeId, semesterId)
-        ) { journalRows, lessons ->
-            val grouped = journalRows.groupBy { it.studentId }
+            getJournalUseCase(groupId, subjectId, subjectLessonTypeId, semesterId),
+            getLessonsUseCase(groupId, subjectId, subjectLessonTypeId, semesterId)
+        ) { journalRows, lessons -> journalRows to lessons }
+            .flatMapLatest { (journalRows, lessons) ->
+                val lessonIds = lessons.map { it.id }
+                val homeworkIdsFlow = if (lessonIds.isEmpty()) {
+                    flowOf(emptyList())
+                } else {
+                    observeHomeworkLessonIdsUseCase(lessonIds)
+                }
 
-            val rows = grouped.map { (_, studentRows) ->
-                val first = studentRows.first()
+                homeworkIdsFlow.map { homeworkLessonIds ->
+                    val grouped = journalRows.groupBy { it.studentId }
 
-                JournalRow(
-                    studentId = first.studentId,
-                    studentName = "${first.studentLastName} ${first.studentFirstName}",
-                    cells = lessons.map { lesson ->
-                        val rowForLesson = studentRows.firstOrNull { it.lessonId == lesson.id }
-                        JournalCell(
-                            lessonId = lesson.id,
-                            value = formatCellValue(
-                                gradeValue = rowForLesson?.gradeValue,
-                                gradeType = rowForLesson?.gradeType
-                            )
+                    val rows = grouped.map { (_, studentRows) ->
+                        val first = studentRows.first()
+
+                        JournalRow(
+                            studentId = first.studentId,
+                            studentName = "${first.studentLastName} ${first.studentFirstName}",
+                            cells = lessons.map { lesson ->
+                                val rowForLesson = studentRows.firstOrNull { it.lessonId == lesson.id }
+                                JournalCell(
+                                    lessonId = lesson.id,
+                                    value = formatCellValue(
+                                        gradeValue = rowForLesson?.gradeValue,
+                                        gradeType = rowForLesson?.gradeType
+                                    )
+                                )
+                            }
                         )
                     }
-                )
-            }
 
-            JournalState(
-                lessons = lessons,
-                rows = rows
-            )
-        }.stateIn(
+                    JournalState(
+                        lessons = lessons,
+                        rows = rows,
+                        homeworkLessonIds = homeworkLessonIds.toSet()
+                    )
+                }
+            }
+            .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
             null
@@ -80,23 +98,22 @@ class JournalViewModel @Inject constructor(
     fun observeJournalMeta(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long,
+        subjectLessonTypeId: Long,
         semesterId: Long
     ): StateFlow<JournalMetaState?> {
         return combine(
             observeSubjectsUseCase(),
-            observeLessonTypesUseCase(),
+            observeLessonTypeByIdUseCase(subjectLessonTypeId),
             getGroupsUseCase(),
             observeSemestersUseCase()
-        ) { subjects, lessonTypes, groups, semesters ->
+        ) { subjects, SubjectLessonType, groups, semesters ->
             val subject = subjects.firstOrNull { it.id == subjectId }
-            val lessonType = lessonTypes.firstOrNull { it.id == lessonTypeId }
             val group = groups.firstOrNull { it.id == groupId }
             val semester = semesters.firstOrNull { it.id == semesterId }
 
             JournalMetaState(
                 subjectLabel = subject?.abbreviation?.takeIf { it.isNotBlank() } ?: subject?.name.orEmpty(),
-                lessonTypeLabel = lessonType?.name.orEmpty(),
+                lessonTypeLabel = SubjectLessonType?.name.orEmpty(),
                 groupLabel = group?.name.orEmpty(),
                 semesterSeason = semester?.season?.name,
                 semesterYear = semester?.year
@@ -159,10 +176,13 @@ class JournalViewModel @Inject constructor(
     ): String {
         return when {
             gradeValue != null -> gradeValue.toString()
-            gradeType == GradeType.ABSENT.name -> "\u041D" // Н
-            gradeType == GradeType.SICK.name -> "\u0417" // З
-            gradeType == GradeType.PASS.name -> "\u041E" // О
+            gradeType == GradeType.ABSENT.name -> "\u041D" // Рќ
+            gradeType == GradeType.SICK.name -> "\u0417" // Р—
+            gradeType == GradeType.PASS.name -> "\u041E" // Рћ
             else -> "-"
         }
     }
 }
+
+
+

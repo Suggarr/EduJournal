@@ -1,4 +1,4 @@
-package com.edujournal.data.mapper
+﻿package com.edujournal.data.mapper
 
 import com.edujournal.data.local.database.entities.LessonEntity
 import com.edujournal.domain.model.Lesson
@@ -8,7 +8,7 @@ fun LessonEntity.toDomain(): Lesson {
         id = id,
         groupId = groupId,
         subjectId = subjectId,
-        lessonTypeId = lessonTypeId,
+        subjectLessonTypeId = subjectLessonTypeId,
         semesterId = semesterId,
         date = date,
         topic = topic
@@ -20,9 +20,10 @@ fun Lesson.toEntity(): LessonEntity {
         id = id,
         groupId = groupId,
         subjectId = subjectId,
-        lessonTypeId = lessonTypeId,
+        subjectLessonTypeId = subjectLessonTypeId,
         semesterId = semesterId,
         date = date,
         topic = topic
     )
 }
+

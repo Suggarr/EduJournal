@@ -1,4 +1,4 @@
-package com.edujournal.presentation.screen
+﻿package com.edujournal.presentation.screen
 
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -17,9 +17,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -63,18 +66,19 @@ import kotlinx.coroutines.withContext
 fun JournalScreen(
     groupId: Long,
     subjectId: Long,
-    lessonTypeId: Long,
+    subjectLessonTypeId: Long,
     semesterId: Long,
     onBack: () -> Unit,
+    onAnalyticsClick: () -> Unit,
     onTopicsClick: () -> Unit,
     viewModel: JournalViewModel = hiltViewModel()
 ) {
-    val journalFlow = remember(groupId, subjectId, lessonTypeId, semesterId) {
-        viewModel.observeJournal(groupId, subjectId, lessonTypeId, semesterId)
+    val journalFlow = remember(groupId, subjectId, subjectLessonTypeId, semesterId) {
+        viewModel.observeJournal(groupId, subjectId, subjectLessonTypeId, semesterId)
     }
     val state by journalFlow.collectAsState()
-    val journalMetaFlow = remember(groupId, subjectId, lessonTypeId, semesterId) {
-        viewModel.observeJournalMeta(groupId, subjectId, lessonTypeId, semesterId)
+    val journalMetaFlow = remember(groupId, subjectId, subjectLessonTypeId, semesterId) {
+        viewModel.observeJournalMeta(groupId, subjectId, subjectLessonTypeId, semesterId)
     }
     val journalMeta by journalMetaFlow.collectAsState()
     val autumnLabel = stringResource(R.string.settings_semester_autumn)
@@ -88,7 +92,7 @@ fun JournalScreen(
         if (seasonLabel != null && journalMeta?.semesterYear != null) {
             "$seasonLabel ${journalMeta?.semesterYear}"
         } else {
-            "Семестр $semesterId"
+            "РЎРµРјРµСЃС‚СЂ $semesterId"
         }
     }
 
@@ -96,6 +100,7 @@ fun JournalScreen(
     var selectedCell by remember { mutableStateOf<Pair<JournalRow, JournalCell>?>(null) }
     var selectedExportFormat by remember { mutableStateOf<JournalExportFormat?>(null) }
     var showExportDialog by remember { mutableStateOf(false) }
+    var showActionsMenu by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -142,18 +147,44 @@ fun JournalScreen(
                     }
                 },
                 actions = {
-                    TextButton(onClick = {
-                        val currentState = state
-                        if (currentState == null || currentState.rows.isEmpty() || currentState.lessons.isEmpty()) {
-                            Toast.makeText(context, context.getString(R.string.journal_export_no_data), Toast.LENGTH_SHORT).show()
-                        } else {
-                            showExportDialog = true
+                    Box {
+                        IconButton(onClick = { showActionsMenu = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = stringResource(R.string.journal_actions_button)
+                            )
                         }
-                    }) {
-                        Text(stringResource(R.string.journal_export_button))
-                    }
-                    TextButton(onClick = onTopicsClick) {
-                        Text(stringResource(R.string.journal_topics_button))
+                        DropdownMenu(
+                            expanded = showActionsMenu,
+                            onDismissRequest = { showActionsMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.journal_export_button)) },
+                                onClick = {
+                                    showActionsMenu = false
+                                    val currentState = state
+                                    if (currentState == null || currentState.rows.isEmpty() || currentState.lessons.isEmpty()) {
+                                        Toast.makeText(context, context.getString(R.string.journal_export_no_data), Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        showExportDialog = true
+                                    }
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.journal_analytics_button)) },
+                                onClick = {
+                                    showActionsMenu = false
+                                    onAnalyticsClick()
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.journal_topics_button)) },
+                                onClick = {
+                                    showActionsMenu = false
+                                    onTopicsClick()
+                                }
+                            )
+                        }
                     }
                 }
             )
@@ -199,6 +230,7 @@ fun JournalScreen(
 
                 JournalHeader(
                     lessons = currentState.lessons,
+                    homeworkLessonIds = currentState.homeworkLessonIds,
                     scrollState = horizontalScrollState
                 )
 
@@ -356,3 +388,4 @@ fun GradeSelectionDialog(
         }
     )
 }
+

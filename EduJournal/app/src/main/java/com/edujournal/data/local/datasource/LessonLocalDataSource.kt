@@ -1,4 +1,4 @@
-package com.edujournal.data.local.datasource
+﻿package com.edujournal.data.local.datasource
 
 import com.edujournal.data.local.dao.LessonDao
 import com.edujournal.data.local.database.entities.LessonEntity
@@ -11,10 +11,14 @@ class LessonLocalDataSource @Inject constructor(
     fun observeLessons(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long,
+        subjectLessonTypeId: Long,
         semesterId: Long
     ): Flow<List<LessonEntity>> {
-        return lessonDao.observeLessons(groupId, subjectId, lessonTypeId, semesterId)
+        return lessonDao.observeLessons(groupId, subjectId, subjectLessonTypeId, semesterId)
+    }
+
+    fun observeLessonById(lessonId: Long): Flow<LessonEntity?> {
+        return lessonDao.observeLessonById(lessonId)
     }
 
     suspend fun insertLesson(lesson: LessonEntity) {
@@ -29,4 +33,5 @@ class LessonLocalDataSource @Inject constructor(
         lessonDao.deleteLesson(lessonId)
     }
 }
+
 

@@ -1,15 +1,19 @@
-package com.edujournal.presentation.screen
+﻿package com.edujournal.presentation.screen
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -38,27 +42,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
-import com.edujournal.domain.model.LessonType
+import com.edujournal.domain.model.SubjectLessonType
 import com.edujournal.domain.usecase.EntityWriteResult
-import com.edujournal.presentation.viewmodel.LessonTypeViewModel
+import com.edujournal.presentation.viewmodel.SubjectLessonTypeViewModel
 import kotlinx.coroutines.flow.collect
+import java.math.BigDecimal
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LessonTypeScreen(
+fun SubjectLessonTypeScreen(
     subjectId: Long,
     onTypeClick: (Long) -> Unit,
     onBackClick: () -> Unit,
-    viewModel: LessonTypeViewModel = hiltViewModel()
+    viewModel: SubjectLessonTypeViewModel = hiltViewModel()
 ) {
+    LaunchedEffect(subjectId) {
+        viewModel.load(subjectId)
+    }
     val types by viewModel.lessonTypes.collectAsState()
     val context = LocalContext.current
     var showAddDialog by remember { mutableStateOf(false) }
-    var typeToEdit by remember { mutableStateOf<LessonType?>(null) }
-    var typeToDelete by remember { mutableStateOf<LessonType?>(null) }
+    var typeToEdit by remember { mutableStateOf<SubjectLessonType?>(null) }
+    var typeToDelete by remember { mutableStateOf<SubjectLessonType?>(null) }
 
     LaunchedEffect(viewModel) {
         viewModel.uiMessageRes.collect { messageRes ->
@@ -97,7 +106,7 @@ fun LessonTypeScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(types) { type ->
-                        LessonTypeCard(
+                        SubjectLessonTypeCard(
                             type = type,
                             onClick = { onTypeClick(type.id) },
                             onEditClick = { typeToEdit = type },
@@ -110,11 +119,11 @@ fun LessonTypeScreen(
     }
 
     if (showAddDialog) {
-        LessonTypeDialog(
+        SubjectLessonTypeDialog(
             title = stringResource(R.string.lesson_type_new),
             onDismiss = { showAddDialog = false },
-            onConfirm = { name ->
-                viewModel.addLessonType(name) { result ->
+            onConfirm = { name, hours ->
+                viewModel.addLessonType(name, hours) { result ->
                     if (result != EntityWriteResult.DUPLICATE) {
                         showAddDialog = false
                     }
@@ -124,12 +133,13 @@ fun LessonTypeScreen(
     }
 
     typeToEdit?.let { type ->
-        LessonTypeDialog(
+        SubjectLessonTypeDialog(
             title = stringResource(R.string.lesson_type_edit),
             initialName = type.name,
+            initialHours = type.hours,
             onDismiss = { typeToEdit = null },
-            onConfirm = { newName ->
-                viewModel.updateLessonType(type.copy(name = newName)) { result ->
+            onConfirm = { newName, hours ->
+                viewModel.updateLessonType(type.copy(name = newName, hours = hours)) { result ->
                     if (result != EntityWriteResult.DUPLICATE) {
                         typeToEdit = null
                     }
@@ -163,8 +173,8 @@ fun LessonTypeScreen(
 }
 
 @Composable
-fun LessonTypeCard(
-    type: LessonType,
+fun SubjectLessonTypeCard(
+    type: SubjectLessonType,
     onClick: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
@@ -177,11 +187,22 @@ fun LessonTypeCard(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = type.name,
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.weight(1f)
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = type.name,
+                    style = MaterialTheme.typography.titleLarge
+                )
+                type.hours?.let { hours ->
+                    Text(
+                        text = stringResource(
+                            R.string.lesson_type_hours_value,
+                            BigDecimal.valueOf(hours).stripTrailingZeros().toPlainString().replace('.', ',')
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             IconButton(onClick = onEditClick) {
                 Icon(
                     Icons.Default.Edit,
@@ -201,27 +222,66 @@ fun LessonTypeCard(
 }
 
 @Composable
-fun LessonTypeDialog(
+fun SubjectLessonTypeDialog(
     title: String,
     initialName: String = "",
+    initialHours: Double? = null,
     onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
+    onConfirm: (String, Double?) -> Unit
 ) {
     var name by remember { mutableStateOf(initialName) }
+    var hoursInput by remember {
+        mutableStateOf(
+            initialHours?.let { BigDecimal.valueOf(it).stripTrailingZeros().toPlainString().replace('.', ',') }
+                .orEmpty()
+        )
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text(stringResource(R.string.lesson_type_name_label)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(R.string.lesson_type_name_label)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = hoursInput,
+                    onValueChange = { value ->
+                        val normalized = value.replace('.', ',')
+                        val filtered = buildString {
+                            var hasSeparator = false
+                            for (ch in normalized) {
+                                when {
+                                    ch.isDigit() -> append(ch)
+                                    ch == ',' && !hasSeparator -> {
+                                        append(ch)
+                                        hasSeparator = true
+                                    }
+                                }
+                            }
+                        }
+                        hoursInput = filtered
+                    },
+                    label = { Text(stringResource(R.string.lesson_type_hours_label)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         },
         confirmButton = {
-            Button(onClick = { onConfirm(name) }, enabled = name.isNotBlank()) {
+            Button(
+                onClick = {
+                    val hours = hoursInput.trim().replace(',', '.').toDoubleOrNull()
+                    onConfirm(name, hours)
+                },
+                enabled = name.isNotBlank()
+            ) {
                 Text(stringResource(R.string.common_save))
             }
         },
@@ -230,3 +290,5 @@ fun LessonTypeDialog(
         }
     )
 }
+
+

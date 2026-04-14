@@ -1,8 +1,9 @@
-package com.edujournal.data.repository
+﻿package com.edujournal.data.repository
 
 import com.edujournal.data.local.datasource.GradeLocalDataSource
 import com.edujournal.data.mapper.toDomain
 import com.edujournal.data.mapper.toEntity
+import com.edujournal.domain.model.DisciplineGradeRecord
 import com.edujournal.domain.model.Grade
 import com.edujournal.domain.model.JournalRow
 import com.edujournal.domain.repository.GradeRepository
@@ -26,9 +27,18 @@ class GradeRepositoryImpl @Inject constructor(
     override fun getJournal(
         groupId: Long,
         subjectId: Long,
-        lessonTypeId: Long,
+        subjectLessonTypeId: Long,
         semesterId: Long
     ): Flow<List<JournalRow>> {
-        return localDataSource.getJournal(groupId, subjectId, lessonTypeId, semesterId)
+        return localDataSource.getJournal(groupId, subjectId, subjectLessonTypeId, semesterId)
+    }
+
+    override fun observeDisciplineGrades(
+        groupId: Long,
+        subjectId: Long,
+        semesterId: Long
+    ): Flow<List<DisciplineGradeRecord>> {
+        return localDataSource.observeDisciplineGrades(groupId, subjectId, semesterId)
     }
 }
+

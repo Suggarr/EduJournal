@@ -1,23 +1,25 @@
-package com.edujournal.data.local.database
+﻿package com.edujournal.data.local.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.edujournal.data.local.dao.GradeDao
 import com.edujournal.data.local.dao.GroupDao
+import com.edujournal.data.local.dao.HomeworkDao
+import com.edujournal.data.local.dao.HomeworkSubmissionDao
 import com.edujournal.data.local.dao.LessonDao
-import com.edujournal.data.local.dao.LessonTypeDao
+import com.edujournal.data.local.dao.SubjectLessonTypeDao
 import com.edujournal.data.local.dao.SemesterDao
 import com.edujournal.data.local.dao.StudentDao
 import com.edujournal.data.local.dao.SubjectDao
-import com.edujournal.data.local.dao.SubjectLessonTypeHoursDao
 import com.edujournal.data.local.database.entities.GradeEntity
 import com.edujournal.data.local.database.entities.GroupEntity
+import com.edujournal.data.local.database.entities.HomeworkEntity
+import com.edujournal.data.local.database.entities.HomeworkSubmissionEntity
 import com.edujournal.data.local.database.entities.LessonEntity
-import com.edujournal.data.local.database.entities.LessonTypeEntity
+import com.edujournal.data.local.database.entities.SubjectLessonTypeEntity
 import com.edujournal.data.local.database.entities.SemesterEntity
 import com.edujournal.data.local.database.entities.StudentEntity
-import com.edujournal.data.local.database.entities.SubjectLessonTypeHoursEntity
 import com.edujournal.data.local.database.entities.SubjectEntity
 import com.edujournal.utils.Converters
 
@@ -27,10 +29,11 @@ import com.edujournal.utils.Converters
         StudentEntity::class,
         SubjectEntity::class,
         SemesterEntity::class,
-        LessonTypeEntity::class,
-        SubjectLessonTypeHoursEntity::class,
+        SubjectLessonTypeEntity::class,
         LessonEntity::class,
-        GradeEntity:: class
+        GradeEntity:: class,
+        HomeworkEntity::class,
+        HomeworkSubmissionEntity::class
     ],
     version = 1,
     exportSchema = false
@@ -41,8 +44,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun studentDao(): StudentDao
     abstract fun subjectDao(): SubjectDao
     abstract fun semesterDao(): SemesterDao
-    abstract fun lessonTypeDao(): LessonTypeDao
-    abstract fun subjectLessonTypeHoursDao(): SubjectLessonTypeHoursDao
+    abstract fun lessonTypeDao(): SubjectLessonTypeDao
     abstract fun lessonDao(): LessonDao
     abstract fun gradeDao(): GradeDao
+    abstract fun homeworkDao(): HomeworkDao
+    abstract fun homeworkSubmissionDao(): HomeworkSubmissionDao
 }
+

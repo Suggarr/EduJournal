@@ -6,45 +6,51 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.edujournal.data.local.dao.GradeDao
 import com.edujournal.data.local.dao.GroupDao
+import com.edujournal.data.local.dao.HomeworkDao
+import com.edujournal.data.local.dao.HomeworkSubmissionDao
 import com.edujournal.data.local.dao.LessonDao
-import com.edujournal.data.local.dao.LessonTypeDao
+import com.edujournal.data.local.dao.SubjectLessonTypeDao
 import com.edujournal.data.local.dao.SemesterDao
 import com.edujournal.data.local.dao.StudentDao
 import com.edujournal.data.local.dao.SubjectDao
-import com.edujournal.data.local.dao.SubjectLessonTypeHoursDao
 import com.edujournal.data.local.database.AppDatabase
 import com.edujournal.data.local.datasource.GradeLocalDataSource
 import com.edujournal.data.local.datasource.GroupLocalDataSource
+import com.edujournal.data.local.datasource.HomeworkLocalDataSource
+import com.edujournal.data.local.datasource.HomeworkSubmissionLocalDataSource
 import com.edujournal.data.local.datasource.LessonLocalDataSource
-import com.edujournal.data.local.datasource.LessonTypeLocalDataSource
+import com.edujournal.data.local.datasource.SubjectLessonTypeLocalDataSource
 import com.edujournal.data.local.datasource.SemesterLocalDataSource
 import com.edujournal.data.local.datasource.StudentLocalDataSource
 import com.edujournal.data.local.datasource.SubjectLocalDataSource
-import com.edujournal.data.local.datasource.SubjectLessonTypeHoursLocalDataSource
 import com.edujournal.data.repository.GradeRepositoryImpl
 import com.edujournal.data.repository.GroupRepositoryImpl
+import com.edujournal.data.repository.HomeworkRepositoryImpl
+import com.edujournal.data.repository.HomeworkSubmissionRepositoryImpl
 import com.edujournal.data.repository.LessonRepositoryImpl
-import com.edujournal.data.repository.LessonTypeRepositoryImpl
+import com.edujournal.data.repository.SubjectLessonTypeRepositoryImpl
 import com.edujournal.data.repository.SemesterRepositoryImpl
 import com.edujournal.data.repository.StudentRepositoryImpl
 import com.edujournal.data.repository.SubjectRepositoryImpl
-import com.edujournal.data.repository.SubjectLessonTypeHoursRepositoryImpl
 import com.edujournal.domain.repository.GradeRepository
 import com.edujournal.domain.repository.GroupRepository
+import com.edujournal.domain.repository.HomeworkRepository
+import com.edujournal.domain.repository.HomeworkSubmissionRepository
 import com.edujournal.domain.repository.LessonRepository
-import com.edujournal.domain.repository.LessonTypeRepository
+import com.edujournal.domain.repository.SubjectLessonTypeRepository
 import com.edujournal.domain.repository.SemesterRepository
 import com.edujournal.domain.repository.StudentRepository
 import com.edujournal.domain.repository.SubjectRepository
-import com.edujournal.domain.repository.SubjectLessonTypeHoursRepository
 import com.edujournal.domain.usecase.CreateGroupUseCase
-import com.edujournal.domain.usecase.CreateLessonTypeUseCase
+import com.edujournal.domain.usecase.CreateHomeworkUseCase
+import com.edujournal.domain.usecase.CreateSubjectLessonTypeUseCase
 import com.edujournal.domain.usecase.CreateLessonUseCase
 import com.edujournal.domain.usecase.CreateSemesterUseCase
 import com.edujournal.domain.usecase.CreateStudentUseCase
 import com.edujournal.domain.usecase.CreateSubjectUseCase
 import com.edujournal.domain.usecase.DeleteGroupUseCase
-import com.edujournal.domain.usecase.DeleteLessonTypeUseCase
+import com.edujournal.domain.usecase.DeleteHomeworkUseCase
+import com.edujournal.domain.usecase.DeleteSubjectLessonTypeUseCase
 import com.edujournal.domain.usecase.DeleteSemesterUseCase
 import com.edujournal.domain.usecase.DeleteStudentUseCase
 import com.edujournal.domain.usecase.DeleteSubjectUseCase
@@ -52,17 +58,20 @@ import com.edujournal.domain.usecase.GetGradesForLessonUseCase
 import com.edujournal.domain.usecase.GetGroupsUseCase
 import com.edujournal.domain.usecase.GetJournalUseCase
 import com.edujournal.domain.usecase.GetLessonsUseCase
-import com.edujournal.domain.usecase.ObserveLessonTypesUseCase
+import com.edujournal.domain.usecase.ObserveHomeworksUseCase
+import com.edujournal.domain.usecase.ObserveHomeworkSubmissionsUseCase
+import com.edujournal.domain.usecase.ObserveSubjectLessonTypesUseCase
 import com.edujournal.domain.usecase.ObserveSemestersUseCase
-import com.edujournal.domain.usecase.ObserveSubjectLessonTypeHoursUseCase
 import com.edujournal.domain.usecase.ObserveStudentsUseCase
 import com.edujournal.domain.usecase.ObserveSubjectsUseCase
 import com.edujournal.domain.usecase.SetGradeUseCase
 import com.edujournal.domain.usecase.UpdateGroupUseCase
-import com.edujournal.domain.usecase.UpdateLessonTypeUseCase
+import com.edujournal.domain.usecase.UpdateHomeworkUseCase
+import com.edujournal.domain.usecase.UpdateSubjectLessonTypeUseCase
 import com.edujournal.domain.usecase.UpdateSemesterUseCase
 import com.edujournal.domain.usecase.UpdateStudentUseCase
 import com.edujournal.domain.usecase.UpdateSubjectUseCase
+import com.edujournal.domain.usecase.UpsertHomeworkSubmissionUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -127,11 +136,6 @@ object DatabaseModule {
                 try {
                     val usedFullNames = mutableSetOf<String>()
 
-                    db.execSQL("INSERT INTO lesson_types (name) VALUES ('Лекция')")
-                    db.execSQL("INSERT INTO lesson_types (name) VALUES ('Практика')")
-                    db.execSQL("INSERT INTO lesson_types (name) VALUES ('Лабораторная')")
-                    db.execSQL("INSERT INTO lesson_types (name) VALUES ('Контрольная')")
-
                     db.execSQL("INSERT INTO semesters (season, year) VALUES ('AUTUMN', 2025)")
                     db.execSQL("INSERT INTO semesters (season, year) VALUES ('SPRING', 2026)")
                     db.execSQL("INSERT INTO semesters (season, year) VALUES ('AUTUMN', 2026)")
@@ -144,6 +148,25 @@ object DatabaseModule {
                     db.execSQL("INSERT INTO subjects (name, abbreviation) VALUES ('Основы программной инженерии', 'ОПИ')")
                     db.execSQL("INSERT INTO subjects (name, abbreviation) VALUES ('Компьютерные системы и сети', 'КСиС')")
                     db.execSQL("INSERT INTO subjects (name, abbreviation) VALUES ('Базы данных', 'БД')")
+
+                    val subjectsCursor = db.query("SELECT id FROM subjects ORDER BY id")
+                    subjectsCursor.use { cursor ->
+                        while (cursor.moveToNext()) {
+                            val subjectId = cursor.getLong(0)
+                            db.execSQL(
+                                "INSERT INTO lesson_types (subjectId, name, hours) VALUES (?, ?, ?)",
+                                arrayOf(subjectId, "Лекция", 20.0)
+                            )
+                            db.execSQL(
+                                "INSERT INTO lesson_types (subjectId, name, hours) VALUES (?, ?, ?)",
+                                arrayOf(subjectId, "Практика", 30.0)
+                            )
+                            db.execSQL(
+                                "INSERT INTO lesson_types (subjectId, name, hours) VALUES (?, ?, ?)",
+                                arrayOf(subjectId, "Лабораторная", 10.0)
+                            )
+                        }
+                    }
 
                     val groupsCursor = db.query("SELECT id FROM `groups` ORDER BY id")
                     groupsCursor.use { cursor ->
@@ -179,26 +202,26 @@ object DatabaseModule {
                         SELECT g.id, s.id, lt.id
                         FROM `groups` g
                         CROSS JOIN subjects s
-                        CROSS JOIN lesson_types lt
+                        JOIN lesson_types lt ON lt.subjectId = s.id
                         """.trimIndent()
                     )
                     combinationsCursor.use { cursor ->
                         while (cursor.moveToNext()) {
                             val groupId = cursor.getLong(0)
                             val subjectId = cursor.getLong(1)
-                            val lessonTypeId = cursor.getLong(2)
+                            val subjectLessonTypeId = cursor.getLong(2)
 
                             val baseDate = LocalDate.of(2026, 9, 1)
-                            val typeOffset = ((lessonTypeId - 1L).coerceAtLeast(0L) * 40L).toInt()
+                            val typeOffset = ((subjectLessonTypeId - 1L).coerceAtLeast(0L) * 40L).toInt()
                             for (i in 0 until 18) {
                                 val date = baseDate.plusDays((typeOffset + i).toLong()).toString()
                                 val topic = "Тема ${i + 1}"
                                 db.execSQL(
                                     """
-                                    INSERT OR IGNORE INTO lessons (groupId, subjectId, lessonTypeId, semesterId, date, topic)
+                                    INSERT OR IGNORE INTO lessons (groupId, subjectId, subjectLessonTypeId, semesterId, date, topic)
                                     VALUES (?, ?, ?, ?, ?, ?)
                                     """.trimIndent(),
-                                    arrayOf(groupId, subjectId, lessonTypeId, 1L, date, topic)
+                                    arrayOf(groupId, subjectId, subjectLessonTypeId, 1L, date, topic)
                                 )
                             }
                         }
@@ -320,28 +343,11 @@ object DatabaseModule {
     ): DeleteSemesterUseCase = DeleteSemesterUseCase(repository)
 
     @Provides
-    fun provideSubjectLessonTypeHoursDao(
-        database: AppDatabase
-    ): SubjectLessonTypeHoursDao = database.subjectLessonTypeHoursDao()
-
-    @Provides
-    fun provideSubjectLessonTypeHoursLocalDataSource(
-        dao: SubjectLessonTypeHoursDao
-    ): SubjectLessonTypeHoursLocalDataSource =
-        SubjectLessonTypeHoursLocalDataSource(dao)
-
-    @Provides
-    fun provideSubjectLessonTypeHoursRepository(
-        localDataSource: SubjectLessonTypeHoursLocalDataSource
-    ): SubjectLessonTypeHoursRepository =
-        SubjectLessonTypeHoursRepositoryImpl(localDataSource)
-
-    @Provides
     fun provideCreateSubjectUseCase(
         repository: SubjectRepository,
-        subjectLessonTypeHoursRepository: SubjectLessonTypeHoursRepository
+        lessonTypeRepository: SubjectLessonTypeRepository
     ): CreateSubjectUseCase =
-        CreateSubjectUseCase(repository, subjectLessonTypeHoursRepository)
+        CreateSubjectUseCase(repository, lessonTypeRepository)
 
     @Provides
     fun provideObserveSubjectsUseCase(
@@ -350,39 +356,33 @@ object DatabaseModule {
         ObserveSubjectsUseCase(repository)
 
     @Provides
-    fun provideObserveSubjectLessonTypeHoursUseCase(
-        repository: SubjectLessonTypeHoursRepository
-    ): ObserveSubjectLessonTypeHoursUseCase =
-        ObserveSubjectLessonTypeHoursUseCase(repository)
-
-    @Provides
     fun provideLessonTypeDao(
         database: AppDatabase
-    ): LessonTypeDao = database.lessonTypeDao()
+    ): SubjectLessonTypeDao = database.lessonTypeDao()
 
     @Provides
     fun provideLessonTypeLocalDataSource(
-        dao: LessonTypeDao
-    ): LessonTypeLocalDataSource =
-        LessonTypeLocalDataSource(dao)
+        dao: SubjectLessonTypeDao
+    ): SubjectLessonTypeLocalDataSource =
+        SubjectLessonTypeLocalDataSource(dao)
 
     @Provides
     fun provideLessonTypeRepository(
-        localDataSource: LessonTypeLocalDataSource
-    ): LessonTypeRepository =
-        LessonTypeRepositoryImpl(localDataSource)
+        localDataSource: SubjectLessonTypeLocalDataSource
+    ): SubjectLessonTypeRepository =
+        SubjectLessonTypeRepositoryImpl(localDataSource)
 
     @Provides
     fun provideCreateLessonTypeUseCase(
-        repository: LessonTypeRepository
-    ): CreateLessonTypeUseCase =
-        CreateLessonTypeUseCase(repository)
+        repository: SubjectLessonTypeRepository
+    ): CreateSubjectLessonTypeUseCase =
+        CreateSubjectLessonTypeUseCase(repository)
 
     @Provides
     fun provideObserveLessonTypesUseCase(
-        repository: LessonTypeRepository
-    ): ObserveLessonTypesUseCase =
-        ObserveLessonTypesUseCase(repository)
+        repository: SubjectLessonTypeRepository
+    ): ObserveSubjectLessonTypesUseCase =
+        ObserveSubjectLessonTypesUseCase(repository)
 
     @Provides
     fun provideLessonDao(
@@ -454,11 +454,70 @@ object DatabaseModule {
     }
 
     @Provides
+    fun provideHomeworkDao(
+        database: AppDatabase
+    ): HomeworkDao = database.homeworkDao()
+
+    @Provides
+    fun provideHomeworkLocalDataSource(
+        dao: HomeworkDao
+    ): HomeworkLocalDataSource = HomeworkLocalDataSource(dao)
+
+    @Provides
+    fun provideHomeworkRepository(
+        localDataSource: HomeworkLocalDataSource
+    ): HomeworkRepository = HomeworkRepositoryImpl(localDataSource)
+
+    @Provides
+    fun provideObserveHomeworksUseCase(
+        repository: HomeworkRepository
+    ): ObserveHomeworksUseCase = ObserveHomeworksUseCase(repository)
+
+    @Provides
+    fun provideCreateHomeworkUseCase(
+        repository: HomeworkRepository
+    ): CreateHomeworkUseCase = CreateHomeworkUseCase(repository)
+
+    @Provides
+    fun provideUpdateHomeworkUseCase(
+        repository: HomeworkRepository
+    ): UpdateHomeworkUseCase = UpdateHomeworkUseCase(repository)
+
+    @Provides
+    fun provideDeleteHomeworkUseCase(
+        repository: HomeworkRepository
+    ): DeleteHomeworkUseCase = DeleteHomeworkUseCase(repository)
+
+    @Provides
+    fun provideHomeworkSubmissionDao(
+        database: AppDatabase
+    ): HomeworkSubmissionDao = database.homeworkSubmissionDao()
+
+    @Provides
+    fun provideHomeworkSubmissionLocalDataSource(
+        dao: HomeworkSubmissionDao
+    ): HomeworkSubmissionLocalDataSource = HomeworkSubmissionLocalDataSource(dao)
+
+    @Provides
+    fun provideHomeworkSubmissionRepository(
+        localDataSource: HomeworkSubmissionLocalDataSource
+    ): HomeworkSubmissionRepository = HomeworkSubmissionRepositoryImpl(localDataSource)
+
+    @Provides
+    fun provideObserveHomeworkSubmissionsUseCase(
+        repository: HomeworkSubmissionRepository
+    ): ObserveHomeworkSubmissionsUseCase = ObserveHomeworkSubmissionsUseCase(repository)
+
+    @Provides
+    fun provideUpsertHomeworkSubmissionUseCase(
+        repository: HomeworkSubmissionRepository
+    ): UpsertHomeworkSubmissionUseCase = UpsertHomeworkSubmissionUseCase(repository)
+
+    @Provides
     fun provideUpdateSubjectUseCase(
-        repository: SubjectRepository,
-        subjectLessonTypeHoursRepository: SubjectLessonTypeHoursRepository
+        repository: SubjectRepository
     ): UpdateSubjectUseCase =
-        UpdateSubjectUseCase(repository, subjectLessonTypeHoursRepository)
+        UpdateSubjectUseCase(repository)
 
     @Provides
     fun provideDeleteSubjectUseCase(
@@ -467,14 +526,14 @@ object DatabaseModule {
 
     @Provides
     fun provideUpdateLessonTypeUseCase(
-        repository: LessonTypeRepository
-    ): UpdateLessonTypeUseCase =
-        UpdateLessonTypeUseCase(repository)
+        repository: SubjectLessonTypeRepository
+    ): UpdateSubjectLessonTypeUseCase =
+        UpdateSubjectLessonTypeUseCase(repository)
 
     @Provides
     fun provideDeleteLessonTypeUseCase(
-        repository: LessonTypeRepository
-    ): DeleteLessonTypeUseCase = DeleteLessonTypeUseCase(repository)
+        repository: SubjectLessonTypeRepository
+    ): DeleteSubjectLessonTypeUseCase = DeleteSubjectLessonTypeUseCase(repository)
 
     @Provides
     fun provideUpdateGroupUseCase(
@@ -498,4 +557,6 @@ object DatabaseModule {
         repository: StudentRepository
     ): DeleteStudentUseCase = DeleteStudentUseCase(repository)
 }
+
+
 
