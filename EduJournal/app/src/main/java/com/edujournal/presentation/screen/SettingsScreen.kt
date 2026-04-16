@@ -1,8 +1,11 @@
 package com.edujournal.presentation.screen
 
 import android.app.KeyguardManager
+import android.net.Uri
 import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.biometric.BiometricManager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -28,6 +31,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.edujournal.R
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +41,9 @@ fun SettingsScreen(
     biometricEnabled: Boolean,
     onSaveUserName: (String) -> Unit,
     onBiometricToggle: (Boolean) -> Unit,
-    onManageSemesters: () -> Unit
+    onManageSemesters: () -> Unit,
+    onExportDatabase: (Uri) -> Unit,
+    onImportDatabase: (Uri) -> Unit
 ) {
     val context = LocalContext.current
     var editedName by remember(userName) { mutableStateOf(userName) }
@@ -44,6 +51,19 @@ fun SettingsScreen(
     val nameSavedText = stringResource(R.string.settings_name_saved)
     val biometricEnrollText = stringResource(R.string.settings_biometric_enroll)
     val biometricUnavailableText = stringResource(R.string.settings_biometric_unavailable)
+    val timestampFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm") }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { uri ->
+        if (uri != null) onExportDatabase(uri)
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) onImportDatabase(uri)
+    }
 
     Scaffold(
         topBar = {
@@ -136,6 +156,29 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(stringResource(R.string.settings_manage_semesters))
+                }
+            }
+
+            item {
+                Button(
+                    onClick = {
+                        val timestamp = LocalDateTime.now().format(timestampFormatter)
+                        exportLauncher.launch("EduJournal_backup_$timestamp.db")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.settings_export_db))
+                }
+            }
+
+            item {
+                Button(
+                    onClick = {
+                        importLauncher.launch(arrayOf("application/octet-stream", "application/x-sqlite3", "*/*"))
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.settings_import_db))
                 }
             }
         }

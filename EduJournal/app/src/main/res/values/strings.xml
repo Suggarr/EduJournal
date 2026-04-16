@@ -141,6 +141,12 @@
     <string name="settings_biometric_enroll">Настройте биометрию или код экрана блокировки в устройстве</string>
     <string name="settings_biometric_unavailable">Биометрия/код недоступны на этом устройстве</string>
     <string name="settings_manage_semesters">Управление семестрами</string>
+    <string name="settings_export_db">Экспорт базы данных</string>
+    <string name="settings_import_db">Импорт базы данных</string>
+    <string name="settings_db_export_success">База данных успешно экспортирована</string>
+    <string name="settings_db_export_error">Не удалось экспортировать базу данных</string>
+    <string name="settings_db_import_success">База данных импортирована. Приложение будет перезапущено</string>
+    <string name="settings_db_import_error">Не удалось импортировать базу данных. Проверьте файл</string>
     <string name="settings_semesters_title">Семестры</string>
     <string name="settings_semester_add">Добавить семестр</string>
     <string name="settings_semester_edit">Изменить семестр</string>

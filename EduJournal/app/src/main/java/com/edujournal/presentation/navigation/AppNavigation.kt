@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -40,6 +41,7 @@ import com.edujournal.presentation.screen.StudentScreen
 import com.edujournal.presentation.screen.SubjectScreen
 import com.edujournal.presentation.screen.WelcomeScreen
 import com.edujournal.presentation.viewmodel.MainViewModel
+import com.edujournal.presentation.viewmodel.SettingsEvent
 
 private data class BottomNavItem(
     val route: String,
@@ -60,6 +62,20 @@ fun AppNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val semesterRequiredMessage = stringResource(R.string.semester_required_for_navigation)
+
+    LaunchedEffect(viewModel, context) {
+        viewModel.settingsEvents.collect { event ->
+            when (event) {
+                is SettingsEvent.Message -> {
+                    Toast.makeText(context, context.getString(event.resId), Toast.LENGTH_SHORT).show()
+                }
+                is SettingsEvent.MessageText -> {
+                    Toast.makeText(context, event.text, Toast.LENGTH_LONG).show()
+                }
+                SettingsEvent.RestartRequired -> restartApplication(context)
+            }
+        }
+    }
 
     val startDestination = if (userName == null) Routes.WELCOME else Routes.SUBJECTS
 
@@ -292,7 +308,9 @@ fun AppNavigation(
                     biometricEnabled = biometricEnabled,
                     onSaveUserName = { viewModel.updateUserName(it) },
                     onBiometricToggle = { viewModel.setBiometricEnabled(it) },
-                    onManageSemesters = { navController.navigate(Routes.SEMESTERS) }
+                    onManageSemesters = { navController.navigate(Routes.SEMESTERS) },
+                    onExportDatabase = { uri -> viewModel.exportDatabase(uri) },
+                    onImportDatabase = { uri -> viewModel.importDatabase(uri) }
                 )
             }
 
@@ -303,6 +321,14 @@ fun AppNavigation(
             }
         }
     }
+}
+
+private fun restartApplication(context: android.content.Context) {
+    val packageManager = context.packageManager
+    val launchIntent = packageManager.getLaunchIntentForPackage(context.packageName) ?: return
+    launchIntent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    context.startActivity(launchIntent)
+    Runtime.getRuntime().exit(0)
 }
 
 private fun currentTopLevelRoute(destination: NavDestination?): String {
