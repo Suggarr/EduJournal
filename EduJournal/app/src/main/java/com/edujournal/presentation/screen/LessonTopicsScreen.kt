@@ -64,15 +64,14 @@ private val lessonDateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern
 @Composable
 fun LessonTopicsScreen(
     groupId: Long,
-    subjectId: Long,
     subjectLessonTypeId: Long,
     semesterId: Long,
     onBack: () -> Unit,
     onHomeworkClick: (Long) -> Unit,
     viewModel: LessonTopicsViewModel = hiltViewModel()
 ) {
-    val lessonsFlow = remember(groupId, subjectId, subjectLessonTypeId, semesterId) {
-        viewModel.observeLessons(groupId, subjectId, subjectLessonTypeId, semesterId)
+    val lessonsFlow = remember(groupId, subjectLessonTypeId, semesterId) {
+        viewModel.observeLessons(groupId, subjectLessonTypeId, semesterId)
     }
     val lessons by lessonsFlow.collectAsState()
     val currentLessons = lessons
@@ -193,7 +192,7 @@ fun LessonTopicsScreen(
             },
             onDismiss = { showAddDialog = false },
             onConfirm = { date, topic ->
-                viewModel.addLesson(groupId, subjectId, subjectLessonTypeId, semesterId, date, topic)
+                viewModel.addLesson(groupId, subjectLessonTypeId, semesterId, date, topic)
                 showAddDialog = false
             }
         )

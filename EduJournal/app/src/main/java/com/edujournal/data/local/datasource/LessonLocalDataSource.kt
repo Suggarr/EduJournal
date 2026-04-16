@@ -10,11 +10,10 @@ class LessonLocalDataSource @Inject constructor(
 ){
     fun observeLessons(
         groupId: Long,
-        subjectId: Long,
         subjectLessonTypeId: Long,
         semesterId: Long
     ): Flow<List<LessonEntity>> {
-        return lessonDao.observeLessons(groupId, subjectId, subjectLessonTypeId, semesterId)
+        return lessonDao.observeLessons(groupId, subjectLessonTypeId, semesterId)
     }
 
     fun observeLessonById(lessonId: Long): Flow<LessonEntity?> {

@@ -33,14 +33,12 @@ interface GradeDao {
         AND grades.lessonId = lessons.id
         WHERE students.groupId = :groupId
         AND lessons.groupId = :groupId
-        AND lessons.subjectId = :subjectId
         AND lessons.subjectLessonTypeId = :subjectLessonTypeId
         AND lessons.semesterId = :semesterId
         ORDER BY students.lastName, students.firstName, lessons.date
         """)
     fun getJournal(
         groupId: Long,
-        subjectId: Long,
         subjectLessonTypeId: Long,
         semesterId: Long
     ): Flow<List<JournalRow>>
@@ -57,14 +55,15 @@ interface GradeDao {
         FROM students
         LEFT JOIN lessons
             ON lessons.groupId = students.groupId
-            AND lessons.subjectId = :subjectId
             AND lessons.semesterId = :semesterId
         LEFT JOIN lesson_types
             ON lesson_types.id = lessons.subjectLessonTypeId
+            AND lesson_types.subjectId = :subjectId
         LEFT JOIN grades
             ON grades.studentId = students.id
             AND grades.lessonId = lessons.id
         WHERE students.groupId = :groupId
+          AND (lessons.id IS NULL OR lesson_types.id IS NOT NULL)
         ORDER BY students.lastName, students.firstName, lessons.date
         """
     )

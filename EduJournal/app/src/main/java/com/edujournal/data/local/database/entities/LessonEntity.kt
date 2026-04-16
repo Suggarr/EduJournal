@@ -16,12 +16,6 @@ import java.time.LocalDate
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = SubjectEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["subjectId"],
-            onDelete = ForeignKey.CASCADE
-        ),
-        ForeignKey(
             entity = SubjectLessonTypeEntity::class,
             parentColumns = ["id"],
             childColumns = ["subjectLessonTypeId"],
@@ -36,11 +30,10 @@ import java.time.LocalDate
     ],
     indices = [
         Index("groupId"),
-        Index("subjectId"),
         Index("subjectLessonTypeId"),
         Index("semesterId"),
         Index(
-            value = ["groupId", "subjectId", "date"],
+            value = ["groupId", "subjectLessonTypeId", "date"],
             unique = true
         )
     ]
@@ -49,7 +42,6 @@ data class LessonEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val groupId: Long,
-    val subjectId: Long,
     val subjectLessonTypeId: Long,
     val semesterId: Long = 1L,
     val date: LocalDate,

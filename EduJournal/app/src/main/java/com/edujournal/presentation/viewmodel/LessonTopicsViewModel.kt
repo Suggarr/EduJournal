@@ -28,11 +28,10 @@ class LessonTopicsViewModel @Inject constructor(
 
     fun observeLessons(
         groupId: Long,
-        subjectId: Long,
         subjectLessonTypeId: Long,
         semesterId: Long
     ): StateFlow<List<Lesson>?> {
-        return getLessonsUseCase(groupId, subjectId, subjectLessonTypeId, semesterId)
+        return getLessonsUseCase(groupId, subjectLessonTypeId, semesterId)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
     }
 
@@ -46,7 +45,6 @@ class LessonTopicsViewModel @Inject constructor(
 
     fun addLesson(
         groupId: Long,
-        subjectId: Long,
         subjectLessonTypeId: Long,
         semesterId: Long,
         date: LocalDate,
@@ -58,7 +56,6 @@ class LessonTopicsViewModel @Inject constructor(
                     Lesson(
                         id = 0,
                         groupId = groupId,
-                        subjectId = subjectId,
                         subjectLessonTypeId = subjectLessonTypeId,
                         semesterId = semesterId,
                         date = date,

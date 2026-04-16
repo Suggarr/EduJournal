@@ -13,17 +13,15 @@ interface LessonDao {
 
     @Query(
         """
-        SELECT * FROM lessons
-        WHERE groupId = :groupId
-        AND subjectId = :subjectId
-        AND subjectLessonTypeId = :subjectLessonTypeId
-        AND semesterId = :semesterId
-        ORDER BY date
+        SELECT lessons.* FROM lessons
+        WHERE lessons.groupId = :groupId
+        AND lessons.subjectLessonTypeId = :subjectLessonTypeId
+        AND lessons.semesterId = :semesterId
+        ORDER BY lessons.date
         """
     )
     fun observeLessons(
         groupId: Long,
-        subjectId: Long,
         subjectLessonTypeId: Long,
         semesterId: Long
     ): Flow<List<LessonEntity>>

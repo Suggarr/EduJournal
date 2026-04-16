@@ -7,7 +7,6 @@ fun LessonEntity.toDomain(): Lesson {
     return Lesson(
         id = id,
         groupId = groupId,
-        subjectId = subjectId,
         subjectLessonTypeId = subjectLessonTypeId,
         semesterId = semesterId,
         date = date,
@@ -19,7 +18,6 @@ fun Lesson.toEntity(): LessonEntity {
     return LessonEntity(
         id = id,
         groupId = groupId,
-        subjectId = subjectId,
         subjectLessonTypeId = subjectLessonTypeId,
         semesterId = semesterId,
         date = date,

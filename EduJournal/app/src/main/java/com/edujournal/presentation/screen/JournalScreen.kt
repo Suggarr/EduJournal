@@ -65,20 +65,19 @@ import kotlinx.coroutines.withContext
 @Composable
 fun JournalScreen(
     groupId: Long,
-    subjectId: Long,
     subjectLessonTypeId: Long,
     semesterId: Long,
     onBack: () -> Unit,
-    onAnalyticsClick: () -> Unit,
+    onAnalyticsClick: (Long) -> Unit,
     onTopicsClick: () -> Unit,
     viewModel: JournalViewModel = hiltViewModel()
 ) {
-    val journalFlow = remember(groupId, subjectId, subjectLessonTypeId, semesterId) {
-        viewModel.observeJournal(groupId, subjectId, subjectLessonTypeId, semesterId)
+    val journalFlow = remember(groupId, subjectLessonTypeId, semesterId) {
+        viewModel.observeJournal(groupId, subjectLessonTypeId, semesterId)
     }
     val state by journalFlow.collectAsState()
-    val journalMetaFlow = remember(groupId, subjectId, subjectLessonTypeId, semesterId) {
-        viewModel.observeJournalMeta(groupId, subjectId, subjectLessonTypeId, semesterId)
+    val journalMetaFlow = remember(groupId, subjectLessonTypeId, semesterId) {
+        viewModel.observeJournalMeta(groupId, subjectLessonTypeId, semesterId)
     }
     val journalMeta by journalMetaFlow.collectAsState()
     val autumnLabel = stringResource(R.string.settings_semester_autumn)
@@ -174,7 +173,7 @@ fun JournalScreen(
                                 text = { Text(stringResource(R.string.journal_analytics_button)) },
                                 onClick = {
                                     showActionsMenu = false
-                                    onAnalyticsClick()
+                                    journalMeta?.subjectId?.let(onAnalyticsClick)
                                 }
                             )
                             DropdownMenuItem(

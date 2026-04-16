@@ -42,14 +42,13 @@ class JournalViewModel @Inject constructor(
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     fun observeJournal(
         groupId: Long,
-        subjectId: Long,
         subjectLessonTypeId: Long,
         semesterId: Long
     ): StateFlow<JournalState?> {
 
         return combine(
-            getJournalUseCase(groupId, subjectId, subjectLessonTypeId, semesterId),
-            getLessonsUseCase(groupId, subjectId, subjectLessonTypeId, semesterId)
+            getJournalUseCase(groupId, subjectLessonTypeId, semesterId),
+            getLessonsUseCase(groupId, subjectLessonTypeId, semesterId)
         ) { journalRows, lessons -> journalRows to lessons }
             .flatMapLatest { (journalRows, lessons) ->
                 val lessonIds = lessons.map { it.id }
@@ -97,7 +96,6 @@ class JournalViewModel @Inject constructor(
 
     fun observeJournalMeta(
         groupId: Long,
-        subjectId: Long,
         subjectLessonTypeId: Long,
         semesterId: Long
     ): StateFlow<JournalMetaState?> {
@@ -107,11 +105,12 @@ class JournalViewModel @Inject constructor(
             getGroupsUseCase(),
             observeSemestersUseCase()
         ) { subjects, SubjectLessonType, groups, semesters ->
-            val subject = subjects.firstOrNull { it.id == subjectId }
+            val subject = subjects.firstOrNull { it.id == SubjectLessonType?.subjectId }
             val group = groups.firstOrNull { it.id == groupId }
             val semester = semesters.firstOrNull { it.id == semesterId }
 
             JournalMetaState(
+                subjectId = subject?.id,
                 subjectLabel = subject?.abbreviation?.takeIf { it.isNotBlank() } ?: subject?.name.orEmpty(),
                 lessonTypeLabel = SubjectLessonType?.name.orEmpty(),
                 groupLabel = group?.name.orEmpty(),

@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.Flow
 interface LessonRepository {
     fun observeLessons(
         groupId: Long,
-        subjectId: Long,
         subjectLessonTypeId: Long,
         semesterId: Long
     ): Flow<List<Lesson>>

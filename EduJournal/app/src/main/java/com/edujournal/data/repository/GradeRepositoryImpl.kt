@@ -26,11 +26,10 @@ class GradeRepositoryImpl @Inject constructor(
 
     override fun getJournal(
         groupId: Long,
-        subjectId: Long,
         subjectLessonTypeId: Long,
         semesterId: Long
     ): Flow<List<JournalRow>> {
-        return localDataSource.getJournal(groupId, subjectId, subjectLessonTypeId, semesterId)
+        return localDataSource.getJournal(groupId, subjectLessonTypeId, semesterId)
     }
 
     override fun observeDisciplineGrades(

@@ -1,6 +1,7 @@
 package com.edujournal.presentation.state
 
 data class JournalMetaState(
+    val subjectId: Long? = null,
     val subjectLabel: String,
     val lessonTypeLabel: String,
     val groupLabel: String,
