@@ -76,4 +76,5 @@ dependencies {
     implementation("androidx.biometric:biometric:1.1.0")
     implementation("org.apache.commons:commons-csv:1.11.0")
     implementation("org.apache.poi:poi-ooxml:5.4.1")
+    implementation("io.github.ehsannarmani:compose-charts:0.1.7")
 }

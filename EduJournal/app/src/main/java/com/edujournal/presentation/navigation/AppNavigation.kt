@@ -187,6 +187,9 @@ fun AppNavigation(
                     onGroupClick = { groupId ->
                         navController.navigate(Routes.journal(semesterId, groupId, subjectLessonTypeId))
                     },
+                    onGroupAnalyticsClick = { groupId ->
+                        navController.navigate(Routes.analytics(semesterId, groupId, subjectId))
+                    },
                     onBackClick = { navController.popBackStack() }
                 )
             }
@@ -233,9 +236,6 @@ fun AppNavigation(
                     subjectLessonTypeId = subjectLessonTypeId,
                     semesterId = semesterId,
                     onBack = { navController.popBackStack() },
-                    onAnalyticsClick = { subjectId ->
-                        navController.navigate(Routes.analytics(semesterId, groupId, subjectId))
-                    },
                     onTopicsClick = {
                         navController.navigate(Routes.lessonTopics(semesterId, groupId, subjectLessonTypeId))
                     }

@@ -49,6 +49,8 @@ interface GradeDao {
             students.id AS studentId,
             students.firstName AS studentFirstName,
             students.lastName AS studentLastName,
+            lessons.id AS lessonId,
+            lessons.date AS lessonDate,
             lesson_types.name AS lessonTypeName,
             grades.value AS gradeValue,
             grades.type AS gradeType

@@ -8,13 +8,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.edujournal.R
 import com.edujournal.domain.model.Group
 
 @Composable
 fun GroupCard(
     group: Group,
     onClick: () -> Unit,
+    onAnalytics: (() -> Unit)? = null,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -34,6 +37,12 @@ fun GroupCard(
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.weight(1f)
             )
+
+            if (onAnalytics != null) {
+                TextButton(onClick = onAnalytics) {
+                    Text(stringResource(R.string.group_analytics))
+                }
+            }
 
             IconButton(onClick = onEdit) {
                 Icon(Icons.Default.Edit, contentDescription = null)

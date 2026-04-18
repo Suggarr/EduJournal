@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -68,7 +69,6 @@ fun JournalScreen(
     subjectLessonTypeId: Long,
     semesterId: Long,
     onBack: () -> Unit,
-    onAnalyticsClick: (Long) -> Unit,
     onTopicsClick: () -> Unit,
     viewModel: JournalViewModel = hiltViewModel()
 ) {
@@ -82,6 +82,7 @@ fun JournalScreen(
     val journalMeta by journalMetaFlow.collectAsState()
     val autumnLabel = stringResource(R.string.settings_semester_autumn)
     val springLabel = stringResource(R.string.settings_semester_spring)
+    val semesterFallback = stringResource(R.string.journal_semester_fallback, semesterId)
     val semesterLabel = remember(journalMeta) {
         val seasonLabel = when (journalMeta?.semesterSeason) {
             SemesterSeason.AUTUMN.name -> autumnLabel
@@ -91,7 +92,7 @@ fun JournalScreen(
         if (seasonLabel != null && journalMeta?.semesterYear != null) {
             "$seasonLabel ${journalMeta?.semesterYear}"
         } else {
-            "РЎРµРјРµСЃС‚СЂ $semesterId"
+            semesterFallback
         }
     }
 
@@ -167,13 +168,6 @@ fun JournalScreen(
                                     } else {
                                         showExportDialog = true
                                     }
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.journal_analytics_button)) },
-                                onClick = {
-                                    showActionsMenu = false
-                                    journalMeta?.subjectId?.let(onAnalyticsClick)
                                 }
                             )
                             DropdownMenuItem(

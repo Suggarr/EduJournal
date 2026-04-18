@@ -46,6 +46,7 @@ import kotlinx.coroutines.flow.collect
 @Composable
 fun GroupScreen(
     onGroupClick: (Long) -> Unit,
+    onGroupAnalyticsClick: ((Long) -> Unit)? = null,
     onBackClick: () -> Unit,
     showBackButton: Boolean = true,
     viewModel: GroupViewModel = hiltViewModel()
@@ -106,6 +107,9 @@ fun GroupScreen(
                         GroupCard(
                             group = group,
                             onClick = { onGroupClick(group.id) },
+                            onAnalytics = onGroupAnalyticsClick?.let { callback ->
+                                { callback(group.id) }
+                            },
                             onEdit = { groupToEdit = group },
                             onDelete = { groupToDelete = group }
                         )
