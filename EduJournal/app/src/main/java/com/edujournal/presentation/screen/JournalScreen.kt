@@ -351,7 +351,7 @@ fun GradeSelectionDialog(
                             .weight(1f)
                             .padding(end = 6.dp)
                     ) {
-                        Text("\u041D")
+                        Text("Н")
                     }
                     Button(
                         onClick = { onTypeSelected(GradeType.SICK) },
@@ -359,13 +359,13 @@ fun GradeSelectionDialog(
                             .weight(1f)
                             .padding(end = 6.dp)
                     ) {
-                        Text("\u0417")
+                        Text("З")
                     }
                     Button(
                         onClick = { onTypeSelected(GradeType.PASS) },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("\u041E")
+                        Text("О")
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))

@@ -2,24 +2,32 @@ package com.edujournal.domain.usecase
 
 import com.edujournal.domain.model.Student
 import com.edujournal.domain.repository.StudentRepository
+import com.edujournal.utils.normalizeSpaces
+import com.edujournal.utils.normalizeSpacesOrNull
 import javax.inject.Inject
 
 class UpdateStudentUseCase @Inject constructor(
     private val repository: StudentRepository
 ) {
     suspend operator fun invoke(student: Student): EntityWriteResult {
-        if (!repository.existsById(student.id)) return EntityWriteResult.NOT_FOUND
+        val normalizedStudent = student.copy(
+            firstName = student.firstName.normalizeSpaces(),
+            lastName = student.lastName.normalizeSpaces(),
+            middleName = student.middleName.normalizeSpacesOrNull().orEmpty()
+        )
+
+        if (!repository.existsById(normalizedStudent.id)) return EntityWriteResult.NOT_FOUND
         if (repository.existsByFullNameInGroupExceptId(
-                id = student.id,
-                groupId = student.groupId,
-                lastName = student.lastName,
-                firstName = student.firstName,
-                middleName = student.middleName
+                id = normalizedStudent.id,
+                groupId = normalizedStudent.groupId,
+                lastName = normalizedStudent.lastName,
+                firstName = normalizedStudent.firstName,
+                middleName = normalizedStudent.middleName
             )
         ) {
             return EntityWriteResult.DUPLICATE
         }
-        repository.updateStudent(student)
+        repository.updateStudent(normalizedStudent)
         return EntityWriteResult.SUCCESS
     }
 }

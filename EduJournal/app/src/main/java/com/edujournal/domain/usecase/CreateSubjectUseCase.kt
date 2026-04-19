@@ -4,6 +4,8 @@ import com.edujournal.domain.model.Subject
 import com.edujournal.domain.model.SubjectLessonType
 import com.edujournal.domain.repository.SubjectLessonTypeRepository
 import com.edujournal.domain.repository.SubjectRepository
+import com.edujournal.utils.normalizeSpaces
+import com.edujournal.utils.normalizeSpacesOrNull
 import javax.inject.Inject
 
 class CreateSubjectUseCase @Inject constructor(
@@ -15,14 +17,17 @@ class CreateSubjectUseCase @Inject constructor(
         abbreviation: String?,
         semesterIds: List<Long> = emptyList()
     ): EntityWriteResult {
+        val normalizedName = name.normalizeSpaces()
+        val normalizedAbbreviation = abbreviation.normalizeSpacesOrNull()
+
         require(semesterIds.isNotEmpty()) { "SEMESTER_REQUIRED" }
-        if (subjectRepository.existsByName(name)) {
+        if (subjectRepository.existsByName(normalizedName)) {
             return EntityWriteResult.DUPLICATE
         }
         val subject = Subject(
             id = 0,
-            name = name,
-            abbreviation = abbreviation
+            name = normalizedName,
+            abbreviation = normalizedAbbreviation
         )
 
         val subjectId = subjectRepository.createSubject(subject)

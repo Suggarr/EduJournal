@@ -175,9 +175,9 @@ class JournalViewModel @Inject constructor(
     ): String {
         return when {
             gradeValue != null -> gradeValue.toString()
-            gradeType == GradeType.ABSENT.name -> "\u041D" // Н
-            gradeType == GradeType.SICK.name -> "\u0417" // З
-            gradeType == GradeType.PASS.name -> "\u041E" // О
+            gradeType == GradeType.ABSENT.name -> "Н"
+            gradeType == GradeType.SICK.name -> "З"
+            gradeType == GradeType.PASS.name -> "О"
             else -> "-"
         }
     }

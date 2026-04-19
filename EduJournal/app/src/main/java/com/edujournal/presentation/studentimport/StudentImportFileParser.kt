@@ -1,18 +1,18 @@
-﻿package com.edujournal.presentation.studentimport
+package com.edujournal.presentation.studentimport
 
 import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
-import android.util.Xml
+import com.edujournal.utils.normalizeSpaces
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.csv.CSVFormat
-import org.xmlpull.v1.XmlPullParser
+import org.apache.poi.ss.usermodel.DataFormatter
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.ByteArrayInputStream
 import java.io.StringReader
 import java.nio.charset.Charset
-import java.util.zip.ZipInputStream
 
 data class ImportStudentRow(
     val firstName: String,
@@ -33,13 +33,13 @@ object StudentImportFileParser {
 
             return@withContext try {
                 val bytes = resolver.openInputStream(uri)?.use { it.readBytes() }
-                    ?: throw IllegalArgumentException("\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043f\u0440\u043e\u0447\u0438\u0442\u0430\u0442\u044c \u0444\u0430\u0439\u043b")
+                    ?: throw IllegalArgumentException("Не удалось прочитать файл")
 
                 val rows = when {
                     displayName.endsWith(".csv") -> parseCsv(bytes)
                     displayName.endsWith(".xlsx") -> parseXlsx(bytes)
                     displayName.endsWith(".xls") -> throw IllegalArgumentException(
-                        "\u0424\u043e\u0440\u043c\u0430\u0442 .xls \u043d\u0435 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442\u0441\u044f. \u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u0435 \u0444\u0430\u0439\u043b \u043a\u0430\u043a .xlsx."
+                        "Формат .xls не поддерживается. Сохраните файл как .xlsx."
                     )
                     else -> {
                         runCatching { parseXlsx(bytes) }
@@ -72,7 +72,7 @@ object StudentImportFileParser {
             .map { record ->
                 val count = maxOf(record.size(), 3)
                 (0 until count).map { index ->
-                    if (index < record.size()) record.get(index).trim() else ""
+                    if (index < record.size()) record.get(index).normalizeSpaces() else ""
                 }
             }
             .filter { cells -> cells.any { it.isNotBlank() } }
@@ -81,174 +81,31 @@ object StudentImportFileParser {
     }
 
     private fun parseXlsx(bytes: ByteArray): List<ImportStudentRow> {
-        val sharedStrings = mutableListOf<String>()
-        var firstSheetBytes: ByteArray? = null
+        ByteArrayInputStream(bytes).use { input ->
+            XSSFWorkbook(input).use { workbook ->
+                if (workbook.numberOfSheets <= 0) return emptyList()
 
-        ZipInputStream(ByteArrayInputStream(bytes)).use { zip ->
-            var entry = zip.nextEntry
-            while (entry != null) {
-                val name = entry.name
-                when {
-                    name == "xl/sharedStrings.xml" -> {
-                        sharedStrings.clear()
-                        sharedStrings.addAll(parseSharedStrings(zip.readBytes()))
-                    }
+                val sheet = workbook.getSheetAt(0) ?: return emptyList()
+                val formatter = DataFormatter()
+                val evaluator = workbook.creationHelper.createFormulaEvaluator()
 
-                    firstSheetBytes == null && name.startsWith("xl/worksheets/") && name.endsWith(".xml") -> {
-                        firstSheetBytes = zip.readBytes()
-                    }
-                }
-
-                zip.closeEntry()
-                entry = zip.nextEntry
-            }
-        }
-
-        val sheetBytes = firstSheetBytes ?: return emptyList()
-        val rows = parseSheetRows(sheetBytes, sharedStrings)
-            .filter { row -> row.any { it.isNotBlank() } }
-
-        return mapRowsToStudents(rows)
-    }
-
-    private fun parseSharedStrings(xmlBytes: ByteArray): List<String> {
-        val parser = Xml.newPullParser()
-        parser.setInput(ByteArrayInputStream(xmlBytes), Charsets.UTF_8.name())
-
-        val result = mutableListOf<String>()
-        var currentText: StringBuilder? = null
-
-        while (parser.eventType != XmlPullParser.END_DOCUMENT) {
-            when (parser.eventType) {
-                XmlPullParser.START_TAG -> {
-                    when (parser.name) {
-                        "si" -> currentText = StringBuilder()
-                        "t" -> {
-                            if (currentText != null) {
-                                currentText.append(readElementText(parser))
-                            }
+                val rows = buildList {
+                    for (row in sheet) {
+                        val columnCount = maxOf(row.lastCellNum.toInt().coerceAtLeast(0), 3)
+                        val cells = (0 until columnCount).map { index ->
+                            val cell = row.getCell(
+                                index,
+                                org.apache.poi.ss.usermodel.Row.MissingCellPolicy.RETURN_BLANK_AS_NULL
+                            )
+                            if (cell == null) "" else formatter.formatCellValue(cell, evaluator).normalizeSpaces()
                         }
+                        if (cells.any { it.isNotBlank() }) add(cells)
                     }
                 }
 
-                XmlPullParser.END_TAG -> {
-                    if (parser.name == "si") {
-                        result.add(currentText?.toString().orEmpty())
-                        currentText = null
-                    }
-                }
-            }
-            parser.next()
-        }
-
-        return result
-    }
-
-    private fun parseSheetRows(
-        xmlBytes: ByteArray,
-        sharedStrings: List<String>
-    ): List<List<String>> {
-        val parser = Xml.newPullParser()
-        parser.setInput(ByteArrayInputStream(xmlBytes), Charsets.UTF_8.name())
-
-        val rows = mutableListOf<List<String>>()
-        var rowMap: MutableMap<Int, String>? = null
-
-        while (parser.eventType != XmlPullParser.END_DOCUMENT) {
-            when (parser.eventType) {
-                XmlPullParser.START_TAG -> {
-                    when (parser.name) {
-                        "row" -> rowMap = mutableMapOf()
-                        "c" -> {
-                            val currentRowMap = rowMap
-                            if (currentRowMap != null) {
-                                val ref = parser.getAttributeValue(null, "r").orEmpty()
-                                val type = parser.getAttributeValue(null, "t").orEmpty()
-                                val columnIndex = columnIndexFromCellRef(ref)
-                                val value = parseCellValue(parser, type, sharedStrings).trim()
-                                if (value.isNotEmpty()) {
-                                    currentRowMap[columnIndex] = value
-                                }
-                            } else {
-                                skipCurrentTag(parser, "c")
-                            }
-                        }
-                    }
-                }
-
-                XmlPullParser.END_TAG -> {
-                    if (parser.name == "row") {
-                        val cells = rowMap.orEmpty()
-                        val maxIndex = cells.keys.maxOrNull() ?: -1
-                        val minColumns = maxOf(maxIndex + 1, 3)
-                        rows.add((0 until minColumns).map { index -> cells[index].orEmpty() })
-                        rowMap = null
-                    }
-                }
-            }
-            parser.next()
-        }
-
-        return rows
-    }
-
-    private fun parseCellValue(
-        parser: XmlPullParser,
-        type: String,
-        sharedStrings: List<String>
-    ): String {
-        var valueText: String? = null
-        val startDepth = parser.depth
-
-        while (!(parser.eventType == XmlPullParser.END_TAG && parser.depth == startDepth && parser.name == "c")) {
-            parser.next()
-            if (parser.eventType == XmlPullParser.START_TAG) {
-                when (parser.name) {
-                    "v" -> valueText = readElementText(parser)
-                    "t" -> {
-                        if (type == "inlineStr") {
-                            valueText = readElementText(parser)
-                        }
-                    }
-                }
+                return mapRowsToStudents(rows)
             }
         }
-
-        return when (type) {
-            "s" -> {
-                val index = valueText?.toIntOrNull()
-                if (index == null) "" else sharedStrings.getOrNull(index).orEmpty()
-            }
-
-            "b" -> if (valueText == "1") "TRUE" else "FALSE"
-            else -> valueText.orEmpty()
-        }
-    }
-
-    private fun readElementText(parser: XmlPullParser): String {
-        if (parser.next() == XmlPullParser.TEXT) {
-            val text = parser.text.orEmpty()
-            parser.nextTag()
-            return text
-        }
-        return ""
-    }
-
-    private fun skipCurrentTag(parser: XmlPullParser, tagName: String) {
-        val startDepth = parser.depth
-        while (!(parser.eventType == XmlPullParser.END_TAG && parser.depth == startDepth && parser.name == tagName)) {
-            parser.next()
-        }
-    }
-
-    private fun columnIndexFromCellRef(cellRef: String): Int {
-        if (cellRef.isBlank()) return 0
-        var index = 0
-        for (char in cellRef) {
-            if (!char.isLetter()) break
-            index = index * 26 + (char.uppercaseChar() - 'A' + 1)
-        }
-        return (index - 1).coerceAtLeast(0)
     }
 
     private fun mapRowsToStudents(rows: List<List<String>>): List<ImportStudentRow> {
@@ -264,28 +121,28 @@ object StudentImportFileParser {
         }
 
         return rows.drop(1).mapNotNull { cells ->
-            val lastName = cells.getOrNull(lastNameIndex).orEmpty().trim()
-            val firstName = cells.getOrNull(firstNameIndex).orEmpty().trim()
-            val middleName = cells.getOrNull(middleNameIndex).orEmpty().trim()
+            val lastName = cells.getOrNull(lastNameIndex).orEmpty().normalizeSpaces()
+            val firstName = cells.getOrNull(firstNameIndex).orEmpty().normalizeSpaces()
+            val middleName = cells.getOrNull(middleNameIndex).orEmpty().normalizeSpaces()
             buildRow(firstName = firstName, lastName = lastName, middleName = middleName)
         }
     }
 
     private fun buildRow(firstName: String, lastName: String, middleName: String): ImportStudentRow? {
-        val first = firstName.trim()
-        val last = lastName.trim()
+        val first = firstName.normalizeSpaces()
+        val last = lastName.normalizeSpaces()
         if (first.isBlank() || last.isBlank()) return null
 
         return ImportStudentRow(
             firstName = first,
             lastName = last,
-            middleName = middleName.trim()
+            middleName = middleName.normalizeSpaces()
         )
     }
 
     private fun decodeCsvContent(bytes: ByteArray): String {
-        val utf8 = bytes.toString(Charsets.UTF_8).removePrefix("\uFEFF")
-        val looksBrokenUtf8 = utf8.count { it == '\uFFFD' } > 0
+        val utf8 = bytes.toString(Charsets.UTF_8).removePrefix("\uFEFF") // BOM символ - в нашей кадировке считается как пробел
+        val looksBrokenUtf8 = utf8.count { it == '�' } > 0
         if (!looksBrokenUtf8) return utf8
 
         return bytes.toString(Charset.forName("windows-1251")).removePrefix("\uFEFF")
@@ -302,7 +159,7 @@ object StudentImportFileParser {
         return value
             .trim()
             .lowercase()
-            .replace("\u0451", "\u0435")
+            .replace("ё", "е")
     }
 
     private fun ContentResolver.queryDisplayName(uri: Uri): String? {
@@ -323,7 +180,7 @@ object StudentImportFileParser {
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-    private const val REQUIRED_LAST_NAME_HEADER = "\u0444\u0430\u043c\u0438\u043b\u0438\u044f"
-    private const val REQUIRED_FIRST_NAME_HEADER = "\u0438\u043c\u044f"
-    private const val REQUIRED_MIDDLE_NAME_HEADER = "\u043e\u0442\u0447\u0435\u0441\u0442\u0432\u043e"
+    private const val REQUIRED_LAST_NAME_HEADER = "фамилия"
+    private const val REQUIRED_FIRST_NAME_HEADER = "имя"
+    private const val REQUIRED_MIDDLE_NAME_HEADER = "отчество"
 }

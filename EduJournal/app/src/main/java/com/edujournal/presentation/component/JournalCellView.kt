@@ -23,9 +23,9 @@ fun JournalCellView(
         "1", "2", "3" -> Color(0xFFFFDAD6)
         "4", "5", "6" -> Color(0xFFFFECB3)
         "7", "8", "9", "10" -> Color(0xFFC8E6C9)
-        "\u041D" -> Color(0xFFFFCC80)
-        "\u0417" -> Color(0xFF90CAF9)
-        "\u041E" -> Color(0xFFB39DDB)
+        "Н" -> Color(0xFFFFCC80)
+        "З" -> Color(0xFF90CAF9)
+        "О" -> Color(0xFFB39DDB)
         else -> Color.White
     }
 
@@ -33,9 +33,9 @@ fun JournalCellView(
         "1", "2", "3" -> Color(0xFF7F1D1D)
         "4", "5", "6" -> Color(0xFF8A4B00)
         "7", "8", "9", "10" -> Color(0xFF1B5E20)
-        "\u041D" -> Color(0xFF6D3500)
-        "\u0417" -> Color(0xFF0D47A1)
-        "\u041E" -> Color(0xFF311B92)
+        "Н" -> Color(0xFF6D3500)
+        "З" -> Color(0xFF0D47A1)
+        "О" -> Color(0xFF311B92)
         else -> Color.Black
     }
 
