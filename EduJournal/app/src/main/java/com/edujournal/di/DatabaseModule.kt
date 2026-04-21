@@ -158,15 +158,15 @@ object DatabaseModule {
                                 arrayOf(subjectId, 1L)
                             )
                             db.execSQL(
-                                "INSERT INTO lesson_types (subjectId, name, hours) VALUES (?, ?, ?)",
+                                "INSERT INTO subject_lesson_types (subjectId, name, hours) VALUES (?, ?, ?)",
                                 arrayOf(subjectId, "Лекция", 20.0)
                             )
                             db.execSQL(
-                                "INSERT INTO lesson_types (subjectId, name, hours) VALUES (?, ?, ?)",
+                                "INSERT INTO subject_lesson_types (subjectId, name, hours) VALUES (?, ?, ?)",
                                 arrayOf(subjectId, "Практика", 30.0)
                             )
                             db.execSQL(
-                                "INSERT INTO lesson_types (subjectId, name, hours) VALUES (?, ?, ?)",
+                                "INSERT INTO subject_lesson_types (subjectId, name, hours) VALUES (?, ?, ?)",
                                 arrayOf(subjectId, "Лабораторная", 10.0)
                             )
                         }
@@ -205,7 +205,7 @@ object DatabaseModule {
                         """
                         SELECT g.id, lt.id
                         FROM `groups` g
-                        CROSS JOIN lesson_types lt
+                        CROSS JOIN subject_lesson_types lt
                         """.trimIndent()
                     )
                     combinationsCursor.use { cursor ->

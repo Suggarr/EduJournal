@@ -37,17 +37,17 @@
     <string name="subject_duplicate_error">Такой предмет уже существует</string>
     <string name="subject_not_found_error">Предмет не найден</string>
 
-    <string name="lesson_type_select">Типы занятий предмета</string>
-    <string name="lesson_type_empty">Типы занятий не найдены</string>
-    <string name="lesson_type_new">Новый тип занятия</string>
-    <string name="lesson_type_edit">Редактировать</string>
-    <string name="lesson_type_delete_title">Удалить тип занятия?</string>
-    <string name="lesson_type_delete_message">Удалить тип занятия "%1$s"? Это действие нельзя отменить.</string>
-    <string name="lesson_type_name_label">Название (например, Лекция)</string>
-    <string name="lesson_type_hours_label">Часы (необязательно)</string>
-    <string name="lesson_type_hours_value">Часы: %1$s</string>
-    <string name="lesson_type_duplicate_error">Такой тип занятия уже существует у этого предмета</string>
-    <string name="lesson_type_not_found_error">Тип занятия не найден</string>
+    <string name="subject_lesson_type_select">Типы занятий предмета</string>
+    <string name="subject_lesson_type_empty">Типы занятий не найдены</string>
+    <string name="subject_lesson_type_new">Новый тип занятия</string>
+    <string name="subject_lesson_type_edit">Редактировать</string>
+    <string name="subject_lesson_type_delete_title">Удалить тип занятия?</string>
+    <string name="subject_lesson_type_delete_message">Удалить тип занятия "%1$s"? Это действие нельзя отменить.</string>
+    <string name="subject_lesson_type_name_label">Название (например, Лекция)</string>
+    <string name="subject_lesson_type_hours_label">Часы (необязательно)</string>
+    <string name="subject_lesson_type_hours_value">Часы: %1$s</string>
+    <string name="subject_lesson_type_duplicate_error">Такой тип занятия уже существует у этого предмета</string>
+    <string name="subject_lesson_type_not_found_error">Тип занятия не найден</string>
 
     <string name="group_select">Выберите группу</string>
     <string name="group_empty">Нет групп</string>

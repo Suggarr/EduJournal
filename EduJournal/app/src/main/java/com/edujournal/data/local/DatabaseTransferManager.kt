@@ -126,7 +126,7 @@ class DatabaseTransferManager @Inject constructor(
             "students",
             "subjects",
             "semesters",
-            "lesson_types",
+            "subject_lesson_types",
             "lessons",
             "grades"
         )
@@ -142,6 +142,12 @@ class DatabaseTransferManager @Inject constructor(
                 while (c.moveToNext()) {
                     existingTables += c.getString(0)
                 }
+            }
+
+            if ("subject_lesson_types" !in existingTables && "lesson_types" in existingTables) {
+                it.execSQL("ALTER TABLE lesson_types RENAME TO subject_lesson_types")
+                existingTables.remove("lesson_types")
+                existingTables.add("subject_lesson_types")
             }
 
             if (!requiredCoreTables.all { table -> table in existingTables }) {

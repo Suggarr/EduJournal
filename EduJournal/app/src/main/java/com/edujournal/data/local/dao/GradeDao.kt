@@ -52,21 +52,21 @@ interface GradeDao {
             students.lastName AS studentLastName,
             lessons.id AS lessonId,
             lessons.date AS lessonDate,
-            lesson_types.name AS lessonTypeName,
+            subject_lesson_types.name AS lessonTypeName,
             grades.value AS gradeValue,
             grades.type AS gradeType
         FROM students
         LEFT JOIN lessons
             ON lessons.groupId = students.groupId
             AND lessons.semesterId = :semesterId
-        LEFT JOIN lesson_types
-            ON lesson_types.id = lessons.subjectLessonTypeId
-            AND lesson_types.subjectId = :subjectId
+        LEFT JOIN subject_lesson_types
+            ON subject_lesson_types.id = lessons.subjectLessonTypeId
+            AND subject_lesson_types.subjectId = :subjectId
         LEFT JOIN grades
             ON grades.studentId = students.id
             AND grades.lessonId = lessons.id
         WHERE students.groupId = :groupId
-          AND (lessons.id IS NULL OR lesson_types.id IS NOT NULL)
+          AND (lessons.id IS NULL OR subject_lesson_types.id IS NOT NULL)
         ORDER BY students.lastName, students.firstName, lessons.date
         """
     )

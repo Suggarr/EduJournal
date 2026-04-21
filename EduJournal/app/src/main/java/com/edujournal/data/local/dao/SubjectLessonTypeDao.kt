@@ -11,13 +11,13 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface SubjectLessonTypeDao {
 
-    @Query("SELECT * FROM lesson_types WHERE subjectId = :subjectId ORDER BY id")
+    @Query("SELECT * FROM subject_lesson_types WHERE subjectId = :subjectId ORDER BY id")
     fun observeLessonTypes(subjectId: Long): Flow<List<SubjectLessonTypeEntity>>
 
-    @Query("SELECT * FROM lesson_types WHERE id = :id LIMIT 1")
+    @Query("SELECT * FROM subject_lesson_types WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): SubjectLessonTypeEntity?
 
-    @Query("SELECT * FROM lesson_types WHERE id = :id LIMIT 1")
+    @Query("SELECT * FROM subject_lesson_types WHERE id = :id LIMIT 1")
     fun observeById(id: Long): Flow<SubjectLessonTypeEntity?>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
@@ -26,16 +26,16 @@ interface SubjectLessonTypeDao {
     @Update(onConflict = OnConflictStrategy.IGNORE)
     suspend fun update(SubjectLessonType: SubjectLessonTypeEntity): Int
 
-    @Query("SELECT EXISTS(SELECT 1 FROM lesson_types WHERE id = :id)")
+    @Query("SELECT EXISTS(SELECT 1 FROM subject_lesson_types WHERE id = :id)")
     suspend fun existsById(id: Long): Boolean
 
-    @Query("SELECT EXISTS(SELECT 1 FROM lesson_types WHERE subjectId = :subjectId AND name = :name)")
+    @Query("SELECT EXISTS(SELECT 1 FROM subject_lesson_types WHERE subjectId = :subjectId AND name = :name)")
     suspend fun existsByName(subjectId: Long, name: String): Boolean
 
-    @Query("SELECT EXISTS(SELECT 1 FROM lesson_types WHERE subjectId = :subjectId AND name = :name AND id != :id)")
+    @Query("SELECT EXISTS(SELECT 1 FROM subject_lesson_types WHERE subjectId = :subjectId AND name = :name AND id != :id)")
     suspend fun existsByNameExceptId(subjectId: Long, name: String, id: Long): Boolean
 
-    @Query("DELETE FROM lesson_types WHERE id = :typeId")
+    @Query("DELETE FROM subject_lesson_types WHERE id = :typeId")
     suspend fun deleteById(typeId: Long)
 }
 

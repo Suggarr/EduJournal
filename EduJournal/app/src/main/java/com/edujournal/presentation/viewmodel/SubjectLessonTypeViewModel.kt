@@ -49,8 +49,8 @@ class SubjectLessonTypeViewModel @Inject constructor(
             val subjectId = _subjectId.value ?: return@launch
             val result = createLessonTypeUseCase(subjectId, name, hours)
             when (result) {
-                EntityWriteResult.DUPLICATE -> _uiMessageRes.emit(R.string.lesson_type_duplicate_error)
-                EntityWriteResult.NOT_FOUND -> _uiMessageRes.emit(R.string.lesson_type_not_found_error)
+                    EntityWriteResult.DUPLICATE -> _uiMessageRes.emit(R.string.subject_lesson_type_duplicate_error)
+                    EntityWriteResult.NOT_FOUND -> _uiMessageRes.emit(R.string.subject_lesson_type_not_found_error)
                 EntityWriteResult.SUCCESS -> Unit
             }
             onResult(result)
@@ -67,8 +67,8 @@ class SubjectLessonTypeViewModel @Inject constructor(
         viewModelScope.launch {
             val result = updateLessonTypeUseCase(type)
             when (result) {
-                EntityWriteResult.DUPLICATE -> _uiMessageRes.emit(R.string.lesson_type_duplicate_error)
-                EntityWriteResult.NOT_FOUND -> _uiMessageRes.emit(R.string.lesson_type_not_found_error)
+                    EntityWriteResult.DUPLICATE -> _uiMessageRes.emit(R.string.subject_lesson_type_duplicate_error)
+                    EntityWriteResult.NOT_FOUND -> _uiMessageRes.emit(R.string.subject_lesson_type_not_found_error)
                 EntityWriteResult.SUCCESS -> Unit
             }
             onResult(result)

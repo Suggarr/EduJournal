@@ -3,8 +3,10 @@ package com.edujournal.presentation.screen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -64,12 +66,14 @@ fun HomeworkScreen(
     }
     val state by stateFlow.collectAsState()
     val lessonDateInTitle = state?.lessonDate?.format(homeworkDateFormatter)
+    val canAddHomework = state != null && state?.homework == null
     var showAddDialog by remember { mutableStateOf(false) }
     var homeworkToEdit by remember { mutableStateOf<Homework?>(null) }
     var homeworkToDelete by remember { mutableStateOf<Homework?>(null) }
     val listState = rememberLazyListState()
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
                 title = {
@@ -90,11 +94,13 @@ fun HomeworkScreen(
             )
         },
         floatingActionButton = {
-            ScrollAwareAddFab(
-                listState = listState,
-                onClick = { showAddDialog = true },
-                contentDescription = stringResource(R.string.common_add)
-            )
+            if (canAddHomework) {
+                ScrollAwareAddFab(
+                    listState = listState,
+                    onClick = { showAddDialog = true },
+                    contentDescription = stringResource(R.string.common_add)
+                )
+            }
         }
     ) { paddingValues ->
         val ui = state
@@ -116,11 +122,9 @@ fun HomeworkScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(bottom = 16.dp), // Можно поставить vertical
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-            }
             val homework = ui.homework
             if (homework == null) {
                 item {

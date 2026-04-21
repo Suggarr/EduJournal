@@ -142,7 +142,7 @@ fun LessonTopicsScreen(
                     state = listState,
                     modifier = Modifier
                         .fillMaxSize(),
-                    contentPadding = PaddingValues(0.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp), // Можно поставить vertical
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(currentLessons) { lesson ->

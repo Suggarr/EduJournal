@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -77,9 +78,10 @@ fun SubjectLessonTypeScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.lesson_type_select)) },
+                title = { Text(stringResource(R.string.subject_lesson_type_select)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -101,12 +103,12 @@ fun SubjectLessonTypeScreen(
         Box(modifier = Modifier.padding(padding).padding(horizontal = 16.dp)) {
             if (types.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(stringResource(R.string.lesson_type_empty), color = MaterialTheme.colorScheme.outline)
+                    Text(stringResource(R.string.subject_lesson_type_empty), color = MaterialTheme.colorScheme.outline)
                 }
             } else {
                 LazyColumn(
                     state = listState,
-                    contentPadding = PaddingValues(vertical = 16.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp), // Можно поставить vertical
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(types) { type ->
@@ -124,7 +126,7 @@ fun SubjectLessonTypeScreen(
 
     if (showAddDialog) {
         SubjectLessonTypeDialog(
-            title = stringResource(R.string.lesson_type_new),
+            title = stringResource(R.string.subject_lesson_type_new),
             onDismiss = { showAddDialog = false },
             onConfirm = { name, hours ->
                 viewModel.addLessonType(name, hours) { result ->
@@ -138,7 +140,7 @@ fun SubjectLessonTypeScreen(
 
     typeToEdit?.let { type ->
         SubjectLessonTypeDialog(
-            title = stringResource(R.string.lesson_type_edit),
+            title = stringResource(R.string.subject_lesson_type_edit),
             initialName = type.name,
             initialHours = type.hours,
             onDismiss = { typeToEdit = null },
@@ -155,8 +157,8 @@ fun SubjectLessonTypeScreen(
     typeToDelete?.let { type ->
         AlertDialog(
             onDismissRequest = { typeToDelete = null },
-            title = { Text(stringResource(R.string.lesson_type_delete_title)) },
-            text = { Text(stringResource(R.string.lesson_type_delete_message, type.name)) },
+            title = { Text(stringResource(R.string.subject_lesson_type_delete_title)) },
+            text = { Text(stringResource(R.string.subject_lesson_type_delete_message, type.name)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -199,7 +201,7 @@ fun SubjectLessonTypeCard(
                 type.hours?.let { hours ->
                     Text(
                         text = stringResource(
-                            R.string.lesson_type_hours_value,
+                            R.string.subject_lesson_type_hours_value,
                             BigDecimal.valueOf(hours).stripTrailingZeros().toPlainString().replace('.', ',')
                         ),
                         style = MaterialTheme.typography.bodyMedium,
@@ -248,7 +250,7 @@ fun SubjectLessonTypeDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text(stringResource(R.string.lesson_type_name_label)) },
+                    label = { Text(stringResource(R.string.subject_lesson_type_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -271,7 +273,7 @@ fun SubjectLessonTypeDialog(
                         }
                         hoursInput = filtered
                     },
-                    label = { Text(stringResource(R.string.lesson_type_hours_label)) },
+                    label = { Text(stringResource(R.string.subject_lesson_type_hours_label)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     modifier = Modifier.fillMaxWidth()

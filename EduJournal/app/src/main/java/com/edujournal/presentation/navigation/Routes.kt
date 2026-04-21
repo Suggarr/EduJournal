@@ -7,7 +7,7 @@ object Routes {
 
     const val WELCOME = "welcome"
     const val SUBJECTS = "subjects"
-    const val LESSON_TYPES = "lesson_types/{semesterId}/{subjectId}"
+    const val SUBJECT_LESSON_TYPES = "subject_lesson_types/{semesterId}/{subjectId}"
     const val GROUPS = "groups/{semesterId}/{subjectId}/{subjectLessonTypeId}"
     const val STUDENTS = "students/{groupId}"
     const val JOURNAL = "journal/{semesterId}/{groupId}/{subjectLessonTypeId}"
@@ -17,7 +17,7 @@ object Routes {
     const val SETTINGS = "settings"
     const val SEMESTERS = "semesters"
 
-    fun lessonTypes(semesterId: Long, subjectId: Long) = "lesson_types/$semesterId/$subjectId"
+    fun subjectLessonTypes(semesterId: Long, subjectId: Long) = "subject_lesson_types/$semesterId/$subjectId"
     fun groups(semesterId: Long, subjectId: Long, subjectLessonTypeId: Long) =
         "groups/$semesterId/$subjectId/$subjectLessonTypeId"
     fun students(groupId: Long) = "students/$groupId"

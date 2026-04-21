@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -67,6 +68,7 @@ fun SemesterManagementScreen(
     var semesterToDelete by remember { mutableStateOf<Semester?>(null) }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings_semesters_title)) },
@@ -97,7 +99,7 @@ fun SemesterManagementScreen(
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(vertical = 16.dp),
+                contentPadding = PaddingValues(bottom = 16.dp), // Можно поставить vertical
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(semesters, key = { it.id }) { semester ->

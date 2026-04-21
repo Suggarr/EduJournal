@@ -146,7 +146,7 @@ fun AppNavigation(
                     onSubjectClick = { subjectId ->
                         val semesterId = selectedSemesterId ?: semesters.firstOrNull()?.id
                         if (semesterId != null) {
-                            navController.navigate(Routes.lessonTypes(semesterId, subjectId))
+                            navController.navigate(Routes.subjectLessonTypes(semesterId, subjectId))
                         } else {
                             Toast.makeText(context, semesterRequiredMessage, Toast.LENGTH_SHORT).show()
                         }
@@ -155,7 +155,7 @@ fun AppNavigation(
             }
 
             composable(
-                route = Routes.LESSON_TYPES,
+                route = Routes.SUBJECT_LESSON_TYPES,
                 arguments = listOf(
                     navArgument("semesterId") { type = NavType.LongType },
                     navArgument("subjectId") { type = NavType.LongType }
