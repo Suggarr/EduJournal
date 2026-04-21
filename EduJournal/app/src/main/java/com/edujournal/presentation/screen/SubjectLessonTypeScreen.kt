@@ -13,16 +13,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +47,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.SubjectLessonType
 import com.edujournal.domain.usecase.EntityWriteResult
+import com.edujournal.presentation.component.ScrollAwareAddFab
 import com.edujournal.presentation.viewmodel.SubjectLessonTypeViewModel
 import kotlinx.coroutines.flow.collect
 import java.math.BigDecimal
@@ -68,6 +68,7 @@ fun SubjectLessonTypeScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var typeToEdit by remember { mutableStateOf<SubjectLessonType?>(null) }
     var typeToDelete by remember { mutableStateOf<SubjectLessonType?>(null) }
+    val listState = rememberLazyListState()
 
     LaunchedEffect(viewModel) {
         viewModel.uiMessageRes.collect { messageRes ->
@@ -90,9 +91,11 @@ fun SubjectLessonTypeScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.common_add))
-            }
+            ScrollAwareAddFab(
+                listState = listState,
+                onClick = { showAddDialog = true },
+                contentDescription = stringResource(R.string.common_add)
+            )
         }
     ) { padding ->
         Box(modifier = Modifier.padding(padding).padding(horizontal = 16.dp)) {
@@ -102,6 +105,7 @@ fun SubjectLessonTypeScreen(
                 }
             } else {
                 LazyColumn(
+                    state = listState,
                     contentPadding = PaddingValues(vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {

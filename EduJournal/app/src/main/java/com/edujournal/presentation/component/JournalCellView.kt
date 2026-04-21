@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.edujournal.presentation.state.JournalCell
 
 @Composable
@@ -52,5 +53,14 @@ fun JournalCellView(
             style = MaterialTheme.typography.bodyMedium,
             color = textColor
         )
+
+        if (!cell.comment.isNullOrBlank()) {
+            Text(
+                text = "•",
+                color = Color(0xFF1565C0),
+                fontSize = 30.sp,
+                modifier = Modifier.align(Alignment.TopEnd)
+            )
+        }
     }
 }

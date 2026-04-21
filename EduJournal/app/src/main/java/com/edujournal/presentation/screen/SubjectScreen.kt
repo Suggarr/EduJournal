@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
@@ -25,7 +25,6 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -56,6 +55,7 @@ import com.edujournal.domain.model.Semester
 import com.edujournal.domain.model.SemesterSeason
 import com.edujournal.domain.model.Subject
 import com.edujournal.domain.usecase.EntityWriteResult
+import com.edujournal.presentation.component.ScrollAwareAddFab
 import com.edujournal.presentation.viewmodel.SubjectViewModel
 import kotlinx.coroutines.flow.collect
 
@@ -74,6 +74,7 @@ fun SubjectScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var subjectToEdit by remember { mutableStateOf<Subject?>(null) }
     var subjectToDelete by remember { mutableStateOf<Subject?>(null) }
+    val listState = rememberLazyListState()
     var editSubjectSemesterIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
     var yearMenuExpanded by remember { mutableStateOf(false) }
     var semesterMenuExpanded by remember { mutableStateOf(false) }
@@ -124,13 +125,12 @@ fun SubjectScreen(
             )
         },
         floatingActionButton = {
-            if (semesters.isNotEmpty()) {
-                FloatingActionButton(
-                    onClick = { showAddDialog = true }
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.common_add))
-                }
-            }
+            ScrollAwareAddFab(
+                listState = listState,
+                onClick = { showAddDialog = true },
+                contentDescription = stringResource(R.string.common_add),
+                enabled = semesters.isNotEmpty()
+            )
         }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues).padding(horizontal = 16.dp)) {
@@ -230,6 +230,7 @@ fun SubjectScreen(
                     }
                 } else {
                     LazyColumn(
+                        state = listState,
                         contentPadding = PaddingValues(vertical = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {

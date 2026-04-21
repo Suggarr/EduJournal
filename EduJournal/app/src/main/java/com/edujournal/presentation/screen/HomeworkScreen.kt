@@ -10,9 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
@@ -20,7 +20,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.Homework
+import com.edujournal.presentation.component.ScrollAwareAddFab
 import com.edujournal.presentation.viewmodel.HomeworkDisplayStatus
 import com.edujournal.presentation.viewmodel.HomeworkStudentUi
 import com.edujournal.presentation.viewmodel.HomeworkViewModel
@@ -67,6 +67,7 @@ fun HomeworkScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var homeworkToEdit by remember { mutableStateOf<Homework?>(null) }
     var homeworkToDelete by remember { mutableStateOf<Homework?>(null) }
+    val listState = rememberLazyListState()
 
     Scaffold(
         topBar = {
@@ -89,9 +90,11 @@ fun HomeworkScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.common_add))
-            }
+            ScrollAwareAddFab(
+                listState = listState,
+                onClick = { showAddDialog = true },
+                contentDescription = stringResource(R.string.common_add)
+            )
         }
     ) { paddingValues ->
         val ui = state
@@ -108,6 +111,7 @@ fun HomeworkScreen(
         }
 
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)

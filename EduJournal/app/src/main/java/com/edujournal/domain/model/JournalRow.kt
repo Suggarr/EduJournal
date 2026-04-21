@@ -11,5 +11,7 @@ data class JournalRow (
 
     val gradeValue: Int?,
 
-    val gradeType: String?
+    val gradeType: String?,
+
+    val gradeComment: String?
 )

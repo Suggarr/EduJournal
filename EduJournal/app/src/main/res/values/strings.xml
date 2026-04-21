@@ -100,6 +100,9 @@
     <string name="journal_grade_legend">Оценки 1-10, Н - отсутствовал, З - болел, О - освобожден.</string>
     <string name="journal_homework_badge">ДЗ</string>
     <string name="journal_clear_grade">Очистить оценку</string>
+    <string name="journal_comment_title">Комментарий к ячейке</string>
+    <string name="journal_comment_label">Текст комментария</string>
+    <string name="journal_comment_clear">Очистить</string>
     <string name="analytics_title">Аналитика дисциплины</string>
     <string name="analytics_context">Предмет: %1$s | Группа: %2$s</string>
     <string name="analytics_summary_title">Сводка по дисциплине</string>

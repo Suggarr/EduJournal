@@ -25,7 +25,8 @@ interface GradeDao {
         students.lastName AS studentLastName,
         lessons.id AS lessonId,
         grades.value AS gradeValue,
-        grades.type AS gradeType
+        grades.type AS gradeType,
+        grades.comment AS gradeComment
         FROM students
         CROSS JOIN lessons
         LEFT JOIN grades

@@ -3,7 +3,7 @@ package com.edujournal.presentation.component
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -27,7 +27,8 @@ fun JournalRowView(
     row: JournalRow,
     rowIndex: Int,
     scrollState: ScrollState,
-    onCellClick: (JournalCell) -> Unit
+    onCellClick: (JournalCell) -> Unit,
+    onCellLongClick: (JournalCell) -> Unit
 ) {
     val studentBg = if (rowIndex % 2 == 0) Color(0xFFF9F9F9) else Color.White
 
@@ -56,7 +57,10 @@ fun JournalRowView(
                     cell = cell,
                     modifier = Modifier
                         .width(96.dp)
-                        .clickable { onCellClick(cell) }
+                        .combinedClickable(
+                            onClick = { onCellClick(cell) },
+                            onLongClick = { onCellLongClick(cell) }
+                        )
                 )
             }
         }

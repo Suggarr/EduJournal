@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -98,6 +99,7 @@ fun JournalScreen(
 
     val horizontalScrollState = rememberScrollState()
     var selectedCell by remember { mutableStateOf<Pair<JournalRow, JournalCell>?>(null) }
+    var selectedCommentCell by remember { mutableStateOf<Pair<JournalRow, JournalCell>?>(null) }
     var selectedExportFormat by remember { mutableStateOf<JournalExportFormat?>(null) }
     var showExportDialog by remember { mutableStateOf(false) }
     var showActionsMenu by remember { mutableStateOf(false) }
@@ -235,6 +237,9 @@ fun JournalScreen(
                             scrollState = horizontalScrollState,
                             onCellClick = { cell ->
                                 selectedCell = row to cell
+                            },
+                            onCellLongClick = { cell ->
+                                selectedCommentCell = row to cell
                             }
                         )
                     }
@@ -247,16 +252,43 @@ fun JournalScreen(
         GradeSelectionDialog(
             onDismiss = { selectedCell = null },
             onNumericGradeSelected = { grade ->
-                viewModel.setNumericGrade(row.studentId, cell.lessonId, grade)
+                viewModel.setNumericGrade(row.studentId, cell.lessonId, grade, cell.comment)
                 selectedCell = null
             },
             onTypeSelected = { type ->
-                viewModel.setGradeType(row.studentId, cell.lessonId, type)
+                viewModel.setGradeType(row.studentId, cell.lessonId, type, cell.comment)
                 selectedCell = null
             },
             onClear = {
-                viewModel.clearGrade(row.studentId, cell.lessonId)
+                viewModel.clearGrade(row.studentId, cell.lessonId, cell.comment)
                 selectedCell = null
+            }
+        )
+    }
+
+    selectedCommentCell?.let { (row, cell) ->
+        CommentDialog(
+            initialComment = cell.comment.orEmpty(),
+            onDismiss = { selectedCommentCell = null },
+            onSave = { comment ->
+                viewModel.setComment(
+                    studentId = row.studentId,
+                    lessonId = cell.lessonId,
+                    comment = comment,
+                    currentGradeValue = cell.gradeValue,
+                    currentGradeType = cell.gradeType
+                )
+                selectedCommentCell = null
+            },
+            onClear = {
+                viewModel.setComment(
+                    studentId = row.studentId,
+                    lessonId = cell.lessonId,
+                    comment = null,
+                    currentGradeValue = cell.gradeValue,
+                    currentGradeType = cell.gradeType
+                )
+                selectedCommentCell = null
             }
         )
     }
@@ -301,6 +333,45 @@ fun JournalScreen(
             }
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CommentDialog(
+    initialComment: String,
+    onDismiss: () -> Unit,
+    onSave: (String?) -> Unit,
+    onClear: () -> Unit
+) {
+    var comment by remember(initialComment) { mutableStateOf(initialComment) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.journal_comment_title)) },
+        text = {
+            OutlinedTextField(
+                value = comment,
+                onValueChange = { comment = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.journal_comment_label)) }
+            )
+        },
+        confirmButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+                Button(onClick = { onSave(comment) }) {
+                    Text(stringResource(R.string.common_save))
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onClear) {
+                Text(stringResource(R.string.journal_comment_clear))
+            }
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

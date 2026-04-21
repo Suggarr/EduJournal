@@ -74,7 +74,10 @@ class JournalViewModel @Inject constructor(
                                     value = formatCellValue(
                                         gradeValue = rowForLesson?.gradeValue,
                                         gradeType = rowForLesson?.gradeType
-                                    )
+                                    ),
+                                    gradeValue = rowForLesson?.gradeValue,
+                                    gradeType = rowForLesson?.gradeType?.let { GradeType.valueOf(it) },
+                                    comment = rowForLesson?.gradeComment
                                 )
                             }
                         )
@@ -124,7 +127,7 @@ class JournalViewModel @Inject constructor(
         )
     }
 
-    fun setNumericGrade(studentId: Long, lessonId: Long, value: Int) {
+    fun setNumericGrade(studentId: Long, lessonId: Long, value: Int, comment: String?) {
         viewModelScope.launch {
             setGradeUseCase(
                 Grade(
@@ -133,13 +136,13 @@ class JournalViewModel @Inject constructor(
                     lessonId = lessonId,
                     value = value,
                     type = GradeType.GRADE,
-                    comment = null
+                    comment = comment
                 )
             )
         }
     }
 
-    fun setGradeType(studentId: Long, lessonId: Long, type: GradeType) {
+    fun setGradeType(studentId: Long, lessonId: Long, type: GradeType, comment: String?) {
         viewModelScope.launch {
             setGradeUseCase(
                 Grade(
@@ -148,13 +151,13 @@ class JournalViewModel @Inject constructor(
                     lessonId = lessonId,
                     value = null,
                     type = type,
-                    comment = null
+                    comment = comment
                 )
             )
         }
     }
 
-    fun clearGrade(studentId: Long, lessonId: Long) {
+    fun clearGrade(studentId: Long, lessonId: Long, comment: String?) {
         viewModelScope.launch {
             setGradeUseCase(
                 Grade(
@@ -163,7 +166,32 @@ class JournalViewModel @Inject constructor(
                     lessonId = lessonId,
                     value = null,
                     type = GradeType.GRADE,
-                    comment = null
+                    comment = comment
+                )
+            )
+        }
+    }
+
+    fun setComment(
+        studentId: Long,
+        lessonId: Long,
+        comment: String?,
+        currentGradeValue: Int?,
+        currentGradeType: GradeType?
+    ) {
+        viewModelScope.launch {
+            val normalizedComment = comment?.trim()?.takeIf { it.isNotEmpty() }
+            val normalizedType = currentGradeType ?: GradeType.GRADE
+            val normalizedValue = if (normalizedType == GradeType.GRADE) currentGradeValue else null
+
+            setGradeUseCase(
+                Grade(
+                    id = 0,
+                    studentId = studentId,
+                    lessonId = lessonId,
+                    value = normalizedValue,
+                    type = normalizedType,
+                    comment = normalizedComment
                 )
             )
         }
