@@ -3,8 +3,8 @@
 import android.widget.Toast
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -87,8 +87,8 @@ fun AppNavigation(
         ),
         BottomNavItem(
             route = Routes.GROUPS_TAB,
-            title = stringResource(R.string.bottom_groups),
-            icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) }
+            title = stringResource(R.string.bottom_students),
+            icon = { Icon(Icons.Default.Person, contentDescription = null) }
         ),
         BottomNavItem(
             route = Routes.SETTINGS_TAB,
@@ -168,7 +168,13 @@ fun AppNavigation(
                     onTypeClick = { typeId ->
                         navController.navigate(Routes.groups(semesterId, subjectId, typeId))
                     },
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = {
+                        navController.navigate(Routes.SUBJECTS) {
+                            popUpTo(Routes.SUBJECTS) { inclusive = false }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
 
@@ -190,7 +196,13 @@ fun AppNavigation(
                     onGroupAnalyticsClick = { groupId ->
                         navController.navigate(Routes.analytics(semesterId, groupId, subjectId))
                     },
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = {
+                        navController.navigate(Routes.subjectLessonTypes(semesterId, subjectId)) {
+                            popUpTo(Routes.subjectLessonTypes(semesterId, subjectId)) { inclusive = false }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
 
@@ -216,7 +228,13 @@ fun AppNavigation(
                 val groupId = backStackEntry.arguments?.getLong("groupId") ?: 0L
                 StudentScreen(
                     groupId = groupId,
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = {
+                        navController.navigate(Routes.GROUPS_TAB) {
+                            popUpTo(Routes.GROUPS_TAB) { inclusive = false }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
 
@@ -310,7 +328,13 @@ fun AppNavigation(
 
             composable(Routes.SEMESTERS) {
                 SemesterManagementScreen(
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = {
+                        navController.navigate(Routes.SETTINGS_TAB) {
+                            popUpTo(Routes.SETTINGS_TAB) { inclusive = false }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
         }

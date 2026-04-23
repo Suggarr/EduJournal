@@ -63,6 +63,36 @@ fun JournalRowView(
                         )
                 )
             }
+
+            Box(
+                modifier = Modifier
+                    .width(96.dp)
+                    .height(40.dp)
+                    .background(Color(0xFFE8F5E9))
+                    .border(1.dp, Color.Black),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = row.averageText,
+                    color = Color.Black,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .width(96.dp)
+                    .height(40.dp)
+                    .background(Color(0xFFFFF3E0))
+                    .border(1.dp, Color.Black),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = row.absencesCount.toString(),
+                    color = Color.Black,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
     }
 }

@@ -139,6 +139,7 @@ fun AnalyticsScreen(
                     attendanceMarkedCount = ui.attendanceMarkedCount,
                     attendanceAbsentCount = ui.attendanceAbsentCount,
                     attendanceSickCount = ui.attendanceSickCount,
+                    attendancePassCount = ui.attendancePassCount,
                     attendancePercent = ui.attendancePercent
                 )
             }
@@ -268,6 +269,7 @@ private fun AnalyticsSummaryCard(
     attendanceMarkedCount: Int,
     attendanceAbsentCount: Int,
     attendanceSickCount: Int,
+    attendancePassCount: Int,
     attendancePercent: Double?
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -306,9 +308,11 @@ private fun AnalyticsSummaryCard(
             )
             Text(
                 text = stringResource(
-                    R.string.analytics_summary_absent_sick,
+                    R.string.analytics_summary_absent_sick_pass,
                     attendanceAbsentCount,
-                    attendanceSickCount
+                    attendanceSickCount,
+                    attendancePassCount,
+                    attendanceAbsentCount + attendanceSickCount + attendancePassCount
                 ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

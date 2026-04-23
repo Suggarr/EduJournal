@@ -63,30 +63,50 @@ class JournalViewModel @Inject constructor(
 
                     val rows = grouped.map { (_, studentRows) ->
                         val first = studentRows.first()
+                        val cells = lessons.map { lesson ->
+                            val rowForLesson = studentRows.firstOrNull { it.lessonId == lesson.id }
+                            JournalCell(
+                                lessonId = lesson.id,
+                                value = formatCellValue(
+                                    gradeValue = rowForLesson?.gradeValue,
+                                    gradeType = rowForLesson?.gradeType
+                                ),
+                                gradeValue = rowForLesson?.gradeValue,
+                                gradeType = rowForLesson?.gradeType?.let { GradeType.valueOf(it) },
+                                comment = rowForLesson?.gradeComment
+                            )
+                        }
+                        val numericValues = cells.mapNotNull { it.gradeValue }
+                        val absencesCount = cells.count {
+                            it.gradeType == GradeType.ABSENT ||
+                                it.gradeType == GradeType.SICK ||
+                                it.gradeType == GradeType.PASS
+                        }
 
                         JournalRow(
                             studentId = first.studentId,
                             studentName = "${first.studentLastName} ${first.studentFirstName}",
-                            cells = lessons.map { lesson ->
-                                val rowForLesson = studentRows.firstOrNull { it.lessonId == lesson.id }
-                                JournalCell(
-                                    lessonId = lesson.id,
-                                    value = formatCellValue(
-                                        gradeValue = rowForLesson?.gradeValue,
-                                        gradeType = rowForLesson?.gradeType
-                                    ),
-                                    gradeValue = rowForLesson?.gradeValue,
-                                    gradeType = rowForLesson?.gradeType?.let { GradeType.valueOf(it) },
-                                    comment = rowForLesson?.gradeComment
-                                )
-                            }
+                            cells = cells,
+                            averageText = formatAverage(numericValues.takeIf { it.isNotEmpty() }?.average()),
+                            absencesCount = absencesCount
                         )
+                    }
+
+                    val lessonAbsencesCounts = lessons.map { lesson ->
+                        journalRows.count {
+                            it.lessonId == lesson.id && (
+                                it.gradeType == GradeType.ABSENT.name ||
+                                    it.gradeType == GradeType.SICK.name ||
+                                    it.gradeType == GradeType.PASS.name
+                                )
+                        }
                     }
 
                     JournalState(
                         lessons = lessons,
                         rows = rows,
-                        homeworkLessonIds = homeworkLessonIds.toSet()
+                        homeworkLessonIds = homeworkLessonIds.toSet(),
+                        lessonAbsencesCounts = lessonAbsencesCounts
                     )
                 }
             }
@@ -207,6 +227,17 @@ class JournalViewModel @Inject constructor(
             gradeType == GradeType.SICK.name -> "З"
             gradeType == GradeType.PASS.name -> "О"
             else -> "-"
+        }
+    }
+
+    private fun formatAverage(value: Double?): String {
+        if (value == null || value.isNaN()) return "-"
+        val rounded = kotlin.math.round(value * 10.0) / 10.0
+        val asInt = rounded.toInt()
+        return if (rounded == asInt.toDouble()) {
+            asInt.toString()
+        } else {
+            rounded.toString().replace('.', ',')
         }
     }
 }

@@ -31,6 +31,7 @@ data class DisciplineAnalyticsUiState(
     val attendanceMarkedCount: Int,
     val attendanceAbsentCount: Int,
     val attendanceSickCount: Int,
+    val attendancePassCount: Int,
     val attendancePresentCount: Int,
     val attendancePercent: Double?,
     val overTime: List<GradeOverTimePoint>,
@@ -94,9 +95,8 @@ class AnalyticsViewModel @Inject constructor(
             val attendanceMarkedCount = gradeRowsWithMark.size
             val attendanceAbsentCount = gradeRowsWithMark.count { it.gradeType == GradeType.ABSENT.name }
             val attendanceSickCount = gradeRowsWithMark.count { it.gradeType == GradeType.SICK.name }
-            val attendancePresentCount = gradeRowsWithMark.count { row ->
-                row.gradeType == GradeType.GRADE.name || row.gradeType == GradeType.PASS.name
-            }
+            val attendancePassCount = gradeRowsWithMark.count { it.gradeType == GradeType.PASS.name }
+            val attendancePresentCount = gradeRowsWithMark.count { it.gradeType == GradeType.GRADE.name }
             val attendancePercent = attendanceMarkedCount
                 .takeIf { it > 0 }
                 ?.let { attendancePresentCount * 100.0 / it }
@@ -178,6 +178,7 @@ class AnalyticsViewModel @Inject constructor(
                 attendanceMarkedCount = attendanceMarkedCount,
                 attendanceAbsentCount = attendanceAbsentCount,
                 attendanceSickCount = attendanceSickCount,
+                attendancePassCount = attendancePassCount,
                 attendancePresentCount = attendancePresentCount,
                 attendancePercent = attendancePercent,
                 overTime = overTime,

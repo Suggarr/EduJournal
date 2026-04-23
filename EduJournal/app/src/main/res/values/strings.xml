@@ -9,7 +9,7 @@
     <string name="common_cancel">Отмена</string>
 
     <string name="bottom_home">Главная</string>
-    <string name="bottom_groups">Группы</string>
+    <string name="bottom_students">Студенты</string>
     <string name="bottom_settings">Настройки</string>
     <string name="semester_label">Семестр</string>
     <string name="semester_select">Выберите семестр</string>
@@ -103,6 +103,10 @@
     <string name="journal_comment_title">Комментарий к ячейке</string>
     <string name="journal_comment_label">Текст комментария</string>
     <string name="journal_comment_clear">Очистить</string>
+    <string name="journal_average_short">Ср. балл</string>
+    <string name="journal_absences_short">Н/З/О</string>
+    <string name="journal_average_label">Средний балл</string>
+    <string name="journal_absences_label">Отсутствующие (Н/З/О)</string>
     <string name="analytics_title">Аналитика дисциплины</string>
     <string name="analytics_context">Предмет: %1$s | Группа: %2$s</string>
     <string name="analytics_summary_title">Сводка по дисциплине</string>
@@ -111,7 +115,7 @@
     <string name="analytics_summary_lessons">Проведено занятий: %1$d</string>
     <string name="analytics_summary_hours">План часов (по типам): %1$s</string>
     <string name="analytics_summary_attendance">Посещаемость (по отмеченным): %1$d/%2$d (%3$s%%)</string>
-    <string name="analytics_summary_absent_sick">Пропуски: Н - %1$d, З - %2$d</string>
+    <string name="analytics_summary_absent_sick_pass">Пропуски (Н/З/О): Н - %1$d, З - %2$d, О - %3$d, всего - %4$d</string>
     <string name="analytics_over_time_title">Динамика среднего балла по датам</string>
     <string name="analytics_over_time_empty">Недостаточно данных для построения графика</string>
     <string name="analytics_over_time_y_hint">Шкала по оси Y: 1..10</string>

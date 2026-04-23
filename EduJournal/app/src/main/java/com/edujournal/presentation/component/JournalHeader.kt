@@ -80,6 +80,40 @@ fun JournalHeader(
                     }
                 }
             }
+
+            Box(
+                modifier = Modifier
+                    .width(96.dp)
+                    .height(52.dp)
+                    .background(Color(0xFFECEFF1))
+                    .border(1.dp, Color.Black),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.journal_average_short),
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .width(96.dp)
+                    .height(52.dp)
+                    .background(Color(0xFFECEFF1))
+                    .border(1.dp, Color.Black),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.journal_absences_short),
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black
+                )
+            }
         }
     }
 }
