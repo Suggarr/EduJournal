@@ -1,24 +1,32 @@
 ﻿package com.edujournal.presentation.navigation
 
 import android.widget.Toast
+import android.content.Intent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavType
@@ -54,6 +62,8 @@ fun AppNavigation(
     viewModel: MainViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val density = LocalDensity.current
+    val fixedBottomLabelSizeSp = (12f / density.fontScale).sp
     val navController = rememberNavController()
     val userName by viewModel.userName
     val biometricEnabled by viewModel.biometricEnabled
@@ -71,6 +81,19 @@ fun AppNavigation(
                 }
                 is SettingsEvent.MessageText -> {
                     Toast.makeText(context, event.text, Toast.LENGTH_LONG).show()
+                }
+                is SettingsEvent.ShareDatabase -> {
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "application/octet-stream"
+                        putExtra(Intent.EXTRA_STREAM, event.uri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    context.startActivity(
+                        Intent.createChooser(
+                            shareIntent,
+                            context.getString(R.string.settings_share_db)
+                        )
+                    )
                 }
                 SettingsEvent.RestartRequired -> restartApplication(context)
             }
@@ -91,6 +114,11 @@ fun AppNavigation(
             icon = { Icon(Icons.Default.Person, contentDescription = null) }
         ),
         BottomNavItem(
+            route = Routes.SEMESTERS,
+            title = stringResource(R.string.bottom_semesters),
+            icon = { Icon(Icons.Default.DateRange, contentDescription = null) }
+        ),
+        BottomNavItem(
             route = Routes.SETTINGS_TAB,
             title = stringResource(R.string.bottom_settings),
             icon = { Icon(Icons.Default.Settings, contentDescription = null) }
@@ -104,7 +132,10 @@ fun AppNavigation(
         contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {
             if (shouldShowBottomBar) {
-                NavigationBar {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+                    tonalElevation = 0.dp
+                ) {
                     bottomItems.forEach { item ->
                         NavigationBarItem(
                             selected = selectedTopLevelRoute == item.route,
@@ -116,7 +147,21 @@ fun AppNavigation(
                                 }
                             },
                             icon = item.icon,
-                            label = { Text(item.title) }
+                            label = {
+                                Text(
+                                    text = item.title,
+                                    fontSize = fixedBottomLabelSizeSp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         )
                     }
                 }
@@ -319,15 +364,17 @@ fun AppNavigation(
                     userName = userName.orEmpty(),
                     biometricEnabled = biometricEnabled,
                     onSaveUserName = { viewModel.updateUserName(it) },
-                    onBiometricToggle = { viewModel.setBiometricEnabled(it) },
+                    onBiometricToggle = { viewModel.requestBiometricToggle(it) },
                     onManageSemesters = { navController.navigate(Routes.SEMESTERS) },
                     onExportDatabase = { uri -> viewModel.exportDatabase(uri) },
-                    onImportDatabase = { uri -> viewModel.importDatabase(uri) }
+                    onImportDatabase = { uri -> viewModel.importDatabase(uri) },
+                    onShareDatabase = { viewModel.shareDatabase() }
                 )
             }
 
             composable(Routes.SEMESTERS) {
                 SemesterManagementScreen(
+                    showBackButton = false,
                     onBackClick = {
                         navController.navigate(Routes.SETTINGS_TAB) {
                             popUpTo(Routes.SETTINGS_TAB) { inclusive = false }
@@ -354,7 +401,8 @@ private fun currentTopLevelRoute(destination: NavDestination?): String {
 
     return when {
         route == Routes.GROUPS_TAB || route == Routes.STUDENTS -> Routes.GROUPS_TAB
-        route == Routes.SETTINGS_TAB || route == Routes.SEMESTERS -> Routes.SETTINGS_TAB
+        route == Routes.SEMESTERS -> Routes.SEMESTERS
+        route == Routes.SETTINGS_TAB -> Routes.SETTINGS_TAB
         else -> Routes.SUBJECTS
     }
 }

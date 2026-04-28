@@ -42,6 +42,19 @@ class DatabaseTransferManager @Inject constructor(
         }
     }
 
+    suspend fun createShareSnapshot(): File? = withContext(Dispatchers.IO) {
+        runCatching {
+            lastError = null
+            val snapshotFile = createExportSnapshot()
+            require(snapshotFile.exists()) { "DB_FILE_NOT_FOUND" }
+            snapshotFile
+        }.getOrElse { e ->
+            lastError = e.message ?: e::class.java.simpleName
+            Log.e("DatabaseTransfer", "Create share snapshot failed: ${lastError}", e)
+            null
+        }
+    }
+
     suspend fun importDatabase(uri: Uri): Boolean = withContext(Dispatchers.IO) {
         runCatching {
             lastError = null

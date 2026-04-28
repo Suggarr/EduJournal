@@ -1,7 +1,8 @@
-package com.edujournal.presentation.screen
+﻿package com.edujournal.presentation.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -20,6 +22,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -41,11 +45,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.Homework
+import com.edujournal.presentation.component.DeleteRectActionButton
+import com.edujournal.presentation.component.EditRectActionButton
 import com.edujournal.presentation.component.ScrollAwareAddFab
 import com.edujournal.presentation.viewmodel.HomeworkDisplayStatus
 import com.edujournal.presentation.viewmodel.HomeworkStudentUi
@@ -74,15 +81,20 @@ fun HomeworkScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         text = lessonDateInTitle?.let {
                             stringResource(R.string.homework_title_for_lesson, it)
-                        } ?: stringResource(R.string.homework_title_short)
+                        } ?: stringResource(R.string.homework_title_short),
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal)
                     )
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                ),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -122,8 +134,8 @@ fun HomeworkScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(bottom = 16.dp), // Можно поставить vertical
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = PaddingValues(vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             val homework = ui.homework
             if (homework == null) {
@@ -219,24 +231,34 @@ private fun HomeworkCard(
     onSetSubmitted: (HomeworkStudentUi) -> Unit,
     onSetNotSubmitted: (HomeworkStudentUi) -> Unit
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(12.dp)) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = homework.text,
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
-                IconButton(onClick = { onEditHomework(homework) }) {
-                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.common_edit))
-                }
-                IconButton(onClick = { onDeleteHomework(homework) }) {
-                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.common_delete))
-                }
+                Spacer(modifier = Modifier.width(8.dp))
+                EditRectActionButton(onClick = { onEditHomework(homework) })
+                Spacer(modifier = Modifier.width(12.dp))
+                DeleteRectActionButton(onClick = { onDeleteHomework(homework) })
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -265,22 +287,68 @@ private fun HomeworkStudentRow(
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.bodyMedium
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            StatusChip(status = student.displayStatus, modifier = Modifier.weight(1f))
-            OutlinedButton(
-                onClick = onSetSubmitted,
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Text(stringResource(R.string.homework_status_submitted_short))
-            }
-            OutlinedButton(
-                onClick = onSetNotSubmitted,
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Text(stringResource(R.string.homework_status_not_submitted_short))
+        Spacer(modifier = Modifier.height(4.dp))
+        StatusChip(status = student.displayStatus)
+        Spacer(modifier = Modifier.height(8.dp))
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val isCompactWidth = maxWidth < 360.dp
+            if (isCompactWidth) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = onSetSubmitted,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(36.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.homework_status_submitted_short),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = onSetNotSubmitted,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(36.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.homework_status_not_submitted_short),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onSetSubmitted,
+                        modifier = Modifier
+                            .height(36.dp)
+                            .weight(1f)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.homework_status_submitted_short),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = onSetNotSubmitted,
+                        modifier = Modifier
+                            .height(36.dp)
+                            .weight(1f)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.homework_status_not_submitted_short),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -346,3 +414,10 @@ private fun HomeworkDialog(
         }
     )
 }
+
+
+
+
+
+
+

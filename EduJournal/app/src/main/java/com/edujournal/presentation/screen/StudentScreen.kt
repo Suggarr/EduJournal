@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -25,6 +26,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,30 +37,31 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.Student
 import com.edujournal.domain.usecase.EntityWriteResult
 import com.edujournal.presentation.component.ScrollAwareAddFab
-import com.edujournal.presentation.studentimport.StudentImportFileParser
+import com.edujournal.presentation.component.EditRectActionButton
+import com.edujournal.presentation.component.DeleteRectActionButton
 import com.edujournal.presentation.studentimport.StudentImportInstructionDialog
-import com.edujournal.presentation.studentimport.StudentImportParseResult
+import com.edujournal.presentation.viewmodel.StudentImportEvent
 import com.edujournal.presentation.viewmodel.StudentViewModel
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,13 +76,12 @@ fun StudentScreen(
 
     val students by viewModel.students.collectAsState()
     val groupName by viewModel.groupName.collectAsState()
+    val isImporting by viewModel.isImporting.collectAsState()
 
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     var showAddDialog by remember { mutableStateOf(false) }
     var showImportDialog by remember { mutableStateOf(false) }
-    var isImporting by remember { mutableStateOf(false) }
     var studentToEdit by remember { mutableStateOf<Student?>(null) }
     var studentToDelete by remember { mutableStateOf<Student?>(null) }
     val listState = rememberLazyListState()
@@ -90,43 +92,29 @@ fun StudentScreen(
         }
     }
 
-    val importLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-
-        isImporting = true
-        scope.launch {
-            when (val result = StudentImportFileParser.parse(context, uri)) {
-                is StudentImportParseResult.Success -> {
-                    if (result.students.isEmpty()) {
-                        isImporting = false
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.student_import_empty),
-                            Toast.LENGTH_LONG
-                        ).show()
-                        return@launch
-                    }
-
-                    viewModel.importStudents(
-                        groupId = groupId,
-                        importedStudents = result.students
-                    ) { added, skipped ->
-                        isImporting = false
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.student_import_result, added, skipped),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-
-                is StudentImportParseResult.Error -> {
-                    isImporting = false
+    LaunchedEffect(viewModel) {
+        viewModel.importEvents.collect { event ->
+            when (event) {
+                StudentImportEvent.Empty -> {
                     Toast.makeText(
                         context,
-                        context.getString(R.string.student_import_parse_error, result.reason),
+                        context.getString(R.string.student_import_empty),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+
+                is StudentImportEvent.ParseError -> {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.student_import_parse_error, event.reason),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+
+                is StudentImportEvent.Result -> {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.student_import_result, event.added, event.skipped),
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -134,13 +122,31 @@ fun StudentScreen(
         }
     }
 
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+
+        viewModel.importStudentsFromFile(
+            groupId = groupId,
+            uri = uri
+        )
+    }
+
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
-                    Text(stringResource(R.string.student_group_title, groupName ?: groupId.toString()))
+                    Text(
+                        text = stringResource(R.string.student_group_title, groupName ?: groupId.toString()),
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal)
+                    )
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                ),
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -188,7 +194,7 @@ fun StudentScreen(
                 } else {
                     LazyColumn(
                         state = listState,
-                        contentPadding = PaddingValues(bottom = 16.dp), // Можно поставить vertical
+                        contentPadding = PaddingValues(vertical = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(students) { student ->
@@ -209,7 +215,7 @@ fun StudentScreen(
             onDismiss = { showImportDialog = false },
             onPickFile = {
                 showImportDialog = false
-                importLauncher.launch(StudentImportFileParser.supportedMimeTypes)
+                importLauncher.launch(viewModel.supportedImportMimeTypes)
             }
         )
     }
@@ -286,10 +292,17 @@ fun StudentCard(
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 18.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -298,20 +311,10 @@ fun StudentCard(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.weight(1f)
             )
-            IconButton(onClick = onEditClick) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = stringResource(R.string.common_edit),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-            IconButton(onClick = onDeleteClick) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = stringResource(R.string.common_delete),
-                    tint = MaterialTheme.colorScheme.error
-                )
-            }
+            Spacer(modifier = Modifier.width(8.dp))
+            EditRectActionButton(onClick = onEditClick)
+            Spacer(modifier = Modifier.width(12.dp))
+            DeleteRectActionButton(onClick = onDeleteClick)
         }
     }
 }

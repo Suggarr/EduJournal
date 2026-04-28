@@ -37,9 +37,9 @@ class CreateSubjectUseCase @Inject constructor(
         subjectRepository.replaceSubjectSemesters(subjectId, semesterIds)
 
         val defaultTypes = listOf(
-            SubjectLessonType(id = 0, subjectId = subjectId, name = "Лекция", hours = 20.0),
-            SubjectLessonType(id = 0, subjectId = subjectId, name = "Практика", hours = 30.0),
-            SubjectLessonType(id = 0, subjectId = subjectId, name = "Лабораторная", hours = 10.0)
+            SubjectLessonType(id = 0, subjectId = subjectId, name = "Лекция", hours = 0.0),
+            SubjectLessonType(id = 0, subjectId = subjectId, name = "Практика", hours = 0.0),
+            SubjectLessonType(id = 0, subjectId = subjectId, name = "Лабораторная", hours = 0.0)
         )
         defaultTypes.forEach { type ->
             lessonTypeRepository.createLessonType(type)

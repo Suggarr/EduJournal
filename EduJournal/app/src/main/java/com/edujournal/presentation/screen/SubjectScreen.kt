@@ -1,8 +1,13 @@
 ﻿package com.edujournal.presentation.screen
 
 import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,12 +17,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -33,9 +44,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -44,12 +55,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.Semester
@@ -79,12 +90,9 @@ fun SubjectScreen(
     var editSubjectSemesterIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
     var yearMenuExpanded by remember { mutableStateOf(false) }
     var semesterMenuExpanded by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
     val autumnLabel = stringResource(R.string.settings_semester_autumn)
     val springLabel = stringResource(R.string.settings_semester_spring)
-    val semestersByOrder = semesters.mapIndexed { index, semester ->
-        semester to (index + 1)
-    }
-    val semesterNumberById = semestersByOrder.associate { (semester, number) -> semester.id to number }
     val selectedSemester = semesters.firstOrNull { it.id == selectedSemesterId }
     val selectedYear = selectedSemester?.year
     val availableYears = semesters.map { it.year }.distinct().sorted()
@@ -93,6 +101,16 @@ fun SubjectScreen(
     } else {
         semesters.filter { it.year == selectedYear }
     }
+    val filteredSubjects = subjects
+        ?.filter { subject ->
+            if (searchQuery.isBlank()) {
+                true
+            } else {
+                val query = searchQuery.trim().lowercase()
+                subject.name.lowercase().contains(query) ||
+                    (subject.abbreviation?.lowercase()?.contains(query) == true)
+            }
+        }
 
     LaunchedEffect(viewModel) {
         viewModel.uiMessageRes.collect { messageRes ->
@@ -106,26 +124,7 @@ fun SubjectScreen(
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.subject_greeting, userName),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = stringResource(R.string.subject_title),
-                            style = MaterialTheme.typography.headlineSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 24.sp
-                            )
-                        )
-                    }
-                }
-            )
-        },
+        containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             ScrollAwareAddFab(
                 listState = listState,
@@ -135,86 +134,202 @@ fun SubjectScreen(
             )
         }
     ) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues).padding(horizontal = 16.dp)) {
-            Row(
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp)
+        ) {
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(top = 12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
-                Box(modifier = Modifier.weight(1f)) {
-                    OutlinedButton(
-                        onClick = { yearMenuExpanded = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        val yearLabel = selectedYear?.toString() ?: stringResource(R.string.semester_select)
-                        Text("${stringResource(R.string.settings_semester_year_label)}: $yearLabel")
-                    }
-                    DropdownMenu(
-                        expanded = yearMenuExpanded,
-                        onDismissRequest = { yearMenuExpanded = false }
-                    ) {
-                        availableYears.forEach { year ->
-                            DropdownMenuItem(
-                                text = { Text(year.toString()) },
-                                onClick = {
-                                    yearMenuExpanded = false
-                                    val firstSemesterOfYear = semesters.firstOrNull { it.year == year }
-                                    if (firstSemesterOfYear != null) {
-                                        onSemesterSelected(firstSemesterOfYear.id)
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = stringResource(R.string.subject_greeting, userName),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.subject_title),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                        val isCompactWidth = maxWidth < 360.dp
+                        if (isCompactWidth) {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    OutlinedButton(
+                                        onClick = { yearMenuExpanded = true },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        val yearLabel = selectedYear?.toString() ?: stringResource(R.string.semester_select)
+                                        Text("${stringResource(R.string.settings_semester_year_label)}: $yearLabel")
+                                    }
+                                    DropdownMenu(
+                                        expanded = yearMenuExpanded,
+                                        onDismissRequest = { yearMenuExpanded = false },
+                                        modifier = Modifier.heightIn(max = 240.dp)
+                                    ) {
+                                        availableYears.forEach { year ->
+                                            DropdownMenuItem(
+                                                text = { Text(year.toString()) },
+                                                onClick = {
+                                                    yearMenuExpanded = false
+                                                    val firstSemesterOfYear = semesters.firstOrNull { it.year == year }
+                                                    if (firstSemesterOfYear != null) {
+                                                        onSemesterSelected(firstSemesterOfYear.id)
+                                                    }
+                                                }
+                                            )
+                                        }
                                     }
                                 }
-                            )
-                        }
-                    }
-                }
 
-                Box(modifier = Modifier.weight(1f)) {
-                    OutlinedButton(
-                        onClick = { semesterMenuExpanded = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = semestersOfSelectedYear.isNotEmpty()
-                    ) {
-                        val label = selectedSemester?.let { semester ->
-                            val number = semesterNumberById[semester.id] ?: 0
-                            val season = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
-                            stringResource(
-                                R.string.subject_semester_number_and_season,
-                                number,
-                                season
-                            )
-                        } ?: stringResource(R.string.semester_select)
-                        Text("${stringResource(R.string.semester_label)}: $label")
-                    }
-                    DropdownMenu(
-                        expanded = semesterMenuExpanded,
-                        onDismissRequest = { semesterMenuExpanded = false }
-                    ) {
-                        semestersOfSelectedYear.forEach { semester ->
-                            DropdownMenuItem(
-                                text = {
-                                    val number = semesterNumberById[semester.id] ?: 0
-                                    val season = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
-                                    Text(
-                                        stringResource(
-                                            R.string.subject_semester_number_and_season,
-                                            number,
-                                            season
-                                        )
-                                    )
-                                },
-                                onClick = {
-                                    semesterMenuExpanded = false
-                                    onSemesterSelected(semester.id)
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    OutlinedButton(
+                                        onClick = { semesterMenuExpanded = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        enabled = semestersOfSelectedYear.isNotEmpty()
+                                    ) {
+                                        val label = selectedSemester?.let { semester ->
+                                            if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
+                                        } ?: stringResource(R.string.semester_select)
+                                        Text("${stringResource(R.string.semester_label)}: $label")
+                                    }
+                                    DropdownMenu(
+                                        expanded = semesterMenuExpanded,
+                                        onDismissRequest = { semesterMenuExpanded = false }
+                                    ) {
+                                        semestersOfSelectedYear.forEach { semester ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    val season = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
+                                                    Text(season)
+                                                },
+                                                onClick = {
+                                                    semesterMenuExpanded = false
+                                                    onSemesterSelected(semester.id)
+                                                }
+                                            )
+                                        }
+                                    }
                                 }
-                            )
+                            }
+                        } else {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    OutlinedButton(
+                                        onClick = { yearMenuExpanded = true },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        val yearLabel = selectedYear?.toString() ?: stringResource(R.string.semester_select)
+                                        Text("${stringResource(R.string.settings_semester_year_label)}: $yearLabel")
+                                    }
+                                    DropdownMenu(
+                                        expanded = yearMenuExpanded,
+                                        onDismissRequest = { yearMenuExpanded = false },
+                                        modifier = Modifier.heightIn(max = 240.dp)
+                                    ) {
+                                        availableYears.forEach { year ->
+                                            DropdownMenuItem(
+                                                text = { Text(year.toString()) },
+                                                onClick = {
+                                                    yearMenuExpanded = false
+                                                    val firstSemesterOfYear = semesters.firstOrNull { it.year == year }
+                                                    if (firstSemesterOfYear != null) {
+                                                        onSemesterSelected(firstSemesterOfYear.id)
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Box(modifier = Modifier.weight(1f)) {
+                                    OutlinedButton(
+                                        onClick = { semesterMenuExpanded = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        enabled = semestersOfSelectedYear.isNotEmpty()
+                                    ) {
+                                        val label = selectedSemester?.let { semester ->
+                                            if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
+                                        } ?: stringResource(R.string.semester_select)
+                                        Text("${stringResource(R.string.semester_label)}: $label")
+                                    }
+                                    DropdownMenu(
+                                        expanded = semesterMenuExpanded,
+                                        onDismissRequest = { semesterMenuExpanded = false }
+                                    ) {
+                                        semestersOfSelectedYear.forEach { semester ->
+                                            DropdownMenuItem(
+                                                text = {
+                                                    val season = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
+                                                    Text(season)
+                                                },
+                                                onClick = {
+                                                    semesterMenuExpanded = false
+                                                    onSemesterSelected(semester.id)
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        StatPill(
+                            text = stringResource(
+                                R.string.subject_count_chip,
+                                subjects?.size ?: 0
+                            )
+                        )
                     }
                 }
             }
 
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                singleLine = true,
+                placeholder = { Text(stringResource(R.string.subject_search_placeholder)) },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null
+                    )
+                },
+                trailingIcon = {
+                    if (searchQuery.isNotBlank()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = stringResource(R.string.common_cancel)
+                            )
+                        }
+                    }
+                }
+            )
+
             Box(modifier = Modifier.fillMaxSize()) {
-                val currentSubjects = subjects
+                val currentSubjects = filteredSubjects
                 if (semesters.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
@@ -233,7 +348,7 @@ fun SubjectScreen(
                 } else {
                     LazyColumn(
                         state = listState,
-                        contentPadding = PaddingValues(bottom = 16.dp), // Тут насчет vertical не знаю
+                        contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         items(currentSubjects) { subject ->
@@ -259,7 +374,6 @@ fun SubjectScreen(
         SubjectDialog(
             title = stringResource(R.string.subject_new),
             semesters = semesters,
-            semesterNumberById = semesterNumberById,
             isSemesterSelectionEnabled = true,
             initialSelectedSemesterIds = selectedSemesterId?.let { setOf(it) } ?: emptySet(),
             onDismiss = { showAddDialog = false },
@@ -279,7 +393,6 @@ fun SubjectScreen(
             initialName = subject.name,
             initialAbbreviation = subject.abbreviation ?: "",
             semesters = semesters,
-            semesterNumberById = semesterNumberById,
             isSemesterSelectionEnabled = true,
             initialSelectedSemesterIds = editSubjectSemesterIds,
             onDismiss = { subjectToEdit = null },
@@ -321,6 +434,21 @@ fun SubjectScreen(
 }
 
 @Composable
+private fun StatPill(text: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f),
+        shape = MaterialTheme.shapes.large
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+    }
+}
+
+@Composable
 fun SubjectCard(
     subject: Subject,
     onClick: () -> Unit,
@@ -330,40 +458,84 @@ fun SubjectCard(
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = subject.name,
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal)
                 )
                 subject.abbreviation?.let {
                     if (it.isNotBlank()) {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.outline
-                        )
+                        Surface(
+                            modifier = Modifier.padding(top = 8.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            shape = MaterialTheme.shapes.small
+                        ) {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
                     }
                 }
             }
-            IconButton(onClick = onEditClick) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = stringResource(R.string.common_edit),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-            IconButton(onClick = onDeleteClick) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = stringResource(R.string.common_delete),
-                    tint = MaterialTheme.colorScheme.error
-                )
+            Row(
+                modifier = Modifier.padding(start = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                IconButton(
+                    onClick = onEditClick,
+                    modifier = Modifier
+                        .width(48.dp)
+                        .height(36.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.28f),
+                            shape = MaterialTheme.shapes.small
+                        )
+                ) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = stringResource(R.string.common_edit),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                IconButton(
+                    onClick = onDeleteClick,
+                    modifier = Modifier
+                        .width(48.dp)
+                        .height(36.dp)
+                        .clip(MaterialTheme.shapes.small)
+                        .background(MaterialTheme.colorScheme.errorContainer)
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.28f),
+                            shape = MaterialTheme.shapes.small
+                        )
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = stringResource(R.string.common_delete),
+                        tint = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }
@@ -375,7 +547,6 @@ fun SubjectDialog(
     initialName: String = "",
     initialAbbreviation: String = "",
     semesters: List<Semester>,
-    semesterNumberById: Map<Long, Int>,
     isSemesterSelectionEnabled: Boolean,
     initialSelectedSemesterIds: Set<Long>,
     onDismiss: () -> Unit,
@@ -413,32 +584,37 @@ fun SubjectDialog(
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    semesters.forEach { semester ->
-                        val isChecked = semester.id in selectedSemesterIds
-                        val semesterNumber = semesterNumberById[semester.id] ?: 0
-                        val seasonLabel = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Checkbox(
-                                checked = isChecked,
-                                onCheckedChange = { checked ->
-                                    selectedSemesterIds = if (checked) {
-                                        selectedSemesterIds + semester.id
-                                    } else {
-                                        selectedSemesterIds - semester.id
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 220.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        semesters.forEach { semester ->
+                            val isChecked = semester.id in selectedSemesterIds
+                            val seasonLabel = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Checkbox(
+                                    checked = isChecked,
+                                    onCheckedChange = { checked ->
+                                        selectedSemesterIds = if (checked) {
+                                            selectedSemesterIds + semester.id
+                                        } else {
+                                            selectedSemesterIds - semester.id
+                                        }
                                     }
-                                }
-                            )
-                            Text(
-                                text = stringResource(
-                                    R.string.subject_semester_checkbox_item,
-                                    semesterNumber,
-                                    seasonLabel,
-                                    semester.year
                                 )
-                            )
+                                Text(
+                                    text = stringResource(
+                                        R.string.subject_semester_checkbox_item,
+                                        seasonLabel,
+                                        semester.year
+                                    )
+                                )
+                            }
                         }
                     }
                 }
@@ -457,4 +633,3 @@ fun SubjectDialog(
         }
     )
 }
-

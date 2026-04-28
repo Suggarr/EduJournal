@@ -1,15 +1,20 @@
 package com.edujournal.presentation.viewmodel
 
+import android.app.KeyguardManager
+import android.os.Build
 import android.net.Uri
+import androidx.core.content.FileProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.biometric.BiometricManager
 import com.edujournal.R
 import com.edujournal.data.local.DatabaseTransferManager
 import com.edujournal.data.local.UserPreferences
 import com.edujournal.domain.model.Semester
 import com.edujournal.domain.usecase.ObserveSemestersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -17,16 +22,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.io.File
+import android.content.Context
 import javax.inject.Inject
 
 sealed interface SettingsEvent {
     data class Message(val resId: Int) : SettingsEvent
     data class MessageText(val text: String) : SettingsEvent
+    data class ShareDatabase(val uri: Uri) : SettingsEvent
     data object RestartRequired : SettingsEvent
 }
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val userPreferences: UserPreferences,
     private val databaseTransferManager: DatabaseTransferManager,
     observeSemestersUseCase: ObserveSemestersUseCase
@@ -67,6 +76,44 @@ class MainViewModel @Inject constructor(
         biometricEnabled.value = enabled
     }
 
+    fun requestBiometricToggle(enabled: Boolean) {
+        if (!enabled) {
+            setBiometricEnabled(false)
+            return
+        }
+
+        if (canAuthenticateBiometricOrCredential()) {
+            setBiometricEnabled(true)
+            return
+        }
+
+        val hasDeviceCredential = hasDeviceCredential()
+        val biometricManager = BiometricManager.from(context)
+        val biometricNoneEnrolled =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val authenticators =
+                    BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                        BiometricManager.Authenticators.DEVICE_CREDENTIAL
+                biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
+            } else {
+                @Suppress("DEPRECATION")
+                biometricManager.canAuthenticate() == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
+            }
+
+        viewModelScope.launch {
+            _settingsEvents.emit(
+                SettingsEvent.Message(
+                    if (biometricNoneEnrolled && !hasDeviceCredential) {
+                        R.string.settings_biometric_enroll
+                    } else {
+                        R.string.settings_biometric_unavailable
+                    }
+                )
+            )
+        }
+        setBiometricEnabled(false)
+    }
+
     fun selectSemester(semesterId: Long) {
         selectedSemesterId.value = semesterId
     }
@@ -100,6 +147,23 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun shareDatabase() {
+        viewModelScope.launch {
+            val snapshotFile: File? = databaseTransferManager.createShareSnapshot()
+            if (snapshotFile == null) {
+                _settingsEvents.emit(SettingsEvent.Message(R.string.settings_db_export_error))
+                return@launch
+            }
+
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                snapshotFile
+            )
+            _settingsEvents.emit(SettingsEvent.ShareDatabase(uri))
+        }
+    }
+
     private fun contextualError(raw: String): String {
         return when {
             raw.contains("INVALID_DATABASE", ignoreCase = true) ->
@@ -114,5 +178,24 @@ class MainViewModel @Inject constructor(
                 "не удалось открыть файл назначения"
             else -> raw
         }
+    }
+
+    private fun canAuthenticateBiometricOrCredential(): Boolean {
+        val biometricManager = BiometricManager.from(context)
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val authenticators =
+                BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                    BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS
+        } else {
+            @Suppress("DEPRECATION")
+            val biometricResult = biometricManager.canAuthenticate()
+            biometricResult == BiometricManager.BIOMETRIC_SUCCESS || hasDeviceCredential()
+        }
+    }
+
+    private fun hasDeviceCredential(): Boolean {
+        val keyguardManager = context.getSystemService(KeyguardManager::class.java)
+        return keyguardManager?.isDeviceSecure == true
     }
 }

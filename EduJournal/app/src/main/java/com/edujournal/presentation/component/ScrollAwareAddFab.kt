@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -18,6 +19,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -55,7 +59,11 @@ fun ScrollAwareAddFab(
         exit = fadeOut(animationSpec = tween(durationMillis = 120)) +
             scaleOut(targetScale = 0.9f, animationSpec = tween(durationMillis = 120))
     ) {
-        FloatingActionButton(onClick = onClick) {
+        FloatingActionButton(
+            onClick = onClick,
+            shape = MaterialTheme.shapes.small,
+            modifier = Modifier.size(62.dp)
+        ) {
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = contentDescription

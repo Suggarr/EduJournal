@@ -1,5 +1,6 @@
 package com.edujournal.presentation.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edujournal.R
@@ -11,6 +12,8 @@ import com.edujournal.domain.usecase.GetGroupsUseCase
 import com.edujournal.domain.usecase.ObserveStudentsUseCase
 import com.edujournal.domain.usecase.UpdateStudentUseCase
 import com.edujournal.presentation.studentimport.ImportStudentRow
+import com.edujournal.presentation.studentimport.StudentImportManager
+import com.edujournal.presentation.studentimport.StudentImportParseResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,18 +28,30 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+sealed interface StudentImportEvent {
+    data object Empty : StudentImportEvent
+    data class ParseError(val reason: String) : StudentImportEvent
+    data class Result(val added: Int, val skipped: Int) : StudentImportEvent
+}
+
 @HiltViewModel
 class StudentViewModel @Inject constructor(
     private val observeStudentsUseCase: ObserveStudentsUseCase,
     private val createStudentUseCase: CreateStudentUseCase,
     private val updateStudentUseCase: UpdateStudentUseCase,
     private val deleteStudentUseCase: DeleteStudentUseCase,
-    private val getGroupsUseCase: GetGroupsUseCase
+    private val getGroupsUseCase: GetGroupsUseCase,
+    private val studentImportManager: StudentImportManager
 ) : ViewModel() {
 
     private val _groupId = MutableStateFlow<Long?>(null)
     private val _uiMessageRes = MutableSharedFlow<Int>(extraBufferCapacity = 1)
     val uiMessageRes: SharedFlow<Int> = _uiMessageRes.asSharedFlow()
+    private val _isImporting = MutableStateFlow(false)
+    val isImporting: StateFlow<Boolean> = _isImporting
+    private val _importEvents = MutableSharedFlow<StudentImportEvent>(extraBufferCapacity = 1)
+    val importEvents: SharedFlow<StudentImportEvent> = _importEvents.asSharedFlow()
+    val supportedImportMimeTypes: Array<String> = studentImportManager.supportedMimeTypes
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val students: StateFlow<List<Student>> = _groupId
@@ -134,6 +149,35 @@ class StudentViewModel @Inject constructor(
             }
 
             onCompleted(added, skipped)
+        }
+    }
+
+    fun importStudentsFromFile(
+        groupId: Long,
+        uri: Uri
+    ) {
+        viewModelScope.launch {
+            _isImporting.value = true
+            when (val parseResult = studentImportManager.parse(uri)) {
+                is StudentImportParseResult.Success -> {
+                    if (parseResult.students.isEmpty()) {
+                        _isImporting.value = false
+                        _importEvents.emit(StudentImportEvent.Empty)
+                        return@launch
+                    }
+                    importStudents(groupId, parseResult.students) { added, skipped ->
+                        viewModelScope.launch {
+                            _isImporting.value = false
+                            _importEvents.emit(StudentImportEvent.Result(added, skipped))
+                        }
+                    }
+                }
+
+                is StudentImportParseResult.Error -> {
+                    _isImporting.value = false
+                    _importEvents.emit(StudentImportEvent.ParseError(parseResult.reason))
+                }
+            }
         }
     }
 

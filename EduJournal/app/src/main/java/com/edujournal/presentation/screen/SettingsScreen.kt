@@ -1,25 +1,30 @@
-package com.edujournal.presentation.screen
+﻿package com.edujournal.presentation.screen
 
-import android.app.KeyguardManager
 import android.net.Uri
-import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.biometric.BiometricManager
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,7 +35,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
 import com.edujournal.R
+import com.edujournal.presentation.component.AppTopBar
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -43,14 +51,13 @@ fun SettingsScreen(
     onBiometricToggle: (Boolean) -> Unit,
     onManageSemesters: () -> Unit,
     onExportDatabase: (Uri) -> Unit,
-    onImportDatabase: (Uri) -> Unit
+    onImportDatabase: (Uri) -> Unit,
+    onShareDatabase: () -> Unit
 ) {
     val context = LocalContext.current
     var editedName by remember(userName) { mutableStateOf(userName) }
 
     val nameSavedText = stringResource(R.string.settings_name_saved)
-    val biometricEnrollText = stringResource(R.string.settings_biometric_enroll)
-    val biometricUnavailableText = stringResource(R.string.settings_biometric_unavailable)
     val timestampFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm") }
 
     val exportLauncher = rememberLauncherForActivityResult(
@@ -66,10 +73,9 @@ fun SettingsScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.settings_title)) }
-            )
+            AppTopBar(title = stringResource(R.string.settings_title))
         }
     ) { paddingValues ->
         LazyColumn(
@@ -80,126 +86,130 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                OutlinedTextField(
-                    value = editedName,
-                    onValueChange = { editedName = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.settings_user_name_label)) },
-                    singleLine = true
-                )
-            }
-
-            item {
-                Button(
-                    onClick = {
-                        val trimmedName = editedName.trim()
-                        if (trimmedName.isNotEmpty()) {
-                            onSaveUserName(trimmedName)
-                            Toast.makeText(context, nameSavedText, Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    enabled = editedName.trim().isNotEmpty(),
-                    modifier = Modifier.fillMaxWidth()
+                SettingsSectionCard(
+                    title = stringResource(R.string.settings_section_profile)
                 ) {
-                    Text(stringResource(R.string.settings_save_name))
-                }
-            }
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(text = stringResource(R.string.settings_biometric))
-                    Switch(
-                        checked = biometricEnabled,
-                        onCheckedChange = { enabled ->
-                            if (!enabled) {
-                                onBiometricToggle(false)
-                                return@Switch
-                            }
-
-                            val isAvailable = canAuthenticateBiometricOrCredential(context)
-                            if (isAvailable) {
-                                onBiometricToggle(true)
-                                return@Switch
-                            }
-
-                            val hasDeviceCredential = hasDeviceCredential(context)
-                            val biometricManager = BiometricManager.from(context)
-                            val biometricNoneEnrolled =
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                                    val authenticators =
-                                        BiometricManager.Authenticators.BIOMETRIC_WEAK or
-                                            BiometricManager.Authenticators.DEVICE_CREDENTIAL
-                                    biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
-                                } else {
-                                    @Suppress("DEPRECATION")
-                                    biometricManager.canAuthenticate() == BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED
-                                }
-
-                            Toast.makeText(
-                                context,
-                                if (biometricNoneEnrolled && !hasDeviceCredential) biometricEnrollText else biometricUnavailableText,
-                                Toast.LENGTH_LONG
-                            ).show()
-                            onBiometricToggle(false)
-                        }
+                    OutlinedTextField(
+                        value = editedName,
+                        onValueChange = { editedName = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.settings_user_name_label)) },
+                        singleLine = true
                     )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Button(
+                            onClick = {
+                                val trimmedName = editedName.trim()
+                                if (trimmedName.isNotEmpty()) {
+                                    onSaveUserName(trimmedName)
+                                    Toast.makeText(context, nameSavedText, Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            enabled = editedName.trim().isNotEmpty()
+                        ) {
+                            Text(stringResource(R.string.settings_save_name))
+                        }
+                    }
                 }
             }
 
             item {
-                Button(
-                    onClick = onManageSemesters,
-                    modifier = Modifier.fillMaxWidth()
+                SettingsSectionCard(
+                    title = stringResource(R.string.settings_section_security)
                 ) {
-                    Text(stringResource(R.string.settings_manage_semesters))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(text = stringResource(R.string.settings_biometric))
+                            Text(
+                                text = stringResource(R.string.settings_biometric_subtitle),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = biometricEnabled,
+                            onCheckedChange = onBiometricToggle
+                        )
+                    }
                 }
             }
 
             item {
-                Button(
-                    onClick = {
-                        val timestamp = LocalDateTime.now().format(timestampFormatter)
-                        exportLauncher.launch("EduJournal_backup_$timestamp.db")
-                    },
-                    modifier = Modifier.fillMaxWidth()
+                SettingsSectionCard(
+                    title = stringResource(R.string.settings_section_data)
                 ) {
-                    Text(stringResource(R.string.settings_export_db))
-                }
-            }
-
-            item {
-                Button(
-                    onClick = {
-                        importLauncher.launch(arrayOf("application/octet-stream", "application/x-sqlite3", "*/*"))
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.settings_import_db))
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        FilledTonalButton(
+                            onClick = {
+                                val timestamp = LocalDateTime.now().format(timestampFormatter)
+                                exportLauncher.launch("EduJournal_backup_$timestamp.db")
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(R.string.settings_export_db))
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                importLauncher.launch(arrayOf("application/octet-stream", "application/x-sqlite3", "*/*"))
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(R.string.settings_import_db))
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            IconButton(
+                                onClick = onShareDatabase
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = stringResource(R.string.settings_share_db)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-private fun canAuthenticateBiometricOrCredential(context: android.content.Context): Boolean {
-    val biometricManager = BiometricManager.from(context)
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        val authenticators =
-            BiometricManager.Authenticators.BIOMETRIC_WEAK or
-                BiometricManager.Authenticators.DEVICE_CREDENTIAL
-        biometricManager.canAuthenticate(authenticators) == BiometricManager.BIOMETRIC_SUCCESS
-    } else {
-        @Suppress("DEPRECATION")
-        val biometricResult = biometricManager.canAuthenticate()
-        biometricResult == BiometricManager.BIOMETRIC_SUCCESS || hasDeviceCredential(context)
+@Composable
+private fun SettingsSectionCard(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium
+            )
+            content()
+        }
     }
-}
-
-private fun hasDeviceCredential(context: android.content.Context): Boolean {
-    val keyguardManager = context.getSystemService(KeyguardManager::class.java)
-    return keyguardManager?.isDeviceSecure == true
 }
