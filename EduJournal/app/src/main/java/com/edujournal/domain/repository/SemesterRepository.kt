@@ -1,4 +1,4 @@
-package com.edujournal.domain.repository
+﻿package com.edujournal.domain.repository
 
 import com.edujournal.domain.model.Semester
 import kotlinx.coroutines.flow.Flow
@@ -9,3 +9,5 @@ interface SemesterRepository {
     suspend fun updateSemester(semester: Semester)
     suspend fun deleteSemester(semesterId: Long)
 }
+
+

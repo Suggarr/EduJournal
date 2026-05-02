@@ -1,8 +1,8 @@
-package com.edujournal.data.mapper
+﻿package com.edujournal.data.mapper
 
 import com.edujournal.data.local.database.entities.HomeworkSubmissionEntity
 import com.edujournal.domain.model.HomeworkSubmission
-import com.edujournal.domain.model.HomeworkSubmissionStatus
+import com.edujournal.domain.model.enum.HomeworkSubmissionStatus
 
 fun HomeworkSubmissionEntity.toDomain(): HomeworkSubmission {
     return HomeworkSubmission(
@@ -21,3 +21,5 @@ fun HomeworkSubmission.toEntity(): HomeworkSubmissionEntity {
         status = status.name
     )
 }
+
+

@@ -1,4 +1,4 @@
-package com.edujournal.data.local.database.entities
+﻿package com.edujournal.data.local.database.entities
 
 
 import androidx.room.Entity
@@ -14,3 +14,5 @@ data class GroupEntity(@PrimaryKey(autoGenerate = true)
 
     val name: String
 )
+
+

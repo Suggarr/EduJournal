@@ -56,7 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.Group
-import com.edujournal.domain.usecase.EntityWriteResult
+import com.edujournal.domain.usecase.common.EntityWriteResult
 import com.edujournal.presentation.component.DeleteRectActionButton
 import com.edujournal.presentation.component.EditRectActionButton
 import com.edujournal.presentation.component.ScrollAwareAddFab
@@ -144,7 +144,7 @@ fun GroupScreen(
                         onValueChange = { searchQuery = it },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 12.dp, bottom = 8.dp),
+                            .padding(top = 12.dp),
                         singleLine = true,
                         placeholder = { Text(stringResource(R.string.group_name_label)) },
                         leadingIcon = {
@@ -175,7 +175,7 @@ fun GroupScreen(
                     } else {
                         LazyColumn(
                             state = listState,
-                            contentPadding = PaddingValues(bottom = 16.dp),
+                            contentPadding = PaddingValues(top = 12.dp, bottom = 16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             items(filteredGroups) { group ->

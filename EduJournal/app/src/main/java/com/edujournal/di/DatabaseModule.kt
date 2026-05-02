@@ -13,6 +13,7 @@ import com.edujournal.data.local.dao.SubjectLessonTypeDao
 import com.edujournal.data.local.dao.SemesterDao
 import com.edujournal.data.local.dao.StudentDao
 import com.edujournal.data.local.dao.SubjectDao
+import com.edujournal.data.local.dao.TopicTemplateDao
 import com.edujournal.data.local.database.AppDatabase
 import com.edujournal.data.local.datasource.GradeLocalDataSource
 import com.edujournal.data.local.datasource.GroupLocalDataSource
@@ -23,6 +24,7 @@ import com.edujournal.data.local.datasource.SubjectLessonTypeLocalDataSource
 import com.edujournal.data.local.datasource.SemesterLocalDataSource
 import com.edujournal.data.local.datasource.StudentLocalDataSource
 import com.edujournal.data.local.datasource.SubjectLocalDataSource
+import com.edujournal.data.local.datasource.TopicTemplateLocalDataSource
 import com.edujournal.data.repository.GradeRepositoryImpl
 import com.edujournal.data.repository.GroupRepositoryImpl
 import com.edujournal.data.repository.HomeworkRepositoryImpl
@@ -32,6 +34,7 @@ import com.edujournal.data.repository.SubjectLessonTypeRepositoryImpl
 import com.edujournal.data.repository.SemesterRepositoryImpl
 import com.edujournal.data.repository.StudentRepositoryImpl
 import com.edujournal.data.repository.SubjectRepositoryImpl
+import com.edujournal.data.repository.TopicTemplateRepositoryImpl
 import com.edujournal.domain.repository.GradeRepository
 import com.edujournal.domain.repository.GroupRepository
 import com.edujournal.domain.repository.HomeworkRepository
@@ -41,37 +44,42 @@ import com.edujournal.domain.repository.SubjectLessonTypeRepository
 import com.edujournal.domain.repository.SemesterRepository
 import com.edujournal.domain.repository.StudentRepository
 import com.edujournal.domain.repository.SubjectRepository
-import com.edujournal.domain.usecase.CreateGroupUseCase
-import com.edujournal.domain.usecase.CreateHomeworkUseCase
-import com.edujournal.domain.usecase.CreateSubjectLessonTypeUseCase
-import com.edujournal.domain.usecase.CreateLessonUseCase
-import com.edujournal.domain.usecase.CreateSemesterUseCase
-import com.edujournal.domain.usecase.CreateStudentUseCase
-import com.edujournal.domain.usecase.CreateSubjectUseCase
-import com.edujournal.domain.usecase.DeleteGroupUseCase
-import com.edujournal.domain.usecase.DeleteHomeworkUseCase
-import com.edujournal.domain.usecase.DeleteSubjectLessonTypeUseCase
-import com.edujournal.domain.usecase.DeleteSemesterUseCase
-import com.edujournal.domain.usecase.DeleteStudentUseCase
-import com.edujournal.domain.usecase.DeleteSubjectUseCase
-import com.edujournal.domain.usecase.GetGradesForLessonUseCase
-import com.edujournal.domain.usecase.GetGroupsUseCase
-import com.edujournal.domain.usecase.GetJournalUseCase
-import com.edujournal.domain.usecase.GetLessonsUseCase
-import com.edujournal.domain.usecase.ObserveHomeworksUseCase
-import com.edujournal.domain.usecase.ObserveHomeworkSubmissionsUseCase
-import com.edujournal.domain.usecase.ObserveSubjectLessonTypesUseCase
-import com.edujournal.domain.usecase.ObserveSemestersUseCase
-import com.edujournal.domain.usecase.ObserveStudentsUseCase
-import com.edujournal.domain.usecase.ObserveSubjectsUseCase
-import com.edujournal.domain.usecase.SetGradeUseCase
-import com.edujournal.domain.usecase.UpdateGroupUseCase
-import com.edujournal.domain.usecase.UpdateHomeworkUseCase
-import com.edujournal.domain.usecase.UpdateSubjectLessonTypeUseCase
-import com.edujournal.domain.usecase.UpdateSemesterUseCase
-import com.edujournal.domain.usecase.UpdateStudentUseCase
-import com.edujournal.domain.usecase.UpdateSubjectUseCase
-import com.edujournal.domain.usecase.UpsertHomeworkSubmissionUseCase
+import com.edujournal.domain.repository.TopicTemplateRepository
+import com.edujournal.domain.usecase.group.CreateGroupUseCase
+import com.edujournal.domain.usecase.homework.CreateHomeworkUseCase
+import com.edujournal.domain.usecase.subjectlessontype.CreateSubjectLessonTypeUseCase
+import com.edujournal.domain.usecase.lesson.CreateLessonUseCase
+import com.edujournal.domain.usecase.semester.CreateSemesterUseCase
+import com.edujournal.domain.usecase.student.CreateStudentUseCase
+import com.edujournal.domain.usecase.subject.CreateSubjectUseCase
+import com.edujournal.domain.usecase.topictemplate.CreateTopicTemplateUseCase
+import com.edujournal.domain.usecase.group.DeleteGroupUseCase
+import com.edujournal.domain.usecase.homework.DeleteHomeworkUseCase
+import com.edujournal.domain.usecase.subjectlessontype.DeleteSubjectLessonTypeUseCase
+import com.edujournal.domain.usecase.semester.DeleteSemesterUseCase
+import com.edujournal.domain.usecase.student.DeleteStudentUseCase
+import com.edujournal.domain.usecase.subject.DeleteSubjectUseCase
+import com.edujournal.domain.usecase.topictemplate.DeleteTopicTemplateUseCase
+import com.edujournal.domain.usecase.grade.GetGradesForLessonUseCase
+import com.edujournal.domain.usecase.group.GetGroupsUseCase
+import com.edujournal.domain.usecase.journal.GetJournalUseCase
+import com.edujournal.domain.usecase.lesson.GetLessonsUseCase
+import com.edujournal.domain.usecase.homework.ObserveHomeworksUseCase
+import com.edujournal.domain.usecase.homeworksubmission.ObserveHomeworkSubmissionsUseCase
+import com.edujournal.domain.usecase.subjectlessontype.ObserveSubjectLessonTypesUseCase
+import com.edujournal.domain.usecase.semester.ObserveSemestersUseCase
+import com.edujournal.domain.usecase.student.ObserveStudentsUseCase
+import com.edujournal.domain.usecase.subject.ObserveSubjectsUseCase
+import com.edujournal.domain.usecase.topictemplate.ObserveTopicTemplatesUseCase
+import com.edujournal.domain.usecase.grade.SetGradeUseCase
+import com.edujournal.domain.usecase.group.UpdateGroupUseCase
+import com.edujournal.domain.usecase.homework.UpdateHomeworkUseCase
+import com.edujournal.domain.usecase.subjectlessontype.UpdateSubjectLessonTypeUseCase
+import com.edujournal.domain.usecase.semester.UpdateSemesterUseCase
+import com.edujournal.domain.usecase.student.UpdateStudentUseCase
+import com.edujournal.domain.usecase.subject.UpdateSubjectUseCase
+import com.edujournal.domain.usecase.topictemplate.UpdateTopicTemplateUseCase
+import com.edujournal.domain.usecase.homeworksubmission.UpsertHomeworkSubmissionUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -558,6 +566,41 @@ object DatabaseModule {
     fun provideDeleteStudentUseCase(
         repository: StudentRepository
     ): DeleteStudentUseCase = DeleteStudentUseCase(repository)
+
+    @Provides
+    fun provideTopicTemplateDao(
+        database: AppDatabase
+    ): TopicTemplateDao = database.topicTemplateDao()
+
+    @Provides
+    fun provideTopicTemplateLocalDataSource(
+        dao: TopicTemplateDao
+    ): TopicTemplateLocalDataSource = TopicTemplateLocalDataSource(dao)
+
+    @Provides
+    fun provideTopicTemplateRepository(
+        localDataSource: TopicTemplateLocalDataSource
+    ): TopicTemplateRepository = TopicTemplateRepositoryImpl(localDataSource)
+
+    @Provides
+    fun provideObserveTopicTemplatesUseCase(
+        repository: TopicTemplateRepository
+    ): ObserveTopicTemplatesUseCase = ObserveTopicTemplatesUseCase(repository)
+
+    @Provides
+    fun provideCreateTopicTemplateUseCase(
+        repository: TopicTemplateRepository
+    ): CreateTopicTemplateUseCase = CreateTopicTemplateUseCase(repository)
+
+    @Provides
+    fun provideUpdateTopicTemplateUseCase(
+        repository: TopicTemplateRepository
+    ): UpdateTopicTemplateUseCase = UpdateTopicTemplateUseCase(repository)
+
+    @Provides
+    fun provideDeleteTopicTemplateUseCase(
+        repository: TopicTemplateRepository
+    ): DeleteTopicTemplateUseCase = DeleteTopicTemplateUseCase(repository)
 }
 
 

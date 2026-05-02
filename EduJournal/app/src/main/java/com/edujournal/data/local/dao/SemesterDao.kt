@@ -1,4 +1,4 @@
-package com.edujournal.data.local.dao
+﻿package com.edujournal.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -32,3 +32,4 @@ interface SemesterDao {
     @Query("DELETE FROM semesters WHERE id = :semesterId")
     suspend fun deleteById(semesterId: Long)
 }
+

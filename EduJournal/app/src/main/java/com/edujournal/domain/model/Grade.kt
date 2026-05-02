@@ -1,4 +1,7 @@
+﻿
 package com.edujournal.domain.model
+
+import com.edujournal.domain.model.enum.GradeType
 
 data class Grade(
     val id: Long,
@@ -8,3 +11,5 @@ data class Grade(
     val type: GradeType,
     val comment: String?
 )
+
+

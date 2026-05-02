@@ -12,7 +12,7 @@ import com.edujournal.R
 import com.edujournal.data.local.DatabaseTransferManager
 import com.edujournal.data.local.UserPreferences
 import com.edujournal.domain.model.Semester
-import com.edujournal.domain.usecase.ObserveSemestersUseCase
+import com.edujournal.domain.usecase.semester.ObserveSemestersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -126,7 +126,12 @@ class MainViewModel @Inject constructor(
             } else {
                 val details = databaseTransferManager.lastError ?: "unknown"
                 _settingsEvents.emit(
-                    SettingsEvent.MessageText("Экспорт БД: ${contextualError(details)}")
+                    SettingsEvent.MessageText(
+                        context.getString(
+                            R.string.settings_db_export_error_detailed,
+                            contextualError(details)
+                        )
+                    )
                 )
             }
         }
@@ -141,7 +146,12 @@ class MainViewModel @Inject constructor(
             } else {
                 val details = databaseTransferManager.lastError ?: "unknown"
                 _settingsEvents.emit(
-                    SettingsEvent.MessageText("Импорт БД: ${contextualError(details)}")
+                    SettingsEvent.MessageText(
+                        context.getString(
+                            R.string.settings_db_import_error_detailed,
+                            contextualError(details)
+                        )
+                    )
                 )
             }
         }
@@ -167,15 +177,15 @@ class MainViewModel @Inject constructor(
     private fun contextualError(raw: String): String {
         return when {
             raw.contains("INVALID_DATABASE", ignoreCase = true) ->
-                "файл не прошел проверку структуры"
+                context.getString(R.string.settings_db_error_invalid_structure)
             raw.contains("INVALID_DATABASE_HEADER", ignoreCase = true) ->
-                "файл не является корректной SQLite базой"
+                context.getString(R.string.settings_db_error_invalid_header)
             raw.contains("MISSING_TABLES:", ignoreCase = true) ->
-                "в файле отсутствуют таблицы приложения"
+                context.getString(R.string.settings_db_error_missing_tables)
             raw.contains("INPUT_STREAM_NOT_FOUND", ignoreCase = true) ->
-                "не удалось открыть выбранный файл"
+                context.getString(R.string.settings_db_error_input_stream)
             raw.contains("OUTPUT_STREAM_NOT_FOUND", ignoreCase = true) ->
-                "не удалось открыть файл назначения"
+                context.getString(R.string.settings_db_error_output_stream)
             else -> raw
         }
     }

@@ -1,4 +1,4 @@
-package com.edujournal.presentation.screen
+﻿package com.edujournal.presentation.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

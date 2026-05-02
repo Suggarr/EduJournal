@@ -1,9 +1,8 @@
-﻿package com.edujournal.presentation.screen
+package com.edujournal.presentation.screen
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -43,12 +42,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.presentation.component.AppTopBar
 import com.edujournal.domain.model.Semester
-import com.edujournal.domain.model.SemesterSeason
+import com.edujournal.domain.model.enum.SemesterSeason
 import com.edujournal.presentation.component.DeleteRectActionButton
 import com.edujournal.presentation.component.EditRectActionButton
 import com.edujournal.presentation.viewmodel.SemesterViewModel
@@ -100,19 +100,31 @@ fun SemesterManagementScreen(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(semesters, key = { it.id }) { semester ->
-                    SemesterItemCard(
-                        semester = semester,
-                        autumnLabel = autumnLabel,
-                        springLabel = springLabel,
-                        onEditClick = { semesterToEdit = semester },
-                        onDeleteClick = { semesterToDelete = semester }
+            if (semesters.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_semester_empty),
+                        color = MaterialTheme.colorScheme.outline
                     )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(semesters, key = { it.id }) { semester ->
+                        SemesterItemCard(
+                            semester = semester,
+                            autumnLabel = autumnLabel,
+                            springLabel = springLabel,
+                            onEditClick = { semesterToEdit = semester },
+                            onDeleteClick = { semesterToDelete = semester }
+                        )
+                    }
                 }
             }
         }
@@ -257,75 +269,55 @@ private fun SemesterDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(text = stringResource(R.string.settings_semester_season_label))
-                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                    val isCompactWidth = maxWidth < 360.dp
-                    if (isCompactWidth) {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            if (selectedSeason == SemesterSeason.AUTUMN) {
-                                Button(
-                                    onClick = { selectedSeason = SemesterSeason.AUTUMN },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(text = autumnLabel)
-                                }
-                            } else {
-                                OutlinedButton(
-                                    onClick = { selectedSeason = SemesterSeason.AUTUMN },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(text = autumnLabel)
-                                }
-                            }
-
-                            if (selectedSeason == SemesterSeason.SPRING) {
-                                Button(
-                                    onClick = { selectedSeason = SemesterSeason.SPRING },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(text = springLabel)
-                                }
-                            } else {
-                                OutlinedButton(
-                                    onClick = { selectedSeason = SemesterSeason.SPRING },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(text = springLabel)
-                                }
-                            }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (selectedSeason == SemesterSeason.AUTUMN) {
+                        Button(
+                            onClick = { selectedSeason = SemesterSeason.AUTUMN },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = autumnLabel,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     } else {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            if (selectedSeason == SemesterSeason.AUTUMN) {
-                                Button(
-                                    onClick = { selectedSeason = SemesterSeason.AUTUMN },
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(text = autumnLabel)
-                                }
-                            } else {
-                                OutlinedButton(
-                                    onClick = { selectedSeason = SemesterSeason.AUTUMN },
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(text = autumnLabel)
-                                }
-                            }
+                        OutlinedButton(
+                            onClick = { selectedSeason = SemesterSeason.AUTUMN },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = autumnLabel,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
 
-                            if (selectedSeason == SemesterSeason.SPRING) {
-                                Button(
-                                    onClick = { selectedSeason = SemesterSeason.SPRING },
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(text = springLabel)
-                                }
-                            } else {
-                                OutlinedButton(
-                                    onClick = { selectedSeason = SemesterSeason.SPRING },
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(text = springLabel)
-                                }
-                            }
+                    if (selectedSeason == SemesterSeason.SPRING) {
+                        Button(
+                            onClick = { selectedSeason = SemesterSeason.SPRING },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = springLabel,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    } else {
+                        OutlinedButton(
+                            onClick = { selectedSeason = SemesterSeason.SPRING },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = springLabel,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }
@@ -371,10 +363,3 @@ private fun Semester.toDisplayName(autumnLabel: String, springLabel: String): St
     }
     return "$seasonLabel $year"
 }
-
-
-
-
-
-
-

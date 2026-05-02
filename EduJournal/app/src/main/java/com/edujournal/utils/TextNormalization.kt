@@ -1,4 +1,4 @@
-package com.edujournal.utils
+﻿package com.edujournal.utils
 
 private val MULTI_SPACE_REGEX = Regex("\\s+")
 

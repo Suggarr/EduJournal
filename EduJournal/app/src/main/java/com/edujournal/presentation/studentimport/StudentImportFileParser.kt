@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import com.edujournal.R
 import com.edujournal.utils.normalizeSpaces
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -33,29 +34,49 @@ object StudentImportFileParser {
 
             return@withContext try {
                 val bytes = resolver.openInputStream(uri)?.use { it.readBytes() }
-                    ?: throw IllegalArgumentException("Не удалось прочитать файл")
+                    ?: throw IllegalArgumentException(
+                        context.getString(R.string.student_import_error_read_file)
+                    )
 
                 val rows = when {
-                    displayName.endsWith(".csv") -> parseCsv(bytes)
-                    displayName.endsWith(".xlsx") -> parseXlsx(bytes)
+                    displayName.endsWith(".csv") -> parseCsv(
+                        bytes = bytes,
+                        requiredColumnsError = context.getString(R.string.student_import_error_required_columns)
+                    )
+                    displayName.endsWith(".xlsx") -> parseXlsx(
+                        bytes = bytes,
+                        requiredColumnsError = context.getString(R.string.student_import_error_required_columns)
+                    )
                     displayName.endsWith(".xls") -> throw IllegalArgumentException(
-                        "Формат .xls не поддерживается. Сохраните файл как .xlsx."
+                        context.getString(R.string.student_import_error_xls_not_supported)
                     )
                     else -> {
-                        runCatching { parseXlsx(bytes) }
-                            .getOrElse { parseCsv(bytes) }
+                        runCatching {
+                            parseXlsx(
+                                bytes = bytes,
+                                requiredColumnsError = context.getString(R.string.student_import_error_required_columns)
+                            )
+                        }.getOrElse {
+                            parseCsv(
+                                bytes = bytes,
+                                requiredColumnsError = context.getString(R.string.student_import_error_required_columns)
+                            )
+                        }
                     }
                 }
 
                 StudentImportParseResult.Success(rows)
             } catch (e: Exception) {
                 StudentImportParseResult.Error(
-                    reason = e.message ?: "Invalid file format"
+                    reason = e.message ?: context.getString(R.string.student_import_error_invalid_format)
                 )
             }
         }
 
-    private fun parseCsv(bytes: ByteArray): List<ImportStudentRow> {
+    private fun parseCsv(
+        bytes: ByteArray,
+        requiredColumnsError: String
+    ): List<ImportStudentRow> {
         val content = decodeCsvContent(bytes)
         if (content.isBlank()) return emptyList()
 
@@ -77,10 +98,13 @@ object StudentImportFileParser {
             }
             .filter { cells -> cells.any { it.isNotBlank() } }
 
-        return mapRowsToStudents(rows)
+        return mapRowsToStudents(rows, requiredColumnsError)
     }
 
-    private fun parseXlsx(bytes: ByteArray): List<ImportStudentRow> {
+    private fun parseXlsx(
+        bytes: ByteArray,
+        requiredColumnsError: String
+    ): List<ImportStudentRow> {
         ByteArrayInputStream(bytes).use { input ->
             XSSFWorkbook(input).use { workbook ->
                 if (workbook.numberOfSheets <= 0) return emptyList()
@@ -103,12 +127,15 @@ object StudentImportFileParser {
                     }
                 }
 
-                return mapRowsToStudents(rows)
+                return mapRowsToStudents(rows, requiredColumnsError)
             }
         }
     }
 
-    private fun mapRowsToStudents(rows: List<List<String>>): List<ImportStudentRow> {
+    private fun mapRowsToStudents(
+        rows: List<List<String>>,
+        requiredColumnsError: String
+    ): List<ImportStudentRow> {
         if (rows.isEmpty()) return emptyList()
 
         val header = rows.first().map { normalizeStrictHeader(it) }
@@ -117,7 +144,7 @@ object StudentImportFileParser {
         val middleNameIndex = header.indexOf(REQUIRED_MIDDLE_NAME_HEADER)
 
         if (lastNameIndex < 0 || firstNameIndex < 0 || middleNameIndex < 0) {
-            throw IllegalArgumentException("Обязательные колонки: Фамилия, Имя, Отчество")
+            throw IllegalArgumentException(requiredColumnsError)
         }
 
         return rows.drop(1).mapNotNull { cells ->

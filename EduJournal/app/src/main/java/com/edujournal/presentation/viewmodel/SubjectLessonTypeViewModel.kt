@@ -4,11 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edujournal.R
 import com.edujournal.domain.model.SubjectLessonType
-import com.edujournal.domain.usecase.CreateSubjectLessonTypeUseCase
-import com.edujournal.domain.usecase.DeleteSubjectLessonTypeUseCase
-import com.edujournal.domain.usecase.EntityWriteResult
-import com.edujournal.domain.usecase.ObserveSubjectLessonTypesUseCase
-import com.edujournal.domain.usecase.UpdateSubjectLessonTypeUseCase
+import com.edujournal.domain.usecase.subjectlessontype.CreateSubjectLessonTypeUseCase
+import com.edujournal.domain.usecase.subjectlessontype.DeleteSubjectLessonTypeUseCase
+import com.edujournal.domain.usecase.common.EntityWriteResult
+import com.edujournal.domain.usecase.subjectlessontype.ObserveSubjectLessonTypesUseCase
+import com.edujournal.domain.usecase.subjectlessontype.UpdateSubjectLessonTypeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow

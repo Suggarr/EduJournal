@@ -1,8 +1,8 @@
-package com.edujournal.data.mapper
+﻿package com.edujournal.data.mapper
 
 import com.edujournal.data.local.database.entities.GradeEntity
 import com.edujournal.domain.model.Grade
-import com.edujournal.domain.model.GradeType
+import com.edujournal.domain.model.enum.GradeType
 
 fun GradeEntity.toDomain(): Grade {
     return Grade(
@@ -25,3 +25,4 @@ fun Grade.toEntity(): GradeEntity {
         comment = comment
     )
 }
+

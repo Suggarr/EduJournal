@@ -1,4 +1,4 @@
-package com.edujournal.domain.repository
+﻿package com.edujournal.domain.repository
 
 import com.edujournal.domain.model.Group
 import kotlinx.coroutines.flow.Flow
@@ -13,3 +13,5 @@ interface GroupRepository {
     suspend fun existsByNameExceptId(name: String, id: Long): Boolean
     suspend fun deleteGroup(id: Long)
 }
+
+

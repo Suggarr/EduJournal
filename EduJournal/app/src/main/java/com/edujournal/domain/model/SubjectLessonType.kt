@@ -7,3 +7,5 @@ data class SubjectLessonType(
     val hours: Double?
 )
 
+
+

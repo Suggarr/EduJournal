@@ -1,4 +1,4 @@
-package com.edujournal.ui.theme
+﻿package com.edujournal.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes

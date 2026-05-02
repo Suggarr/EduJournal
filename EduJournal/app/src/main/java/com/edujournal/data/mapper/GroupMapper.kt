@@ -1,4 +1,4 @@
-package com.edujournal.data.mapper
+﻿package com.edujournal.data.mapper
 
 import com.edujournal.data.local.database.entities.GroupEntity
 import com.edujournal.domain.model.Group
@@ -16,3 +16,4 @@ fun Group.toEntity(): GroupEntity{
         name = name
     )
 }
+

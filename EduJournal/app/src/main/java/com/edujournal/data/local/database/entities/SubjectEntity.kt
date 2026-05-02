@@ -1,4 +1,4 @@
-package com.edujournal.data.local.database.entities
+﻿package com.edujournal.data.local.database.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -17,3 +17,5 @@ data class SubjectEntity(
     val name: String,
     val abbreviation: String?
 )
+
+

@@ -1,4 +1,4 @@
-package com.edujournal.presentation.state
+﻿package com.edujournal.presentation.state
 
 import com.edujournal.domain.model.Lesson
 

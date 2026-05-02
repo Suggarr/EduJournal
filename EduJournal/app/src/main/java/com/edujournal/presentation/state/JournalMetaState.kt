@@ -1,4 +1,4 @@
-package com.edujournal.presentation.state
+﻿package com.edujournal.presentation.state
 
 data class JournalMetaState(
     val subjectId: Long? = null,

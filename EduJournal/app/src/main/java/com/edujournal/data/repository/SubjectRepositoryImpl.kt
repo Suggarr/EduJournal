@@ -1,4 +1,4 @@
-package com.edujournal.data.repository
+﻿package com.edujournal.data.repository
 
 import com.edujournal.data.local.datasource.SubjectLocalDataSource
 import com.edujournal.data.mapper.toDomain
@@ -56,3 +56,5 @@ class SubjectRepositoryImpl(
         localDataSource.deleteSubject(subjectId)
     }
 }
+
+

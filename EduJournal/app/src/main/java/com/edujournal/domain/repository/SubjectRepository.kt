@@ -1,4 +1,4 @@
-package com.edujournal.domain.repository
+﻿package com.edujournal.domain.repository
 
 import com.edujournal.domain.model.Subject
 import kotlinx.coroutines.flow.Flow
@@ -18,3 +18,5 @@ interface SubjectRepository {
 
     suspend fun deleteSubject(subjectId: Long)
 }
+
+

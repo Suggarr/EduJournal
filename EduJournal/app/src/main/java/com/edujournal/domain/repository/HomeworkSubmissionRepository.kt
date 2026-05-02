@@ -1,4 +1,4 @@
-package com.edujournal.domain.repository
+﻿package com.edujournal.domain.repository
 
 import com.edujournal.domain.model.HomeworkSubmission
 import kotlinx.coroutines.flow.Flow
@@ -8,3 +8,5 @@ interface HomeworkSubmissionRepository {
 
     suspend fun upsertSubmission(submission: HomeworkSubmission)
 }
+
+

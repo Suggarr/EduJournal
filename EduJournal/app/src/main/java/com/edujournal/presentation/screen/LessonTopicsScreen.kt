@@ -1,6 +1,5 @@
 ﻿package com.edujournal.presentation.screen
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -53,6 +53,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.Lesson
+import com.edujournal.domain.model.TopicTemplate
 import com.edujournal.presentation.component.DeleteRectActionButton
 import com.edujournal.presentation.component.EditRectActionButton
 import com.edujournal.presentation.component.ScrollAwareAddFab
@@ -81,6 +82,10 @@ fun LessonTopicsScreen(
     val lessons by lessonsFlow.collectAsState()
     val currentLessons = lessons
     val requiredHours by viewModel.observeRequiredHours(subjectLessonTypeId).collectAsState()
+    val templatesFlow = remember(semesterId, subjectLessonTypeId) {
+        viewModel.observeTopicTemplates(semesterId, subjectLessonTypeId)
+    }
+    val templates by templatesFlow.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var lessonToEdit by remember { mutableStateOf<Lesson?>(null) }
     var lessonToDelete by remember { mutableStateOf<Lesson?>(null) }
@@ -201,6 +206,7 @@ fun LessonTopicsScreen(
     if (showAddDialog) {
         LessonTopicDialog(
             title = stringResource(R.string.lesson_topics_add),
+            templates = templates,
             isDateBusy = { selectedDate ->
                 currentLessons.orEmpty().any { it.date == selectedDate }
             },
@@ -215,6 +221,7 @@ fun LessonTopicsScreen(
     lessonToEdit?.let { lesson ->
         LessonTopicDialog(
             title = stringResource(R.string.lesson_topics_edit),
+            templates = templates,
             initialDate = lesson.date,
             initialTopic = lesson.topic,
             isDateBusy = { selectedDate ->
@@ -270,19 +277,19 @@ private fun formatHoursValue(hours: Double): String {
 @Composable
 private fun LessonTopicDialog(
     title: String,
+    templates: List<TopicTemplate>,
     initialDate: LocalDate = LocalDate.now(),
     initialTopic: String = "",
     isDateBusy: (LocalDate) -> Boolean = { false },
     onDismiss: () -> Unit,
     onConfirm: (LocalDate, String) -> Unit
 ) {
-    val context = LocalContext.current
     var topic by remember { mutableStateOf(initialTopic) }
     var selectedDate by remember { mutableStateOf(initialDate) }
     var showDatePicker by remember { mutableStateOf(false) }
-    val duplicateDateMessage = stringResource(R.string.lesson_topics_duplicate_date_error)
+    var showTemplatesDialog by remember { mutableStateOf(false) }
     val dateBusy = isDateBusy(selectedDate)
-    val canSave = topic.isNotBlank()
+    val canSave = topic.isNotBlank() && !dateBusy
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -311,16 +318,29 @@ private fun LessonTopicDialog(
                     label = { Text(stringResource(R.string.lesson_topics_topic_label)) },
                     modifier = Modifier.fillMaxWidth()
                 )
+                if (dateBusy) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = stringResource(R.string.lesson_topics_duplicate_date_error),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                if (templates.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TextButton(
+                        onClick = { showTemplatesDialog = true },
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text(stringResource(R.string.lesson_topics_choose_template))
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    if (dateBusy) {
-                        Toast.makeText(context, duplicateDateMessage, Toast.LENGTH_LONG).show()
-                    } else {
-                        onConfirm(selectedDate, topic.trim())
-                    }
+                    onConfirm(selectedDate, topic.trim())
                 },
                 enabled = canSave
             ) {
@@ -352,11 +372,7 @@ private fun LessonTopicDialog(
                             val pickedDate = Instant.ofEpochMilli(millis)
                                 .atZone(ZoneId.systemDefault())
                                 .toLocalDate()
-                            if (isDateBusy(pickedDate)) {
-                                Toast.makeText(context, duplicateDateMessage, Toast.LENGTH_LONG).show()
-                            } else {
-                                selectedDate = pickedDate
-                            }
+                            selectedDate = pickedDate
                         }
                         showDatePicker = false
                     }
@@ -373,7 +389,48 @@ private fun LessonTopicDialog(
             DatePicker(state = pickerState)
         }
     }
+
+    if (showTemplatesDialog) {
+        AlertDialog(
+            onDismissRequest = { showTemplatesDialog = false },
+            title = { Text(stringResource(R.string.lesson_topics_template_dialog_title)) },
+            text = {
+                if (templates.isEmpty()) {
+                    Text(stringResource(R.string.topic_template_empty))
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 320.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        items(templates) { template ->
+                            TextButton(
+                                onClick = {
+                                    topic = template.title
+                                    showTemplatesDialog = false
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "${template.orderInType}. ${template.title}",
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showTemplatesDialog = false }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        )
+    }
 }
+
+
 
 
 

@@ -1,4 +1,4 @@
-package com.edujournal.data.mapper
+﻿package com.edujournal.data.mapper
 
 import com.edujournal.data.local.database.entities.SubjectEntity
 import com.edujournal.domain.model.Subject
@@ -18,3 +18,5 @@ fun Subject.toEntity(): SubjectEntity {
         abbreviation = abbreviation
     )
 }
+
+

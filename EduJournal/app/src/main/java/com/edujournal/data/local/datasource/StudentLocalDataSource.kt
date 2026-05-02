@@ -1,4 +1,4 @@
-package com.edujournal.data.local.datasource
+﻿package com.edujournal.data.local.datasource
 
 import com.edujournal.data.local.dao.StudentDao
 import com.edujournal.data.local.database.entities.StudentEntity
@@ -25,7 +25,7 @@ class StudentLocalDataSource(
         groupId: Long,
         lastName: String,
         firstName: String,
-        middleName: String
+        middleName: String?
     ): Boolean {
         return studentDao.existsByFullNameInGroup(groupId, lastName, firstName, middleName)
     }
@@ -35,7 +35,7 @@ class StudentLocalDataSource(
         groupId: Long,
         lastName: String,
         firstName: String,
-        middleName: String
+        middleName: String?
     ): Boolean {
         return studentDao.existsByFullNameInGroupExceptId(id, groupId, lastName, firstName, middleName)
     }
@@ -44,3 +44,5 @@ class StudentLocalDataSource(
         studentDao.deleteById(id)
     }
 }
+
+

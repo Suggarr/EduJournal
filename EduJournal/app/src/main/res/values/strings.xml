@@ -1,4 +1,4 @@
-﻿<resources>
+<resources>
     <string name="app_name">EduJournal</string>
 
     <string name="common_back">Назад</string>
@@ -77,6 +77,10 @@
     <string name="student_import_empty">В файле не найдено студентов для импорта.</string>
     <string name="student_import_result">Импорт завершен: добавлено %1$d, пропущено %2$d.</string>
     <string name="student_import_parse_error">Ошибка импорта: %1$s</string>
+    <string name="student_import_error_read_file">Не удалось прочитать файл</string>
+    <string name="student_import_error_xls_not_supported">Формат .xls не поддерживается. Сохраните файл как .xlsx.</string>
+    <string name="student_import_error_required_columns">Обязательные колонки: Фамилия, Имя, Отчество</string>
+    <string name="student_import_error_invalid_format">Некорректный формат файла</string>
     <string name="student_import_instructions">Поддерживаются файлы CSV и Excel (.csv, .xlsx).\n\nОбязательные колонки в первой строке:\n1) Фамилия\n2) Имя\n3) Отчество\n\nИмена колонок должны быть именно такими.\n\nПример строки CSV:\nФамилия;Имя;Отчество\nИванов;Иван;Иванович</string>
     <string name="student_last_name">Фамилия</string>
     <string name="student_first_name">Имя</string>
@@ -156,10 +160,27 @@
     <string name="lesson_topics_homework_button">ДЗ</string>
     <string name="lesson_topics_selected_date">Дата: %1$s</string>
     <string name="lesson_topics_required_hours">Необходимо часов: %1$s</string>
+    <string name="lesson_topics_choose_template">Выбрать из списка тем</string>
+    <string name="lesson_topics_template_dialog_title">Список тем</string>
     <string name="lesson_topics_duplicate_date_error">Тема с этой датой уже существует. Выберите другую дату.</string>
     <string name="lesson_topics_invalid_date_error">Некорректная дата: тема на выбранную дату уже существует.</string>
     <string name="lesson_topics_delete_title">Удалить тему?</string>
     <string name="lesson_topics_delete_message">Удалить тему занятия от %1$s? Это действие нельзя отменить.</string>
+    <string name="topic_template_title">Список тем</string>
+    <string name="topic_template_empty">Список тем пока не добавлены</string>
+    <string name="topic_template_add">Добавить тему</string>
+    <string name="topic_template_edit">Редактировать тему</string>
+    <string name="topic_template_delete_title">Удалить тему?</string>
+    <string name="topic_template_delete_message">Удалить тему "%1$s"?</string>
+    <string name="topic_template_name_label">Тема</string>
+    <string name="topic_template_duplicate_error">Тема с таким номером уже существует</string>
+    <string name="topic_template_batch_add">Вставить несколько</string>
+    <string name="topic_template_batch_dialog_title">Введите темы</string>
+    <string name="topic_template_batch_hint">Вставьте темы построчно (каждая строка = отдельная тема).</string>
+    <string name="topic_template_batch_input_label">Список тем</string>
+    <string name="topic_template_batch_example">Тема 1\nТема 2\nТема 3</string>
+    <string name="topic_template_batch_apply">Добавить</string>
+    <string name="topic_template_batch_result">Добавлено тем: %1$d</string>
 
     <string name="settings_title">Настройки</string>
     <string name="settings_section_profile">Профиль</string>
@@ -178,8 +199,15 @@
     <string name="settings_import_db">Импорт базы данных</string>
     <string name="settings_db_export_success">База данных успешно экспортирована</string>
     <string name="settings_db_export_error">Не удалось экспортировать базу данных</string>
+    <string name="settings_db_export_error_detailed">Экспорт БД: %1$s</string>
     <string name="settings_db_import_success">База данных импортирована. Приложение будет перезапущено</string>
     <string name="settings_db_import_error">Не удалось импортировать базу данных. Проверьте файл</string>
+    <string name="settings_db_import_error_detailed">Импорт БД: %1$s</string>
+    <string name="settings_db_error_invalid_structure">файл не прошел проверку структуры</string>
+    <string name="settings_db_error_invalid_header">файл не является корректной SQLite базой</string>
+    <string name="settings_db_error_missing_tables">в файле отсутствуют таблицы приложения</string>
+    <string name="settings_db_error_input_stream">не удалось открыть выбранный файл</string>
+    <string name="settings_db_error_output_stream">не удалось открыть файл назначения</string>
     <string name="settings_semesters_title">Семестры</string>
     <string name="settings_semester_add">Добавить семестр</string>
     <string name="settings_semester_edit">Изменить семестр</string>
@@ -192,8 +220,8 @@
     <string name="settings_semester_last_delete_error">Нельзя удалить последний семестр</string>
     <string name="settings_semester_invalid_year">Введите корректный год (4 цифры)</string>
     <string name="settings_semester_duplicate_season_year">Такой семестр уже существует</string>
+    <string name="settings_semester_empty">Список семестров пуст. Добавьте первый семестр.</string>
 
     <string name="biometric_prompt_title">Подтвердите вход</string>
     <string name="biometric_prompt_subtitle">Используйте биометрию или PIN/пароль устройства</string>
 </resources>
-

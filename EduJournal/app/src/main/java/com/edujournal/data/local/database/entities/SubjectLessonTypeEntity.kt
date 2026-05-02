@@ -28,3 +28,5 @@ data class SubjectLessonTypeEntity(
     val hours: Double?
 )
 
+
+

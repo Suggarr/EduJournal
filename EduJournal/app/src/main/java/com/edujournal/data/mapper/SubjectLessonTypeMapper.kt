@@ -22,3 +22,5 @@ fun SubjectLessonType.toEntity(): SubjectLessonTypeEntity {
 }
 
 
+
+

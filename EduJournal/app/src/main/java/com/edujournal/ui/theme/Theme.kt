@@ -1,4 +1,4 @@
-package com.edujournal.ui.theme
+﻿package com.edujournal.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -50,7 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.SubjectLessonType
-import com.edujournal.domain.usecase.EntityWriteResult
+import com.edujournal.domain.usecase.common.EntityWriteResult
 import com.edujournal.presentation.component.DeleteRectActionButton
 import com.edujournal.presentation.component.EditRectActionButton
 import com.edujournal.presentation.component.ScrollAwareAddFab
@@ -63,6 +64,7 @@ import java.math.BigDecimal
 fun SubjectLessonTypeScreen(
     subjectId: Long,
     onTypeClick: (Long) -> Unit,
+    onTemplatesClick: (Long) -> Unit,
     onBackClick: () -> Unit,
     viewModel: SubjectLessonTypeViewModel = hiltViewModel()
 ) {
@@ -129,6 +131,7 @@ fun SubjectLessonTypeScreen(
                         SubjectLessonTypeCard(
                             type = type,
                             onClick = { onTypeClick(type.id) },
+                            onTemplatesClick = { onTemplatesClick(type.id) },
                             onEditClick = { typeToEdit = type },
                             onDeleteClick = { typeToDelete = type }
                         )
@@ -196,6 +199,7 @@ fun SubjectLessonTypeScreen(
 fun SubjectLessonTypeCard(
     type: SubjectLessonType,
     onClick: () -> Unit,
+    onTemplatesClick: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
@@ -229,6 +233,14 @@ fun SubjectLessonTypeCard(
                 }
             }
             Spacer(modifier = Modifier.width(8.dp))
+            IconButton(onClick = onTemplatesClick) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.List,
+                    contentDescription = stringResource(R.string.topic_template_title),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            Spacer(modifier = Modifier.width(6.dp))
             EditRectActionButton(onClick = onEditClick)
             Spacer(modifier = Modifier.width(12.dp))
             DeleteRectActionButton(onClick = onDeleteClick)

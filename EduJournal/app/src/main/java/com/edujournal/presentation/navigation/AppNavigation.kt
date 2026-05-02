@@ -48,6 +48,7 @@ import com.edujournal.presentation.screen.SettingsScreen
 import com.edujournal.presentation.screen.StudentScreen
 import com.edujournal.presentation.screen.SubjectScreen
 import com.edujournal.presentation.screen.WelcomeScreen
+import com.edujournal.presentation.screen.TopicTemplateScreen
 import com.edujournal.presentation.viewmodel.MainViewModel
 import com.edujournal.presentation.viewmodel.SettingsEvent
 
@@ -213,6 +214,9 @@ fun AppNavigation(
                     onTypeClick = { typeId ->
                         navController.navigate(Routes.groups(semesterId, subjectId, typeId))
                     },
+                    onTemplatesClick = { typeId ->
+                        navController.navigate(Routes.topicTemplates(semesterId, typeId))
+                    },
                     onBackClick = {
                         navController.navigate(Routes.SUBJECTS) {
                             popUpTo(Routes.SUBJECTS) { inclusive = false }
@@ -302,6 +306,22 @@ fun AppNavigation(
                     onTopicsClick = {
                         navController.navigate(Routes.lessonTopics(semesterId, groupId, subjectLessonTypeId))
                     }
+                )
+            }
+
+            composable(
+                route = Routes.TOPIC_TEMPLATES,
+                arguments = listOf(
+                    navArgument("semesterId") { type = NavType.LongType },
+                    navArgument("subjectLessonTypeId") { type = NavType.LongType }
+                )
+            ) { backStackEntry ->
+                val semesterId = backStackEntry.arguments?.getLong("semesterId") ?: 1L
+                val subjectLessonTypeId = backStackEntry.arguments?.getLong("subjectLessonTypeId") ?: 0L
+                TopicTemplateScreen(
+                    semesterId = semesterId,
+                    subjectLessonTypeId = subjectLessonTypeId,
+                    onBackClick = { navController.popBackStack() }
                 )
             }
 
@@ -406,6 +426,8 @@ private fun currentTopLevelRoute(destination: NavDestination?): String {
         else -> Routes.SUBJECTS
     }
 }
+
+
 
 
 

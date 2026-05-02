@@ -1,4 +1,4 @@
-package com.edujournal.data.local.database.entities
+﻿package com.edujournal.data.local.database.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -24,6 +24,8 @@ data class StudentEntity(
     val id: Long = 0,
     val firstName: String,
     val lastName: String,
-    val middleName: String,
+    val middleName: String?,
     val groupId: Long
 )
+
+

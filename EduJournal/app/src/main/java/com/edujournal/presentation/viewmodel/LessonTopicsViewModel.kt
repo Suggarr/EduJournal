@@ -3,11 +3,13 @@
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edujournal.domain.model.Lesson
-import com.edujournal.domain.usecase.CreateLessonUseCase
-import com.edujournal.domain.usecase.DeleteLessonUseCase
-import com.edujournal.domain.usecase.GetLessonsUseCase
-import com.edujournal.domain.usecase.ObserveSubjectLessonTypeByIdUseCase
-import com.edujournal.domain.usecase.UpdateLessonUseCase
+import com.edujournal.domain.model.TopicTemplate
+import com.edujournal.domain.usecase.lesson.CreateLessonUseCase
+import com.edujournal.domain.usecase.lesson.DeleteLessonUseCase
+import com.edujournal.domain.usecase.lesson.GetLessonsUseCase
+import com.edujournal.domain.usecase.topictemplate.ObserveTopicTemplatesUseCase
+import com.edujournal.domain.usecase.subjectlessontype.ObserveSubjectLessonTypeByIdUseCase
+import com.edujournal.domain.usecase.lesson.UpdateLessonUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +23,7 @@ import javax.inject.Inject
 class LessonTopicsViewModel @Inject constructor(
     private val getLessonsUseCase: GetLessonsUseCase,
     private val observeLessonTypeByIdUseCase: ObserveSubjectLessonTypeByIdUseCase,
+    private val observeTopicTemplatesUseCase: ObserveTopicTemplatesUseCase,
     private val createLessonUseCase: CreateLessonUseCase,
     private val updateLessonUseCase: UpdateLessonUseCase,
     private val deleteLessonUseCase: DeleteLessonUseCase
@@ -41,6 +44,14 @@ class LessonTopicsViewModel @Inject constructor(
         return observeLessonTypeByIdUseCase(subjectLessonTypeId)
             .map { it?.hours }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    }
+
+    fun observeTopicTemplates(
+        semesterId: Long,
+        subjectLessonTypeId: Long
+    ): StateFlow<List<TopicTemplate>> {
+        return observeTopicTemplatesUseCase(semesterId, subjectLessonTypeId)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     }
 
     fun addLesson(

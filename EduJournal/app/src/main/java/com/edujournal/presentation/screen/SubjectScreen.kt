@@ -7,7 +7,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -60,13 +59,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.Semester
-import com.edujournal.domain.model.SemesterSeason
+import com.edujournal.domain.model.enum.SemesterSeason
 import com.edujournal.domain.model.Subject
-import com.edujournal.domain.usecase.EntityWriteResult
+import com.edujournal.domain.usecase.common.EntityWriteResult
 import com.edujournal.presentation.component.ScrollAwareAddFab
 import com.edujournal.presentation.viewmodel.SubjectViewModel
 import kotlinx.coroutines.flow.collect
@@ -162,126 +162,72 @@ fun SubjectScreen(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                        val isCompactWidth = maxWidth < 360.dp
-                        if (isCompactWidth) {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Box(modifier = Modifier.fillMaxWidth()) {
-                                    OutlinedButton(
-                                        onClick = { yearMenuExpanded = true },
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        val yearLabel = selectedYear?.toString() ?: stringResource(R.string.semester_select)
-                                        Text("${stringResource(R.string.settings_semester_year_label)}: $yearLabel")
-                                    }
-                                    DropdownMenu(
-                                        expanded = yearMenuExpanded,
-                                        onDismissRequest = { yearMenuExpanded = false },
-                                        modifier = Modifier.heightIn(max = 240.dp)
-                                    ) {
-                                        availableYears.forEach { year ->
-                                            DropdownMenuItem(
-                                                text = { Text(year.toString()) },
-                                                onClick = {
-                                                    yearMenuExpanded = false
-                                                    val firstSemesterOfYear = semesters.firstOrNull { it.year == year }
-                                                    if (firstSemesterOfYear != null) {
-                                                        onSemesterSelected(firstSemesterOfYear.id)
-                                                    }
-                                                }
-                                            )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedButton(
+                                onClick = { yearMenuExpanded = true },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                val yearLabel = selectedYear?.toString() ?: "-"
+                                Text(
+                                    text = "${stringResource(R.string.settings_semester_year_label)}: $yearLabel",
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = yearMenuExpanded,
+                                onDismissRequest = { yearMenuExpanded = false },
+                                modifier = Modifier.heightIn(max = 240.dp)
+                            ) {
+                                availableYears.forEach { year ->
+                                    DropdownMenuItem(
+                                        text = { Text(year.toString()) },
+                                        onClick = {
+                                            yearMenuExpanded = false
+                                            val firstSemesterOfYear = semesters.firstOrNull { it.year == year }
+                                            if (firstSemesterOfYear != null) {
+                                                onSemesterSelected(firstSemesterOfYear.id)
+                                            }
                                         }
-                                    }
-                                }
-
-                                Box(modifier = Modifier.fillMaxWidth()) {
-                                    OutlinedButton(
-                                        onClick = { semesterMenuExpanded = true },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        enabled = semestersOfSelectedYear.isNotEmpty()
-                                    ) {
-                                        val label = selectedSemester?.let { semester ->
-                                            if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
-                                        } ?: stringResource(R.string.semester_select)
-                                        Text("${stringResource(R.string.semester_label)}: $label")
-                                    }
-                                    DropdownMenu(
-                                        expanded = semesterMenuExpanded,
-                                        onDismissRequest = { semesterMenuExpanded = false }
-                                    ) {
-                                        semestersOfSelectedYear.forEach { semester ->
-                                            DropdownMenuItem(
-                                                text = {
-                                                    val season = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
-                                                    Text(season)
-                                                },
-                                                onClick = {
-                                                    semesterMenuExpanded = false
-                                                    onSemesterSelected(semester.id)
-                                                }
-                                            )
-                                        }
-                                    }
+                                    )
                                 }
                             }
-                        } else {
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Box(modifier = Modifier.weight(1f)) {
-                                    OutlinedButton(
-                                        onClick = { yearMenuExpanded = true },
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        val yearLabel = selectedYear?.toString() ?: stringResource(R.string.semester_select)
-                                        Text("${stringResource(R.string.settings_semester_year_label)}: $yearLabel")
-                                    }
-                                    DropdownMenu(
-                                        expanded = yearMenuExpanded,
-                                        onDismissRequest = { yearMenuExpanded = false },
-                                        modifier = Modifier.heightIn(max = 240.dp)
-                                    ) {
-                                        availableYears.forEach { year ->
-                                            DropdownMenuItem(
-                                                text = { Text(year.toString()) },
-                                                onClick = {
-                                                    yearMenuExpanded = false
-                                                    val firstSemesterOfYear = semesters.firstOrNull { it.year == year }
-                                                    if (firstSemesterOfYear != null) {
-                                                        onSemesterSelected(firstSemesterOfYear.id)
-                                                    }
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
+                        }
 
-                                Box(modifier = Modifier.weight(1f)) {
-                                    OutlinedButton(
-                                        onClick = { semesterMenuExpanded = true },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        enabled = semestersOfSelectedYear.isNotEmpty()
-                                    ) {
-                                        val label = selectedSemester?.let { semester ->
-                                            if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
-                                        } ?: stringResource(R.string.semester_select)
-                                        Text("${stringResource(R.string.semester_label)}: $label")
-                                    }
-                                    DropdownMenu(
-                                        expanded = semesterMenuExpanded,
-                                        onDismissRequest = { semesterMenuExpanded = false }
-                                    ) {
-                                        semestersOfSelectedYear.forEach { semester ->
-                                            DropdownMenuItem(
-                                                text = {
-                                                    val season = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
-                                                    Text(season)
-                                                },
-                                                onClick = {
-                                                    semesterMenuExpanded = false
-                                                    onSemesterSelected(semester.id)
-                                                }
-                                            )
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedButton(
+                                onClick = { semesterMenuExpanded = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = semestersOfSelectedYear.isNotEmpty()
+                            ) {
+                                val label = selectedSemester?.let { semester ->
+                                    if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
+                                } ?: "-"
+                                Text(
+                                    text = "${stringResource(R.string.semester_label)}: $label",
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = semesterMenuExpanded,
+                                onDismissRequest = { semesterMenuExpanded = false }
+                            ) {
+                                semestersOfSelectedYear.forEach { semester ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            val season = if (semester.season == SemesterSeason.AUTUMN) autumnLabel else springLabel
+                                            Text(season)
+                                        },
+                                        onClick = {
+                                            semesterMenuExpanded = false
+                                            onSemesterSelected(semester.id)
                                         }
-                                    }
+                                    )
                                 }
                             }
                         }

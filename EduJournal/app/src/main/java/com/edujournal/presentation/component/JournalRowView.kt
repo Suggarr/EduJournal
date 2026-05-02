@@ -1,4 +1,4 @@
-package com.edujournal.presentation.component
+﻿package com.edujournal.presentation.component
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background

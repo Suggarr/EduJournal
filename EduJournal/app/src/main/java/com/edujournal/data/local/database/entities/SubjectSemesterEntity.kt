@@ -1,4 +1,4 @@
-package com.edujournal.data.local.database.entities
+﻿package com.edujournal.data.local.database.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -33,3 +33,5 @@ data class SubjectSemesterEntity(
     val subjectId: Long,
     val semesterId: Long
 )
+
+

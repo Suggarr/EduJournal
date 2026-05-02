@@ -1,4 +1,4 @@
-package com.edujournal.data.mapper
+﻿package com.edujournal.data.mapper
 
 import com.edujournal.data.local.database.entities.StudentEntity
 import com.edujournal.domain.model.Student
@@ -22,3 +22,4 @@ fun Student.toEntity(): StudentEntity{
         groupId = groupId
     )
 }
+

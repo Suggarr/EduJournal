@@ -1,4 +1,4 @@
-package com.edujournal.presentation.journalexport
+﻿package com.edujournal.presentation.journalexport
 
 import android.content.ContentResolver
 import android.graphics.Color

@@ -1,4 +1,4 @@
-package com.edujournal.domain.repository
+﻿package com.edujournal.domain.repository
 
 import com.edujournal.domain.model.Homework
 import kotlinx.coroutines.flow.Flow
@@ -13,3 +13,5 @@ interface HomeworkRepository {
 
     suspend fun deleteHomework(id: Long)
 }
+
+

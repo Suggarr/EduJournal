@@ -1,12 +1,12 @@
-package com.edujournal.presentation.viewmodel
+﻿package com.edujournal.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.edujournal.domain.model.GradeType
-import com.edujournal.domain.usecase.GetGroupsUseCase
-import com.edujournal.domain.usecase.ObserveDisciplineGradesUseCase
-import com.edujournal.domain.usecase.ObserveSubjectLessonTypesUseCase
-import com.edujournal.domain.usecase.ObserveSubjectsUseCase
+import com.edujournal.domain.model.enum.GradeType
+import com.edujournal.domain.usecase.group.GetGroupsUseCase
+import com.edujournal.domain.usecase.grade.ObserveDisciplineGradesUseCase
+import com.edujournal.domain.usecase.subjectlessontype.ObserveSubjectLessonTypesUseCase
+import com.edujournal.domain.usecase.subject.ObserveSubjectsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

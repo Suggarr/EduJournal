@@ -1,4 +1,4 @@
-package com.edujournal.presentation.component
+﻿package com.edujournal.presentation.component
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack

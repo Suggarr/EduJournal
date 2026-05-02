@@ -1,4 +1,4 @@
-package com.edujournal.data.local.datasource
+﻿package com.edujournal.data.local.datasource
 
 import com.edujournal.data.local.dao.SemesterDao
 import com.edujournal.data.local.database.entities.SemesterEntity
@@ -23,3 +23,5 @@ class SemesterLocalDataSource(
         semesterDao.deleteById(semesterId)
     }
 }
+
+

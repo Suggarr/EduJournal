@@ -12,6 +12,7 @@ import com.edujournal.data.local.dao.SubjectLessonTypeDao
 import com.edujournal.data.local.dao.SemesterDao
 import com.edujournal.data.local.dao.StudentDao
 import com.edujournal.data.local.dao.SubjectDao
+import com.edujournal.data.local.dao.TopicTemplateDao
 import com.edujournal.data.local.database.entities.GradeEntity
 import com.edujournal.data.local.database.entities.GroupEntity
 import com.edujournal.data.local.database.entities.HomeworkEntity
@@ -22,6 +23,7 @@ import com.edujournal.data.local.database.entities.SemesterEntity
 import com.edujournal.data.local.database.entities.StudentEntity
 import com.edujournal.data.local.database.entities.SubjectEntity
 import com.edujournal.data.local.database.entities.SubjectSemesterEntity
+import com.edujournal.data.local.database.entities.TopicTemplateEntity
 import com.edujournal.utils.Converters
 
 @Database(
@@ -32,12 +34,13 @@ import com.edujournal.utils.Converters
         SemesterEntity::class,
         SubjectSemesterEntity::class,
         SubjectLessonTypeEntity::class,
+        TopicTemplateEntity::class,
         LessonEntity::class,
         GradeEntity:: class,
         HomeworkEntity::class,
         HomeworkSubmissionEntity::class
     ],
-    version = 1,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -49,7 +52,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun lessonTypeDao(): SubjectLessonTypeDao
     abstract fun lessonDao(): LessonDao
     abstract fun gradeDao(): GradeDao
+    abstract fun topicTemplateDao(): TopicTemplateDao
     abstract fun homeworkDao(): HomeworkDao
     abstract fun homeworkSubmissionDao(): HomeworkSubmissionDao
 }
+
+
 

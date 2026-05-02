@@ -1,4 +1,4 @@
-package com.edujournal.data.local
+﻿package com.edujournal.data.local
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -31,3 +31,5 @@ class UserPreferences @Inject constructor(
         return getUserName() == null
     }
 }
+
+

@@ -54,7 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.Student
-import com.edujournal.domain.usecase.EntityWriteResult
+import com.edujournal.domain.usecase.common.EntityWriteResult
 import com.edujournal.presentation.component.ScrollAwareAddFab
 import com.edujournal.presentation.component.EditRectActionButton
 import com.edujournal.presentation.component.DeleteRectActionButton
@@ -267,7 +267,7 @@ fun StudentScreen(
             title = stringResource(R.string.student_edit),
             initialFirstName = student.firstName,
             initialLastName = student.lastName,
-            initialMiddleName = student.middleName,
+            initialMiddleName = student.middleName.orEmpty(),
             onDismiss = { studentToEdit = null },
             onConfirm = { firstName, lastName, middleName ->
                 viewModel.updateStudent(
@@ -307,7 +307,9 @@ fun StudentCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${student.lastName} ${student.firstName} ${student.middleName}",
+                text = listOf(student.lastName, student.firstName, student.middleName)
+                    .filter { !it.isNullOrBlank() }
+                    .joinToString(" "),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.weight(1f)
             )
@@ -326,7 +328,7 @@ fun StudentDialog(
     initialLastName: String = "",
     initialMiddleName: String = "",
     onDismiss: () -> Unit,
-    onConfirm: (String, String, String) -> Unit
+    onConfirm: (String, String, String?) -> Unit
 ) {
     var firstName by remember { mutableStateOf(initialFirstName) }
     var lastName by remember { mutableStateOf(initialLastName) }
@@ -364,7 +366,7 @@ fun StudentDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(firstName, lastName, middleName) },
+                onClick = { onConfirm(firstName, lastName, middleName.ifBlank { null }) },
                 enabled = firstName.isNotBlank() && lastName.isNotBlank()
             ) {
                 Text(stringResource(R.string.common_save))

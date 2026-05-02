@@ -1,4 +1,4 @@
-package com.edujournal.data.local.database.entities
+﻿package com.edujournal.data.local.database.entities
 
 import androidx.room.Entity
 import androidx.room.Index
@@ -14,3 +14,5 @@ data class SemesterEntity(
     val season: String,
     val year: Int
 )
+
+

@@ -1,4 +1,4 @@
-package com.edujournal.data.local
+﻿package com.edujournal.data.local
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
@@ -246,3 +246,5 @@ class DatabaseTransferManager @Inject constructor(
         }.getOrDefault(false)
     }
 }
+
+

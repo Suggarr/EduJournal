@@ -1,4 +1,4 @@
-package com.edujournal.domain.model
+﻿package com.edujournal.domain.model
 
 data class JournalRow (
     val studentId: Long,
@@ -15,3 +15,5 @@ data class JournalRow (
 
     val gradeComment: String?
 )
+
+

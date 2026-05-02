@@ -1,4 +1,4 @@
-package com.edujournal
+﻿package com.edujournal
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

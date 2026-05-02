@@ -1,4 +1,4 @@
-package com.edujournal.domain.model
+﻿package com.edujournal.domain.model
 
 import java.time.LocalDate
 
@@ -12,3 +12,5 @@ data class DisciplineGradeRecord(
     val gradeValue: Int?,
     val gradeType: String?
 )
+
+

@@ -1,4 +1,4 @@
-package com.edujournal.data.local.dao
+﻿package com.edujournal.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -34,7 +34,7 @@ interface StudentDao {
             WHERE groupId = :groupId
               AND lastName = :lastName
               AND firstName = :firstName
-              AND middleName = :middleName
+              AND IFNULL(middleName, '') = IFNULL(:middleName, '')
         )
         """
     )
@@ -42,7 +42,7 @@ interface StudentDao {
         groupId: Long,
         lastName: String,
         firstName: String,
-        middleName: String
+        middleName: String?
     ): Boolean
 
     @Query(
@@ -52,7 +52,7 @@ interface StudentDao {
             WHERE groupId = :groupId
               AND lastName = :lastName
               AND firstName = :firstName
-              AND middleName = :middleName
+              AND IFNULL(middleName, '') = IFNULL(:middleName, '')
               AND id != :id
         )
         """
@@ -62,9 +62,10 @@ interface StudentDao {
         groupId: Long,
         lastName: String,
         firstName: String,
-        middleName: String
+        middleName: String?
     ): Boolean
 
     @Query("DELETE FROM students WHERE id = :id")
     suspend fun deleteById(id: Long)
 }
+

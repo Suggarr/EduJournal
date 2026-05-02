@@ -1,14 +1,14 @@
-package com.edujournal.presentation.viewmodel
+﻿package com.edujournal.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edujournal.R
 import com.edujournal.domain.model.Group
-import com.edujournal.domain.usecase.CreateGroupUseCase
-import com.edujournal.domain.usecase.DeleteGroupUseCase
-import com.edujournal.domain.usecase.EntityWriteResult
-import com.edujournal.domain.usecase.GetGroupsUseCase
-import com.edujournal.domain.usecase.UpdateGroupUseCase
+import com.edujournal.domain.usecase.group.CreateGroupUseCase
+import com.edujournal.domain.usecase.group.DeleteGroupUseCase
+import com.edujournal.domain.usecase.common.EntityWriteResult
+import com.edujournal.domain.usecase.group.GetGroupsUseCase
+import com.edujournal.domain.usecase.group.UpdateGroupUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted

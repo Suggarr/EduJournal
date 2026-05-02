@@ -55,8 +55,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
-import com.edujournal.domain.model.GradeType
-import com.edujournal.domain.model.SemesterSeason
+import com.edujournal.domain.model.enum.GradeType
+import com.edujournal.domain.model.enum.SemesterSeason
 import com.edujournal.presentation.component.JournalHeader
 import com.edujournal.presentation.component.JournalRowView
 import com.edujournal.presentation.journalexport.JournalExportFormat
@@ -524,4 +524,6 @@ fun GradeSelectionDialog(
         }
     )
 }
+
+
 

@@ -1,4 +1,4 @@
-package com.edujournal.utils
+﻿package com.edujournal.utils
 
 import androidx.room.TypeConverter
 import java.time.LocalDate

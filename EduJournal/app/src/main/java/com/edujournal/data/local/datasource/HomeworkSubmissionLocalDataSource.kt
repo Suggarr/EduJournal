@@ -1,4 +1,4 @@
-package com.edujournal.data.local.datasource
+﻿package com.edujournal.data.local.datasource
 
 import com.edujournal.data.local.dao.HomeworkSubmissionDao
 import com.edujournal.data.local.database.entities.HomeworkSubmissionEntity
@@ -15,3 +15,5 @@ class HomeworkSubmissionLocalDataSource(
         homeworkSubmissionDao.upsert(submission)
     }
 }
+
+

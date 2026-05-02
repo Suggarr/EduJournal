@@ -1,4 +1,4 @@
-package com.edujournal.data.local.datasource
+﻿package com.edujournal.data.local.datasource
 
 import com.edujournal.data.local.dao.SubjectDao
 import com.edujournal.data.local.database.entities.SubjectEntity
@@ -47,3 +47,5 @@ class SubjectLocalDataSource(
         subjectDao.deleteById(subjectId)
     }
 }
+
+

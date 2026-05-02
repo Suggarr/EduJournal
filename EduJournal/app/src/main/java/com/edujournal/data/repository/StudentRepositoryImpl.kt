@@ -1,4 +1,4 @@
-package com.edujournal.data.repository
+﻿package com.edujournal.data.repository
 
 import com.edujournal.data.local.datasource.StudentLocalDataSource
 import com.edujournal.data.mapper.toDomain
@@ -34,7 +34,7 @@ class StudentRepositoryImpl(
         groupId: Long,
         lastName: String,
         firstName: String,
-        middleName: String
+        middleName: String?
     ): Boolean {
         return localDataSource.existsByFullNameInGroup(groupId, lastName, firstName, middleName)
     }
@@ -44,7 +44,7 @@ class StudentRepositoryImpl(
         groupId: Long,
         lastName: String,
         firstName: String,
-        middleName: String
+        middleName: String?
     ): Boolean {
         return localDataSource.existsByFullNameInGroupExceptId(id, groupId, lastName, firstName, middleName)
     }
@@ -53,3 +53,5 @@ class StudentRepositoryImpl(
         localDataSource.delete(studentId)
     }
 }
+
+

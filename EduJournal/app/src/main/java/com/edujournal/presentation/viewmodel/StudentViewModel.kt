@@ -1,16 +1,16 @@
-package com.edujournal.presentation.viewmodel
+﻿package com.edujournal.presentation.viewmodel
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edujournal.R
 import com.edujournal.domain.model.Student
-import com.edujournal.domain.usecase.CreateStudentUseCase
-import com.edujournal.domain.usecase.DeleteStudentUseCase
-import com.edujournal.domain.usecase.EntityWriteResult
-import com.edujournal.domain.usecase.GetGroupsUseCase
-import com.edujournal.domain.usecase.ObserveStudentsUseCase
-import com.edujournal.domain.usecase.UpdateStudentUseCase
+import com.edujournal.domain.usecase.student.CreateStudentUseCase
+import com.edujournal.domain.usecase.student.DeleteStudentUseCase
+import com.edujournal.domain.usecase.common.EntityWriteResult
+import com.edujournal.domain.usecase.group.GetGroupsUseCase
+import com.edujournal.domain.usecase.student.ObserveStudentsUseCase
+import com.edujournal.domain.usecase.student.UpdateStudentUseCase
 import com.edujournal.presentation.studentimport.ImportStudentRow
 import com.edujournal.presentation.studentimport.StudentImportManager
 import com.edujournal.presentation.studentimport.StudentImportParseResult
@@ -81,7 +81,7 @@ class StudentViewModel @Inject constructor(
     fun addStudent(
         firstName: String,
         lastName: String,
-        middleName: String,
+        middleName: String?,
         groupId: Long,
         onResult: (EntityWriteResult) -> Unit = {}
     ) {
@@ -199,8 +199,8 @@ class StudentViewModel @Inject constructor(
         }
     }
 
-    private fun studentKey(lastName: String, firstName: String, middleName: String): String {
+    private fun studentKey(lastName: String, firstName: String, middleName: String?): String {
         return listOf(lastName, firstName, middleName)
-            .joinToString("|") { it.trim().lowercase() }
+            .joinToString("|") { it.orEmpty().trim().lowercase() }
     }
 }

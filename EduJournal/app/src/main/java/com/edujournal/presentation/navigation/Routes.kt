@@ -14,6 +14,7 @@ object Routes {
     const val ANALYTICS = "analytics/{semesterId}/{groupId}/{subjectId}"
     const val HOMEWORKS = "homeworks/{lessonId}"
     const val LESSON_TOPICS = "lesson_topics/{semesterId}/{groupId}/{subjectLessonTypeId}"
+    const val TOPIC_TEMPLATES = "topic_templates/{semesterId}/{subjectLessonTypeId}"
     const val SETTINGS = "settings"
     const val SEMESTERS = "semesters"
 
@@ -28,4 +29,6 @@ object Routes {
     fun homeworks(lessonId: Long) = "homeworks/$lessonId"
     fun lessonTopics(semesterId: Long, groupId: Long, subjectLessonTypeId: Long) =
         "lesson_topics/$semesterId/$groupId/$subjectLessonTypeId"
+    fun topicTemplates(semesterId: Long, subjectLessonTypeId: Long) =
+        "topic_templates/$semesterId/$subjectLessonTypeId"
 }

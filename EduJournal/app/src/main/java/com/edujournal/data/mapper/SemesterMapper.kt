@@ -1,8 +1,8 @@
-package com.edujournal.data.mapper
+﻿package com.edujournal.data.mapper
 
 import com.edujournal.data.local.database.entities.SemesterEntity
 import com.edujournal.domain.model.Semester
-import com.edujournal.domain.model.SemesterSeason
+import com.edujournal.domain.model.enum.SemesterSeason
 
 fun SemesterEntity.toDomain(): Semester {
     return Semester(
@@ -19,3 +19,5 @@ fun Semester.toEntity(): SemesterEntity {
         year = year
     )
 }
+
+

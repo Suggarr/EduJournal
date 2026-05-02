@@ -1,6 +1,6 @@
-package com.edujournal.presentation.state
+﻿package com.edujournal.presentation.state
 
-import com.edujournal.domain.model.GradeType
+import com.edujournal.domain.model.enum.GradeType
 
 data class JournalCell(
     val lessonId: Long,

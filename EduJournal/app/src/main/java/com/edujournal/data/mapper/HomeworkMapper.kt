@@ -1,4 +1,4 @@
-package com.edujournal.data.mapper
+﻿package com.edujournal.data.mapper
 
 import com.edujournal.data.local.database.entities.HomeworkEntity
 import com.edujournal.domain.model.Homework
@@ -18,3 +18,5 @@ fun Homework.toEntity(): HomeworkEntity {
         text = text
     )
 }
+
+

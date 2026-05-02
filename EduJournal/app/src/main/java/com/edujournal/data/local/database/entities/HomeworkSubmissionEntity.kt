@@ -1,4 +1,4 @@
-package com.edujournal.data.local.database.entities
+﻿package com.edujournal.data.local.database.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -34,3 +34,5 @@ data class HomeworkSubmissionEntity(
     val studentId: Long,
     val status: String
 )
+
+
