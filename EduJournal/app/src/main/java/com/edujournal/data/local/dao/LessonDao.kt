@@ -30,10 +30,10 @@ interface LessonDao {
     fun observeLessonById(lessonId: Long): Flow<LessonEntity?>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertLesson(lesson: LessonEntity)
+    suspend fun insertLesson(lesson: LessonEntity): Long
 
     @Update
-    suspend fun updateLesson(lesson: LessonEntity)
+    suspend fun updateLesson(lesson: LessonEntity): Int
 
     @Query("DELETE FROM lessons WHERE id = :lessonId")
     suspend fun deleteLesson(lessonId: Long)

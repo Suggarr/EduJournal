@@ -29,17 +29,8 @@ interface SubjectDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(subject: SubjectEntity): Long
 
-    @Update(onConflict = OnConflictStrategy.IGNORE)
+    @Update
     suspend fun update(subject: SubjectEntity): Int
-
-    @Query("SELECT EXISTS(SELECT 1 FROM subjects WHERE id = :id)")
-    suspend fun existsById(id: Long): Boolean
-
-    @Query("SELECT EXISTS(SELECT 1 FROM subjects WHERE name = :name)")
-    suspend fun existsByName(name: String): Boolean
-
-    @Query("SELECT EXISTS(SELECT 1 FROM subjects WHERE name = :name AND id != :id)")
-    suspend fun existsByNameExceptId(name: String, id: Long): Boolean
 
     @Query("SELECT semesterId FROM subject_semesters WHERE subjectId = :subjectId ORDER BY semesterId")
     fun observeSemesterIdsBySubject(subjectId: Long): Flow<List<Long>>

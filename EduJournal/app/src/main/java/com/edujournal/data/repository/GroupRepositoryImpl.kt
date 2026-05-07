@@ -28,18 +28,6 @@ class GroupRepositoryImpl (
         return localDataSource.updateGroup(group.toEntity())
     }
 
-    override suspend fun existsById(id: Long): Boolean {
-        return localDataSource.existsById(id)
-    }
-
-    override suspend fun existsByName(name: String): Boolean {
-        return localDataSource.existsByName(name)
-    }
-
-    override suspend fun existsByNameExceptId(name: String, id: Long): Boolean {
-        return localDataSource.existsByNameExceptId(name, id)
-    }
-
     override suspend fun deleteGroup(id: Long) {
         localDataSource.deleteGroup(id)
     }

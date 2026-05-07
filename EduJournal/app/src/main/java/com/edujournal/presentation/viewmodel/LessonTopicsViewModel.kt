@@ -2,8 +2,10 @@
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.edujournal.R
 import com.edujournal.domain.model.Lesson
 import com.edujournal.domain.model.TopicTemplate
+import com.edujournal.domain.usecase.common.EntityWriteResult
 import com.edujournal.domain.usecase.lesson.CreateLessonUseCase
 import com.edujournal.domain.usecase.lesson.DeleteLessonUseCase
 import com.edujournal.domain.usecase.lesson.GetLessonsUseCase
@@ -11,8 +13,11 @@ import com.edujournal.domain.usecase.topictemplate.ObserveTopicTemplatesUseCase
 import com.edujournal.domain.usecase.subjectlessontype.ObserveSubjectLessonTypeByIdUseCase
 import com.edujournal.domain.usecase.lesson.UpdateLessonUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -28,6 +33,9 @@ class LessonTopicsViewModel @Inject constructor(
     private val updateLessonUseCase: UpdateLessonUseCase,
     private val deleteLessonUseCase: DeleteLessonUseCase
 ) : ViewModel() {
+    private val _uiMessageRes = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+    val uiMessageRes: SharedFlow<Int> = _uiMessageRes.asSharedFlow()
+
 
     fun observeLessons(
         groupId: Long,
@@ -59,29 +67,41 @@ class LessonTopicsViewModel @Inject constructor(
         subjectLessonTypeId: Long,
         semesterId: Long,
         date: LocalDate,
-        topic: String
+        topic: String,
+        onResult: (EntityWriteResult) -> Unit = {}
     ) {
         viewModelScope.launch {
-            runCatching {
-                createLessonUseCase(
-                    Lesson(
-                        id = 0,
-                        groupId = groupId,
-                        subjectLessonTypeId = subjectLessonTypeId,
-                        semesterId = semesterId,
-                        date = date,
-                        topic = topic
-                    )
+            val result = createLessonUseCase(
+                Lesson(
+                    id = 0,
+                    groupId = groupId,
+                    subjectLessonTypeId = subjectLessonTypeId,
+                    semesterId = semesterId,
+                    date = date,
+                    topic = topic
                 )
+            )
+            when (result) {
+                EntityWriteResult.DUPLICATE -> _uiMessageRes.emit(R.string.lesson_topics_duplicate_date_error)
+                EntityWriteResult.NOT_FOUND -> _uiMessageRes.emit(R.string.lesson_topics_invalid_date_error)
+                EntityWriteResult.SUCCESS -> Unit
             }
+            onResult(result)
         }
     }
 
-    fun updateLesson(lesson: Lesson) {
+    fun updateLesson(
+        lesson: Lesson,
+        onResult: (EntityWriteResult) -> Unit = {}
+    ) {
         viewModelScope.launch {
-            runCatching {
-                updateLessonUseCase(lesson)
+            val result = updateLessonUseCase(lesson)
+            when (result) {
+                EntityWriteResult.DUPLICATE -> _uiMessageRes.emit(R.string.lesson_topics_duplicate_date_error)
+                EntityWriteResult.NOT_FOUND -> _uiMessageRes.emit(R.string.lesson_topics_invalid_date_error)
+                EntityWriteResult.SUCCESS -> Unit
             }
+            onResult(result)
         }
     }
 

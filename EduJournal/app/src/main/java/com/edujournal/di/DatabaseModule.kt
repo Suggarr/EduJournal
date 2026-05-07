@@ -100,149 +100,149 @@ object DatabaseModule {
             AppDatabase::class.java,
             "edujournal_db"
         )
-        .fallbackToDestructiveMigration()
-        .addCallback(object : RoomDatabase.Callback() {
-            override fun onCreate(db: SupportSQLiteDatabase) {
-                super.onCreate(db)
-
-                val firstNames = listOf(
-                    "Александр", "Алексей", "Андрей", "Антон", "Артем", "Богдан",
-                    "Вадим", "Виктор", "Владислав", "Георгий", "Глеб", "Даниил",
-                    "Денис", "Дмитрий", "Евгений", "Егор", "Иван", "Илья",
-                    "Кирилл", "Константин", "Леонид", "Максим", "Михаил",
-                    "Никита", "Олег", "Павел", "Роман", "Руслан", "Сергей",
-                    "Степан", "Тимур", "Федор", "Ярослав"
-                )
-                val lastNames = listOf(
-                    "Абрамов", "Алексеев", "Андреев", "Баранов", "Белов", "Беляев",
-                    "Богданов", "Борисов", "Быков", "Васильев", "Виноградов",
-                    "Власов", "Волков", "Воробьев", "Герасимов", "Голубев",
-                    "Горбунов", "Григорьев", "Давыдов", "Егоров", "Елисеев",
-                    "Жуков", "Зайцев", "Захаров", "Иванов", "Игнатьев", "Калинин",
-                    "Карпов", "Киселев", "Ковалев", "Козлов", "Комаров",
-                    "Кондратьев", "Корнилов", "Крылов", "Кузнецов", "Куликов",
-                    "Лазарев", "Лебедев", "Макаров", "Медведев", "Миронов",
-                    "Михайлов", "Морозов", "Назаров", "Никитин", "Новиков",
-                    "Орлов", "Павлов", "Панин", "Петров", "Пономарев", "Попов",
-                    "Романов", "Савельев", "Семенов", "Сергеев", "Сидоров",
-                    "Смирнов", "Соколов", "Тарасов", "Федоров", "Филиппов",
-                    "Чернов", "Шаров", "Шестаков", "Яковлев"
-                )
-                val middleNames = listOf(
-                    "Александрович", "Алексеевич", "Андреевич", "Антонович",
-                    "Артемович", "Богданович", "Вадимович", "Викторович",
-                    "Владимирович", "Георгиевич", "Глебович", "Даниилович",
-                    "Денисович", "Дмитриевич", "Евгеньевич", "Егорович",
-                    "Иванович", "Ильич", "Кириллович", "Константинович",
-                    "Леонидович", "Максимович", "Михайлович", "Никитич",
-                    "Олегович", "Павлович", "Романович", "Русланович",
-                    "Сергеевич", "Степанович", "Тимурович", "Федорович",
-                    "Ярославович"
-                )
-
-                db.beginTransaction()
-                try {
-                    val usedFullNames = mutableSetOf<String>()
-
-                    db.execSQL("INSERT INTO semesters (season, year) VALUES ('AUTUMN', 2025)")
-                    db.execSQL("INSERT INTO semesters (season, year) VALUES ('SPRING', 2026)")
-                    db.execSQL("INSERT INTO semesters (season, year) VALUES ('AUTUMN', 2026)")
-                    db.execSQL("INSERT INTO semesters (season, year) VALUES ('SPRING', 2027)")
-
-                    db.execSQL("INSERT INTO `groups` (name) VALUES ('10701322')")
-                    db.execSQL("INSERT INTO `groups` (name) VALUES ('10701222')")
-                    db.execSQL("INSERT INTO `groups` (name) VALUES ('10701122')")
-
-                    db.execSQL("INSERT INTO subjects (name, abbreviation) VALUES ('Основы программной инженерии', 'ОПИ')")
-                    db.execSQL("INSERT INTO subjects (name, abbreviation) VALUES ('Компьютерные системы и сети', 'КСиС')")
-                    db.execSQL("INSERT INTO subjects (name, abbreviation) VALUES ('Базы данных', 'БД')")
-
-                    val subjectsCursor = db.query("SELECT id FROM subjects ORDER BY id")
-                    subjectsCursor.use { cursor ->
-                        while (cursor.moveToNext()) {
-                            val subjectId = cursor.getLong(0)
-                            db.execSQL(
-                                "INSERT INTO subject_semesters (subjectId, semesterId) VALUES (?, ?)",
-                                arrayOf(subjectId, 1L)
-                            )
-                            db.execSQL(
-                                "INSERT INTO subject_lesson_types (subjectId, name, hours) VALUES (?, ?, ?)",
-                                arrayOf(subjectId, "Лекция", 20.0)
-                            )
-                            db.execSQL(
-                                "INSERT INTO subject_lesson_types (subjectId, name, hours) VALUES (?, ?, ?)",
-                                arrayOf(subjectId, "Практика", 30.0)
-                            )
-                            db.execSQL(
-                                "INSERT INTO subject_lesson_types (subjectId, name, hours) VALUES (?, ?, ?)",
-                                arrayOf(subjectId, "Лабораторная", 10.0)
-                            )
-                        }
-                    }
-
-                    val groupsCursor = db.query("SELECT id FROM `groups` ORDER BY id")
-                    groupsCursor.use { cursor ->
-                        while (cursor.moveToNext()) {
-                            val groupId = cursor.getLong(0)
-                            val groupSeed = (groupId % 1_000_003L).toInt()
-                            for (i in 0 until 30) {
-                                var step = 0
-                                var firstName: String
-                                var lastName: String
-                                var middleName: String
-                                var fullName: String
-                                do {
-                                    val base = i + step
-                                    firstName = firstNames[(groupSeed + base * 7) % firstNames.size]
-                                    lastName = lastNames[(groupSeed * 3 + base * 11) % lastNames.size]
-                                    middleName = middleNames[(groupSeed * 5 + base * 13) % middleNames.size]
-                                    fullName = "$lastName $firstName $middleName"
-                                    step++
-                                } while (fullName in usedFullNames)
-
-                                usedFullNames += fullName
-                                db.execSQL(
-                                    "INSERT INTO students (firstName, lastName, middleName, groupId) VALUES (?, ?, ?, ?)",
-                                    arrayOf(firstName, lastName, middleName, groupId)
-                                )
-                            }
-                        }
-                    }
-
-                    val combinationsCursor = db.query(
-                        """
-                        SELECT g.id, lt.id
-                        FROM `groups` g
-                        CROSS JOIN subject_lesson_types lt
-                        """.trimIndent()
-                    )
-                    combinationsCursor.use { cursor ->
-                        while (cursor.moveToNext()) {
-                            val groupId = cursor.getLong(0)
-                            val subjectLessonTypeId = cursor.getLong(1)
-
-                            val baseDate = LocalDate.of(2026, 9, 1)
-                            val typeOffset = ((subjectLessonTypeId - 1L).coerceAtLeast(0L) * 40L).toInt()
-                            for (i in 0 until 18) {
-                                val date = baseDate.plusDays((typeOffset + i).toLong()).toString()
-                                val topic = "Тема ${i + 1}"
-                                db.execSQL(
-                                    """
-                                    INSERT OR IGNORE INTO lessons (groupId, subjectLessonTypeId, semesterId, date, topic)
-                                    VALUES (?, ?, ?, ?, ?)
-                                    """.trimIndent(),
-                                    arrayOf(groupId, subjectLessonTypeId, 1L, date, topic)
-                                )
-                            }
-                        }
-                    }
-
-                    db.setTransactionSuccessful()
-                } finally {
-                    db.endTransaction()
-                }
-            }
-        }) //Добавил addCallback для инициализации начальных данных
+//        .fallbackToDestructiveMigration()
+//        .addCallback(object : RoomDatabase.Callback() {
+//            override fun onCreate(db: SupportSQLiteDatabase) {
+//                super.onCreate(db)
+//
+//                val firstNames = listOf(
+//                    "Александр", "Алексей", "Андрей", "Антон", "Артем", "Богдан",
+//                    "Вадим", "Виктор", "Владислав", "Георгий", "Глеб", "Даниил",
+//                    "Денис", "Дмитрий", "Евгений", "Егор", "Иван", "Илья",
+//                    "Кирилл", "Константин", "Леонид", "Максим", "Михаил",
+//                    "Никита", "Олег", "Павел", "Роман", "Руслан", "Сергей",
+//                    "Степан", "Тимур", "Федор", "Ярослав"
+//                )
+//                val lastNames = listOf(
+//                    "Абрамов", "Алексеев", "Андреев", "Баранов", "Белов", "Беляев",
+//                    "Богданов", "Борисов", "Быков", "Васильев", "Виноградов",
+//                    "Власов", "Волков", "Воробьев", "Герасимов", "Голубев",
+//                    "Горбунов", "Григорьев", "Давыдов", "Егоров", "Елисеев",
+//                    "Жуков", "Зайцев", "Захаров", "Иванов", "Игнатьев", "Калинин",
+//                    "Карпов", "Киселев", "Ковалев", "Козлов", "Комаров",
+//                    "Кондратьев", "Корнилов", "Крылов", "Кузнецов", "Куликов",
+//                    "Лазарев", "Лебедев", "Макаров", "Медведев", "Миронов",
+//                    "Михайлов", "Морозов", "Назаров", "Никитин", "Новиков",
+//                    "Орлов", "Павлов", "Панин", "Петров", "Пономарев", "Попов",
+//                    "Романов", "Савельев", "Семенов", "Сергеев", "Сидоров",
+//                    "Смирнов", "Соколов", "Тарасов", "Федоров", "Филиппов",
+//                    "Чернов", "Шаров", "Шестаков", "Яковлев"
+//                )
+//                val middleNames = listOf(
+//                    "Александрович", "Алексеевич", "Андреевич", "Антонович",
+//                    "Артемович", "Богданович", "Вадимович", "Викторович",
+//                    "Владимирович", "Георгиевич", "Глебович", "Даниилович",
+//                    "Денисович", "Дмитриевич", "Евгеньевич", "Егорович",
+//                    "Иванович", "Ильич", "Кириллович", "Константинович",
+//                    "Леонидович", "Максимович", "Михайлович", "Никитич",
+//                    "Олегович", "Павлович", "Романович", "Русланович",
+//                    "Сергеевич", "Степанович", "Тимурович", "Федорович",
+//                    "Ярославович"
+//                )
+//
+//                db.beginTransaction()
+//                try {
+//                    val usedFullNames = mutableSetOf<String>()
+//
+//                    db.execSQL("INSERT INTO semesters (season, year) VALUES ('AUTUMN', 2025)")
+//                    db.execSQL("INSERT INTO semesters (season, year) VALUES ('SPRING', 2026)")
+//                    db.execSQL("INSERT INTO semesters (season, year) VALUES ('AUTUMN', 2026)")
+//                    db.execSQL("INSERT INTO semesters (season, year) VALUES ('SPRING', 2027)")
+//
+//                    db.execSQL("INSERT INTO `groups` (name) VALUES ('10701322')")
+//                    db.execSQL("INSERT INTO `groups` (name) VALUES ('10701222')")
+//                    db.execSQL("INSERT INTO `groups` (name) VALUES ('10701122')")
+//
+//                    db.execSQL("INSERT INTO subjects (name, abbreviation) VALUES ('Основы программной инженерии', 'ОПИ')")
+//                    db.execSQL("INSERT INTO subjects (name, abbreviation) VALUES ('Компьютерные системы и сети', 'КСиС')")
+//                    db.execSQL("INSERT INTO subjects (name, abbreviation) VALUES ('Базы данных', 'БД')")
+//
+//                    val subjectsCursor = db.query("SELECT id FROM subjects ORDER BY id")
+//                    subjectsCursor.use { cursor ->
+//                        while (cursor.moveToNext()) {
+//                            val subjectId = cursor.getLong(0)
+//                            db.execSQL(
+//                                "INSERT INTO subject_semesters (subjectId, semesterId) VALUES (?, ?)",
+//                                arrayOf(subjectId, 1L)
+//                            )
+//                            db.execSQL(
+//                                "INSERT INTO subject_lesson_types (subjectId, name, hours) VALUES (?, ?, ?)",
+//                                arrayOf(subjectId, "Лекция", 20.0)
+//                            )
+//                            db.execSQL(
+//                                "INSERT INTO subject_lesson_types (subjectId, name, hours) VALUES (?, ?, ?)",
+//                                arrayOf(subjectId, "Практика", 30.0)
+//                            )
+//                            db.execSQL(
+//                                "INSERT INTO subject_lesson_types (subjectId, name, hours) VALUES (?, ?, ?)",
+//                                arrayOf(subjectId, "Лабораторная", 10.0)
+//                            )
+//                        }
+//                    }
+//
+//                    val groupsCursor = db.query("SELECT id FROM `groups` ORDER BY id")
+//                    groupsCursor.use { cursor ->
+//                        while (cursor.moveToNext()) {
+//                            val groupId = cursor.getLong(0)
+//                            val groupSeed = (groupId % 1_000_003L).toInt()
+//                            for (i in 0 until 30) {
+//                                var step = 0
+//                                var firstName: String
+//                                var lastName: String
+//                                var middleName: String
+//                                var fullName: String
+//                                do {
+//                                    val base = i + step
+//                                    firstName = firstNames[(groupSeed + base * 7) % firstNames.size]
+//                                    lastName = lastNames[(groupSeed * 3 + base * 11) % lastNames.size]
+//                                    middleName = middleNames[(groupSeed * 5 + base * 13) % middleNames.size]
+//                                    fullName = "$lastName $firstName $middleName"
+//                                    step++
+//                                } while (fullName in usedFullNames)
+//
+//                                usedFullNames += fullName
+//                                db.execSQL(
+//                                    "INSERT INTO students (firstName, lastName, middleName, groupId) VALUES (?, ?, ?, ?)",
+//                                    arrayOf(firstName, lastName, middleName, groupId)
+//                                )
+//                            }
+//                        }
+//                    }
+//
+//                    val combinationsCursor = db.query(
+//                        """
+//                        SELECT g.id, lt.id
+//                        FROM `groups` g
+//                        CROSS JOIN subject_lesson_types lt
+//                        """.trimIndent()
+//                    )
+//                    combinationsCursor.use { cursor ->
+//                        while (cursor.moveToNext()) {
+//                            val groupId = cursor.getLong(0)
+//                            val subjectLessonTypeId = cursor.getLong(1)
+//
+//                            val baseDate = LocalDate.of(2026, 9, 1)
+//                            val typeOffset = ((subjectLessonTypeId - 1L).coerceAtLeast(0L) * 40L).toInt()
+//                            for (i in 0 until 18) {
+//                                val date = baseDate.plusDays((typeOffset + i).toLong()).toString()
+//                                val topic = "Тема ${i + 1}"
+//                                db.execSQL(
+//                                    """
+//                                    INSERT OR IGNORE INTO lessons (groupId, subjectLessonTypeId, semesterId, date, topic)
+//                                    VALUES (?, ?, ?, ?, ?)
+//                                    """.trimIndent(),
+//                                    arrayOf(groupId, subjectLessonTypeId, 1L, date, topic)
+//                                )
+//                            }
+//                        }
+//                    }
+//
+//                    db.setTransactionSuccessful()
+//                } finally {
+//                    db.endTransaction()
+//                }
+//            }
+//        }) //Добавил addCallback для инициализации начальных данных
         .build()
     }
 

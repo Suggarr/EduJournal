@@ -12,15 +12,6 @@ class TopicTemplateLocalDataSource @Inject constructor(
         return dao.observeByContext(semesterId, subjectLessonTypeId)
     }
 
-    suspend fun existsOrder(
-        semesterId: Long,
-        subjectLessonTypeId: Long,
-        orderInType: Int,
-        excludeId: Long = 0
-    ): Boolean {
-        return dao.existsOrder(semesterId, subjectLessonTypeId, orderInType, excludeId)
-    }
-
     suspend fun insert(item: TopicTemplateEntity): Long = dao.insert(item)
 
     suspend fun update(item: TopicTemplateEntity): Int = dao.update(item)

@@ -1,8 +1,9 @@
-﻿package com.edujournal.domain.usecase.subject
-import com.edujournal.domain.usecase.common.EntityWriteResult
+package com.edujournal.domain.usecase.subject
 
+import android.database.sqlite.SQLiteConstraintException
 import com.edujournal.domain.model.Subject
 import com.edujournal.domain.repository.SubjectRepository
+import com.edujournal.domain.usecase.common.EntityWriteResult
 import com.edujournal.utils.normalizeSpaces
 import com.edujournal.utils.normalizeSpacesOrNull
 import javax.inject.Inject
@@ -22,16 +23,19 @@ class UpdateSubjectUseCase @Inject constructor(
         if (semesterIds != null) {
             require(semesterIds.isNotEmpty()) { "SEMESTER_REQUIRED" }
         }
-        if (!repository.existsById(normalizedSubject.id)) return EntityWriteResult.NOT_FOUND
-        if (repository.existsByNameExceptId(normalizedSubject.name, normalizedSubject.id)) return EntityWriteResult.DUPLICATE
-        repository.updateSubject(normalizedSubject)
-        if (semesterIds != null) {
-            repository.replaceSubjectSemesters(normalizedSubject.id, semesterIds)
+
+        return try {
+            val updated = repository.updateSubject(normalizedSubject)
+            if (updated == 0) {
+                EntityWriteResult.NOT_FOUND
+            } else {
+                if (semesterIds != null) {
+                    repository.replaceSubjectSemesters(normalizedSubject.id, semesterIds)
+                }
+                EntityWriteResult.SUCCESS
+            }
+        } catch (_: SQLiteConstraintException) {
+            EntityWriteResult.DUPLICATE
         }
-        return EntityWriteResult.SUCCESS
     }
 }
-
-
-
-

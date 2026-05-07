@@ -33,18 +33,6 @@ class SubjectLessonTypeRepositoryImpl(
         return localDataSource.updateLessonType(SubjectLessonType.toEntity())
     }
 
-    override suspend fun existsById(id: Long): Boolean {
-        return localDataSource.existsById(id)
-    }
-
-    override suspend fun existsByName(subjectId: Long, name: String): Boolean {
-        return localDataSource.existsByName(subjectId, name)
-    }
-
-    override suspend fun existsByNameExceptId(subjectId: Long, name: String, id: Long): Boolean {
-        return localDataSource.existsByNameExceptId(subjectId, name, id)
-    }
-
     override suspend fun deleteLessonType(typeId: Long) {
         localDataSource.deleteLessonType(typeId)
     }

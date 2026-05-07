@@ -23,17 +23,8 @@ interface SubjectLessonTypeDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(SubjectLessonType: SubjectLessonTypeEntity): Long
 
-    @Update(onConflict = OnConflictStrategy.IGNORE)
+    @Update
     suspend fun update(SubjectLessonType: SubjectLessonTypeEntity): Int
-
-    @Query("SELECT EXISTS(SELECT 1 FROM subject_lesson_types WHERE id = :id)")
-    suspend fun existsById(id: Long): Boolean
-
-    @Query("SELECT EXISTS(SELECT 1 FROM subject_lesson_types WHERE subjectId = :subjectId AND name = :name)")
-    suspend fun existsByName(subjectId: Long, name: String): Boolean
-
-    @Query("SELECT EXISTS(SELECT 1 FROM subject_lesson_types WHERE subjectId = :subjectId AND name = :name AND id != :id)")
-    suspend fun existsByNameExceptId(subjectId: Long, name: String, id: Long): Boolean
 
     @Query("DELETE FROM subject_lesson_types WHERE id = :typeId")
     suspend fun deleteById(typeId: Long)

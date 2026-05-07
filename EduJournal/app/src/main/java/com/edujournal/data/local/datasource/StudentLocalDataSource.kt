@@ -17,29 +17,6 @@ class StudentLocalDataSource(
         return studentDao.update(student)
     }
 
-    suspend fun existsById(id: Long): Boolean {
-        return studentDao.existsById(id)
-    }
-
-    suspend fun existsByFullNameInGroup(
-        groupId: Long,
-        lastName: String,
-        firstName: String,
-        middleName: String?
-    ): Boolean {
-        return studentDao.existsByFullNameInGroup(groupId, lastName, firstName, middleName)
-    }
-
-    suspend fun existsByFullNameInGroupExceptId(
-        id: Long,
-        groupId: Long,
-        lastName: String,
-        firstName: String,
-        middleName: String?
-    ): Boolean {
-        return studentDao.existsByFullNameInGroupExceptId(id, groupId, lastName, firstName, middleName)
-    }
-
     suspend fun delete(id: Long) {
         studentDao.deleteById(id)
     }

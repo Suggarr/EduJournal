@@ -1,11 +1,13 @@
-﻿package com.edujournal.presentation.screen
+package com.edujournal.presentation.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,8 +19,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -38,6 +38,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,15 +50,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.edujournal.R
 import com.edujournal.domain.model.Lesson
 import com.edujournal.domain.model.TopicTemplate
+import com.edujournal.domain.usecase.common.EntityWriteResult
 import com.edujournal.presentation.component.DeleteRectActionButton
 import com.edujournal.presentation.component.EditRectActionButton
 import com.edujournal.presentation.component.ScrollAwareAddFab
 import com.edujournal.presentation.viewmodel.LessonTopicsViewModel
+import kotlinx.coroutines.flow.collect
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
@@ -90,6 +92,13 @@ fun LessonTopicsScreen(
     var lessonToEdit by remember { mutableStateOf<Lesson?>(null) }
     var lessonToDelete by remember { mutableStateOf<Lesson?>(null) }
     val listState = rememberLazyListState()
+    val context = LocalContext.current
+
+    LaunchedEffect(viewModel) {
+        viewModel.uiMessageRes.collect { messageRes ->
+            Toast.makeText(context, context.getString(messageRes), Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
@@ -135,32 +144,22 @@ fun LessonTopicsScreen(
                         R.string.lesson_topics_required_hours,
                         formatHoursValue(hours)
                     ),
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier
+                    style = MaterialTheme.typography.titleSmall
                 )
             }
 
             if (currentLessons == null) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             } else if (currentLessons.isEmpty()) {
-                Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(stringResource(R.string.lesson_topics_empty))
-            }
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(stringResource(R.string.lesson_topics_empty))
+                }
             } else {
                 LazyColumn(
                     state = listState,
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
@@ -168,9 +167,7 @@ fun LessonTopicsScreen(
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = MaterialTheme.shapes.medium,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface
-                            ),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                         ) {
                             Row(
@@ -207,13 +204,13 @@ fun LessonTopicsScreen(
         LessonTopicDialog(
             title = stringResource(R.string.lesson_topics_add),
             templates = templates,
-            isDateBusy = { selectedDate ->
-                currentLessons.orEmpty().any { it.date == selectedDate }
-            },
             onDismiss = { showAddDialog = false },
             onConfirm = { date, topic ->
-                viewModel.addLesson(groupId, subjectLessonTypeId, semesterId, date, topic)
-                showAddDialog = false
+                viewModel.addLesson(groupId, subjectLessonTypeId, semesterId, date, topic) { result ->
+                    if (result == EntityWriteResult.SUCCESS) {
+                        showAddDialog = false
+                    }
+                }
             }
         )
     }
@@ -224,13 +221,13 @@ fun LessonTopicsScreen(
             templates = templates,
             initialDate = lesson.date,
             initialTopic = lesson.topic,
-            isDateBusy = { selectedDate ->
-                currentLessons.orEmpty().any { it.id != lesson.id && it.date == selectedDate }
-            },
             onDismiss = { lessonToEdit = null },
             onConfirm = { date, topic ->
-                viewModel.updateLesson(lesson.copy(date = date, topic = topic))
-                lessonToEdit = null
+                viewModel.updateLesson(lesson.copy(date = date, topic = topic)) { result ->
+                    if (result == EntityWriteResult.SUCCESS) {
+                        lessonToEdit = null
+                    }
+                }
             }
         )
     }
@@ -280,7 +277,6 @@ private fun LessonTopicDialog(
     templates: List<TopicTemplate>,
     initialDate: LocalDate = LocalDate.now(),
     initialTopic: String = "",
-    isDateBusy: (LocalDate) -> Boolean = { false },
     onDismiss: () -> Unit,
     onConfirm: (LocalDate, String) -> Unit
 ) {
@@ -288,8 +284,7 @@ private fun LessonTopicDialog(
     var selectedDate by remember { mutableStateOf(initialDate) }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTemplatesDialog by remember { mutableStateOf(false) }
-    val dateBusy = isDateBusy(selectedDate)
-    val canSave = topic.isNotBlank() && !dateBusy
+    val canSave = topic.isNotBlank()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -318,14 +313,6 @@ private fun LessonTopicDialog(
                     label = { Text(stringResource(R.string.lesson_topics_topic_label)) },
                     modifier = Modifier.fillMaxWidth()
                 )
-                if (dateBusy) {
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = stringResource(R.string.lesson_topics_duplicate_date_error),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
                 if (templates.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     TextButton(
@@ -369,10 +356,9 @@ private fun LessonTopicDialog(
                     onClick = {
                         val millis = pickerState.selectedDateMillis
                         if (millis != null) {
-                            val pickedDate = Instant.ofEpochMilli(millis)
+                            selectedDate = Instant.ofEpochMilli(millis)
                                 .atZone(ZoneId.systemDefault())
                                 .toLocalDate()
-                            selectedDate = pickedDate
                         }
                         showDatePicker = false
                     }
@@ -429,13 +415,3 @@ private fun LessonTopicDialog(
         )
     }
 }
-
-
-
-
-
-
-
-
-
-

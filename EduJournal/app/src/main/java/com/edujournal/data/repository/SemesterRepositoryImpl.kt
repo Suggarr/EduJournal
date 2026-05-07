@@ -19,8 +19,8 @@ class SemesterRepositoryImpl(
         return localDataSource.insertSemester(semester.toEntity())
     }
 
-    override suspend fun updateSemester(semester: Semester) {
-        localDataSource.updateSemester(semester.toEntity())
+    override suspend fun updateSemester(semester: Semester): Int {
+        return localDataSource.updateSemester(semester.toEntity())
     }
 
     override suspend fun deleteSemester(semesterId: Long) {

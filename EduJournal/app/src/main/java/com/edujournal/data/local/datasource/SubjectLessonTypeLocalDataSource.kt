@@ -27,18 +27,6 @@ class SubjectLessonTypeLocalDataSource(
         return lessonTypeDao.update(SubjectLessonType)
     }
 
-    suspend fun existsById(id: Long): Boolean {
-        return lessonTypeDao.existsById(id)
-    }
-
-    suspend fun existsByName(subjectId: Long, name: String): Boolean {
-        return lessonTypeDao.existsByName(subjectId, name)
-    }
-
-    suspend fun existsByNameExceptId(subjectId: Long, name: String, id: Long): Boolean {
-        return lessonTypeDao.existsByNameExceptId(subjectId, name, id)
-    }
-
     suspend fun deleteLessonType(typeId: Long) {
         lessonTypeDao.deleteById(typeId)
     }

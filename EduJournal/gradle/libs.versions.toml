@@ -13,6 +13,7 @@ ksp = "2.0.21-1.0.25"
 hilt = "2.51"
 hiltNavigationCompose = "1.2.0"
 foundationLayout = "1.10.4"
+mockk = "1.13.12"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -36,6 +37,7 @@ hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 
 
 [plugins]

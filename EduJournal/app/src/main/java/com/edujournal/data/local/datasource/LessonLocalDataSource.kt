@@ -20,12 +20,12 @@ class LessonLocalDataSource @Inject constructor(
         return lessonDao.observeLessonById(lessonId)
     }
 
-    suspend fun insertLesson(lesson: LessonEntity) {
-        lessonDao.insertLesson(lesson)
+    suspend fun insertLesson(lesson: LessonEntity): Long {
+        return lessonDao.insertLesson(lesson)
     }
 
-    suspend fun updateLesson(lesson: LessonEntity) {
-        lessonDao.updateLesson(lesson)
+    suspend fun updateLesson(lesson: LessonEntity): Int {
+        return lessonDao.updateLesson(lesson)
     }
 
     suspend fun deleteLesson(lessonId: Long) {

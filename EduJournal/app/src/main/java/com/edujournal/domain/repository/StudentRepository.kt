@@ -9,20 +9,6 @@ interface StudentRepository {
     suspend fun createStudent(student: Student): Long
 
     suspend fun updateStudent(student: Student): Int
-    suspend fun existsById(id: Long): Boolean
-    suspend fun existsByFullNameInGroup(
-        groupId: Long,
-        lastName: String,
-        firstName: String,
-        middleName: String?
-    ): Boolean
-    suspend fun existsByFullNameInGroupExceptId(
-        id: Long,
-        groupId: Long,
-        lastName: String,
-        firstName: String,
-        middleName: String?
-    ): Boolean
 
     suspend fun deleteStudent(studentId: Long)
 }

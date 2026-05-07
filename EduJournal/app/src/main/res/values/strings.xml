@@ -23,23 +23,23 @@
     <string name="subject_greeting">Здравствуйте, %1$s!</string>
     <string name="subject_title">Ваши дисциплины</string>
     <string name="subject_no_semesters">Семестры еще не созданы. Добавьте семестр во вкладке "Семестры".</string>
-    <string name="subject_empty">Список пуст. Добавьте первый предмет!</string>
-    <string name="subject_new">Новый предмет</string>
+    <string name="subject_empty">Список пуст. Добавьте дисциплину!</string>
+    <string name="subject_new">Новая дисциплина</string>
     <string name="subject_edit">Редактировать</string>
-    <string name="subject_delete_title">Удалить предмет?</string>
-    <string name="subject_delete_message">Удалить предмет "%1$s"? Это действие нельзя отменить.</string>
-    <string name="subject_name_label">Название предмета</string>
-    <string name="subject_abbreviation_label">Сокращение</string>
+    <string name="subject_delete_title">Удалить дисциплину?</string>
+    <string name="subject_delete_message">Удалить дисциплину "%1$s"? Это действие нельзя отменить.</string>
+    <string name="subject_name_label">Название дисциплины</string>
+    <string name="subject_abbreviation_label">Сокращение (необязательно)</string>
     <string name="subject_semesters_label">Семестры изучения</string>
     <string name="subject_semester_checkbox_item">%1$s %2$d</string>
-    <string name="subject_count_chip">Предметов: %1$d</string>
+    <string name="subject_count_chip">Кол-во дициплин: %1$d</string>
     <string name="subject_semester_chip">%1$s %2$d</string>
     <string name="subject_search_placeholder">Поиск дисциплины или сокращения</string>
     <string name="subject_semester_required_error">Выберите хотя бы один семестр</string>
-    <string name="subject_duplicate_error">Такой предмет уже существует</string>
-    <string name="subject_not_found_error">Предмет не найден</string>
+    <string name="subject_duplicate_error">Такая дисциплина уже существует</string>
+    <string name="subject_not_found_error">Дисциплина не найден</string>
 
-    <string name="subject_lesson_type_select">Типы занятий предмета</string>
+    <string name="subject_lesson_type_select">Типы занятий дисцплины</string>
     <string name="subject_lesson_type_empty">Типы занятий не найдены</string>
     <string name="subject_lesson_type_new">Новый тип занятия</string>
     <string name="subject_lesson_type_edit">Редактировать</string>
@@ -48,7 +48,7 @@
     <string name="subject_lesson_type_name_label">Название (например, Лекция)</string>
     <string name="subject_lesson_type_hours_label">Часы (необязательно)</string>
     <string name="subject_lesson_type_hours_value">Часы: %1$s</string>
-    <string name="subject_lesson_type_duplicate_error">Такой тип занятия уже существует у этого предмета</string>
+    <string name="subject_lesson_type_duplicate_error">Такой тип занятия уже существует у этой дисциплины</string>
     <string name="subject_lesson_type_not_found_error">Тип занятия не найден</string>
 
     <string name="group_select">Выберите группу</string>
@@ -101,7 +101,7 @@
     <string name="journal_export_success">Файл журнала успешно сохранен</string>
     <string name="journal_export_failed">Не удалось экспортировать журнал</string>
     <string name="journal_export_no_data">Нет данных для экспорта</string>
-    <string name="journal_context_line">Предмет: %1$s | Тип: %2$s | Группа: %3$s</string>
+    <string name="journal_context_line">Дисциплина: %1$s | Тип: %2$s | Группа: %3$s</string>
     <string name="journal_semester_fallback">Семестр %1$d</string>
     <string name="journal_grade_legend">Оценки 1-10, Н - отсутствовал, З - болел, О - освобожден.</string>
     <string name="journal_homework_badge">ДЗ</string>
@@ -114,7 +114,7 @@
     <string name="journal_average_label">Средний балл</string>
     <string name="journal_absences_label">Отсутствующие (Н/З/О)</string>
     <string name="analytics_title">Аналитика дисциплины</string>
-    <string name="analytics_context">Предмет: %1$s | Группа: %2$s</string>
+    <string name="analytics_context">Дисциплина: %1$s | Группа: %2$s</string>
     <string name="analytics_summary_title">Сводка по дисциплине</string>
     <string name="analytics_summary_group_avg">Средний балл группы: %1$s</string>
     <string name="analytics_summary_students">Студентов: %1$d</string>
@@ -220,7 +220,7 @@
     <string name="settings_semester_last_delete_error">Нельзя удалить последний семестр</string>
     <string name="settings_semester_invalid_year">Введите корректный год (4 цифры)</string>
     <string name="settings_semester_duplicate_season_year">Такой семестр уже существует</string>
-    <string name="settings_semester_empty">Список семестров пуст. Добавьте первый семестр.</string>
+    <string name="settings_semester_empty">Список семестров пуст. Добавьте семестр.</string>
 
     <string name="biometric_prompt_title">Подтвердите вход</string>
     <string name="biometric_prompt_subtitle">Используйте биометрию или PIN/пароль устройства</string>

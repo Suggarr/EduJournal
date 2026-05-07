@@ -11,13 +11,12 @@ class CreateGroupUseCase @Inject constructor(
 ){
     suspend operator fun invoke(name: String): EntityWriteResult {
         val normalizedName = name.normalizeSpaces()
-        if (repository.existsByName(normalizedName)) return EntityWriteResult.DUPLICATE
         val group = Group(
             id = 0,
             name = normalizedName
         )
-        repository.createGroup(group)
-        return EntityWriteResult.SUCCESS
+        val id = repository.createGroup(group)
+        return if (id == -1L) EntityWriteResult.DUPLICATE else EntityWriteResult.SUCCESS
     }
 }
 

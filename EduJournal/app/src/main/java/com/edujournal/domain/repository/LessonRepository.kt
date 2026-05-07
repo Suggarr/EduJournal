@@ -12,9 +12,9 @@ interface LessonRepository {
 
     fun observeLessonById(lessonId: Long): Flow<Lesson?>
 
-    suspend fun insertLesson(lesson: Lesson)
+    suspend fun insertLesson(lesson: Lesson): Long
 
-    suspend fun updateLesson(lesson: Lesson)
+    suspend fun updateLesson(lesson: Lesson): Int
 
     suspend fun deleteLesson(lessonId: Long)
 }

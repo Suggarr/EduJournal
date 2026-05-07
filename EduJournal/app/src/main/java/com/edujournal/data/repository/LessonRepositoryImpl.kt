@@ -30,12 +30,12 @@ class LessonRepositoryImpl @Inject constructor(
             .map { it?.toDomain() }
     }
 
-    override suspend fun insertLesson(lesson: Lesson) {
-        lessonLocalDataSource.insertLesson(lesson.toEntity())
+    override suspend fun insertLesson(lesson: Lesson): Long {
+        return lessonLocalDataSource.insertLesson(lesson.toEntity())
     }
 
-    override suspend fun updateLesson(lesson: Lesson) {
-        lessonLocalDataSource.updateLesson(lesson.toEntity())
+    override suspend fun updateLesson(lesson: Lesson): Int {
+        return lessonLocalDataSource.updateLesson(lesson.toEntity())
     }
 
     override suspend fun deleteLesson(lessonId: Long) {

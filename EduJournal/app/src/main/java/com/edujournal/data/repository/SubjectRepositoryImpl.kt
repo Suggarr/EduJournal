@@ -40,18 +40,6 @@ class SubjectRepositoryImpl(
         localDataSource.replaceSemestersBySubjectId(subjectId, semesterIds)
     }
 
-    override suspend fun existsById(id: Long): Boolean {
-        return localDataSource.existsById(id)
-    }
-
-    override suspend fun existsByName(name: String): Boolean {
-        return localDataSource.existsByName(name)
-    }
-
-    override suspend fun existsByNameExceptId(name: String, id: Long): Boolean {
-        return localDataSource.existsByNameExceptId(name, id)
-    }
-
     override suspend fun deleteSubject(subjectId: Long) {
         localDataSource.deleteSubject(subjectId)
     }

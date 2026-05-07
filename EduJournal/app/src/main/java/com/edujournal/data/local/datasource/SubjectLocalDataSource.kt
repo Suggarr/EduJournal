@@ -27,18 +27,6 @@ class SubjectLocalDataSource(
         return subjectDao.update(subject)
     }
 
-    suspend fun existsById(id: Long): Boolean {
-        return subjectDao.existsById(id)
-    }
-
-    suspend fun existsByName(name: String): Boolean {
-        return subjectDao.existsByName(name)
-    }
-
-    suspend fun existsByNameExceptId(name: String, id: Long): Boolean {
-        return subjectDao.existsByNameExceptId(name, id)
-    }
-
     suspend fun replaceSemestersBySubjectId(subjectId: Long, semesterIds: List<Long>) {
         subjectDao.replaceSemestersBySubjectId(subjectId, semesterIds)
     }

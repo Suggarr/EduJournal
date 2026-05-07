@@ -15,8 +15,8 @@ class SemesterLocalDataSource(
         return semesterDao.insert(semester)
     }
 
-    suspend fun updateSemester(semester: SemesterEntity) {
-        semesterDao.update(semester)
+    suspend fun updateSemester(semester: SemesterEntity): Int {
+        return semesterDao.update(semester)
     }
 
     suspend fun deleteSemester(semesterId: Long) {

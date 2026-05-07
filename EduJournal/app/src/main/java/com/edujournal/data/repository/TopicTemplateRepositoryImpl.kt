@@ -18,15 +18,6 @@ class TopicTemplateRepositoryImpl @Inject constructor(
             .map { list -> list.map { it.toDomain() } }
     }
 
-    override suspend fun existsOrder(
-        semesterId: Long,
-        subjectLessonTypeId: Long,
-        orderInType: Int,
-        excludeId: Long
-    ): Boolean {
-        return localDataSource.existsOrder(semesterId, subjectLessonTypeId, orderInType, excludeId)
-    }
-
     override suspend fun create(item: TopicTemplate): Long {
         return localDataSource.insert(item.toEntity())
     }

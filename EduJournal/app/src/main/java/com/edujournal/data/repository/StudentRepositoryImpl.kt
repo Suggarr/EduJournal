@@ -26,29 +26,6 @@ class StudentRepositoryImpl(
         return localDataSource.update(student.toEntity())
     }
 
-    override suspend fun existsById(id: Long): Boolean {
-        return localDataSource.existsById(id)
-    }
-
-    override suspend fun existsByFullNameInGroup(
-        groupId: Long,
-        lastName: String,
-        firstName: String,
-        middleName: String?
-    ): Boolean {
-        return localDataSource.existsByFullNameInGroup(groupId, lastName, firstName, middleName)
-    }
-
-    override suspend fun existsByFullNameInGroupExceptId(
-        id: Long,
-        groupId: Long,
-        lastName: String,
-        firstName: String,
-        middleName: String?
-    ): Boolean {
-        return localDataSource.existsByFullNameInGroupExceptId(id, groupId, lastName, firstName, middleName)
-    }
-
     override suspend fun deleteStudent(studentId: Long) {
         localDataSource.delete(studentId)
     }

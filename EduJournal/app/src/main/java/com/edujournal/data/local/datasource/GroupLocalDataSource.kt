@@ -20,18 +20,6 @@ class GroupLocalDataSource(
         return groupDao.updateGroup(group)
     }
 
-    suspend fun existsById(id: Long): Boolean {
-        return groupDao.existsById(id)
-    }
-
-    suspend fun existsByName(name: String): Boolean {
-        return groupDao.existsByName(name)
-    }
-
-    suspend fun existsByNameExceptId(name: String, id: Long): Boolean {
-        return groupDao.existsByNameExceptId(name, id)
-    }
-
     suspend fun deleteGroup(id: Long) {
         groupDao.deleteGroup(id)
     }

@@ -27,7 +27,7 @@ interface SemesterDao {
     suspend fun insert(semester: SemesterEntity): Long
 
     @Update
-    suspend fun update(semester: SemesterEntity)
+    suspend fun update(semester: SemesterEntity): Int
 
     @Query("DELETE FROM semesters WHERE id = :semesterId")
     suspend fun deleteById(semesterId: Long)

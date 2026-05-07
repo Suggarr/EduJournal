@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,6 +33,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,9 +51,11 @@ import com.edujournal.R
 import com.edujournal.presentation.component.AppTopBar
 import com.edujournal.domain.model.Semester
 import com.edujournal.domain.model.enum.SemesterSeason
+import com.edujournal.domain.usecase.common.EntityWriteResult
 import com.edujournal.presentation.component.DeleteRectActionButton
 import com.edujournal.presentation.component.EditRectActionButton
 import com.edujournal.presentation.viewmodel.SemesterViewModel
+import kotlinx.coroutines.flow.collectLatest
 import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,11 +72,16 @@ fun SemesterManagementScreen(
 
     val semesterLastDeleteError = stringResource(R.string.settings_semester_last_delete_error)
     val semesterInvalidYearError = stringResource(R.string.settings_semester_invalid_year)
-    val semesterDuplicateSeasonYearError = stringResource(R.string.settings_semester_duplicate_season_year)
 
     var showAddSemesterDialog by remember { mutableStateOf(false) }
     var semesterToEdit by remember { mutableStateOf<Semester?>(null) }
     var semesterToDelete by remember { mutableStateOf<Semester?>(null) }
+
+    LaunchedEffect(Unit) {
+        semesterViewModel.uiMessageRes.collectLatest { messageRes ->
+            Toast.makeText(context, context.getString(messageRes), Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
@@ -138,14 +147,11 @@ fun SemesterManagementScreen(
                 Toast.makeText(context, semesterInvalidYearError, Toast.LENGTH_SHORT).show()
             },
             onConfirm = { season, year ->
-                val hasDuplicate = semesters.any { it.season == season && it.year == year }
-                if (hasDuplicate) {
-                    Toast.makeText(context, semesterDuplicateSeasonYearError, Toast.LENGTH_SHORT).show()
-                    return@SemesterDialog
+                semesterViewModel.addSemester(season, year) { result ->
+                    if (result == EntityWriteResult.SUCCESS) {
+                        showAddSemesterDialog = false
+                    }
                 }
-
-                semesterViewModel.addSemester(season, year)
-                showAddSemesterDialog = false
             }
         )
     }
@@ -160,18 +166,13 @@ fun SemesterManagementScreen(
                 Toast.makeText(context, semesterInvalidYearError, Toast.LENGTH_SHORT).show()
             },
             onConfirm = { season, year ->
-                val hasDuplicate = semesters.any {
-                    it.id != semester.id && it.season == season && it.year == year
-                }
-                if (hasDuplicate) {
-                    Toast.makeText(context, semesterDuplicateSeasonYearError, Toast.LENGTH_SHORT).show()
-                    return@SemesterDialog
-                }
-
                 semesterViewModel.updateSemester(
                     semester.copy(season = season, year = year)
-                )
-                semesterToEdit = null
+                ) { result ->
+                    if (result != EntityWriteResult.DUPLICATE) {
+                        semesterToEdit = null
+                    }
+                }
             }
         )
     }
@@ -238,9 +239,9 @@ private fun SemesterItemCard(
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal),
                 modifier = Modifier.weight(1f)
             )
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             EditRectActionButton(onClick = onEditClick)
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             DeleteRectActionButton(onClick = onDeleteClick)
         }
     }

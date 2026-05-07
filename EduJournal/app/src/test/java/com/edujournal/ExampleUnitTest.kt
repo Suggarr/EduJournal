@@ -1,4 +1,4 @@
-package com.edujournal
+﻿package com.edujournal
 
 import org.junit.Test
 

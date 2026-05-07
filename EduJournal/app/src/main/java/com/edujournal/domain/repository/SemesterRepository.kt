@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 interface SemesterRepository {
     fun observeSemesters(): Flow<List<Semester>>
     suspend fun createSemester(semester: Semester): Long
-    suspend fun updateSemester(semester: Semester)
+    suspend fun updateSemester(semester: Semester): Int
     suspend fun deleteSemester(semesterId: Long)
 }
 

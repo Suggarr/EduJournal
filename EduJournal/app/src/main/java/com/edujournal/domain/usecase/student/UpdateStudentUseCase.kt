@@ -1,8 +1,9 @@
-﻿package com.edujournal.domain.usecase.student
-import com.edujournal.domain.usecase.common.EntityWriteResult
+package com.edujournal.domain.usecase.student
 
+import android.database.sqlite.SQLiteConstraintException
 import com.edujournal.domain.model.Student
 import com.edujournal.domain.repository.StudentRepository
+import com.edujournal.domain.usecase.common.EntityWriteResult
 import com.edujournal.utils.normalizeSpaces
 import com.edujournal.utils.normalizeSpacesOrNull
 import javax.inject.Inject
@@ -17,22 +18,11 @@ class UpdateStudentUseCase @Inject constructor(
             middleName = student.middleName.normalizeSpacesOrNull()
         )
 
-        if (!repository.existsById(normalizedStudent.id)) return EntityWriteResult.NOT_FOUND
-        if (repository.existsByFullNameInGroupExceptId(
-                id = normalizedStudent.id,
-                groupId = normalizedStudent.groupId,
-                lastName = normalizedStudent.lastName,
-                firstName = normalizedStudent.firstName,
-                middleName = normalizedStudent.middleName
-            )
-        ) {
-            return EntityWriteResult.DUPLICATE
+        return try {
+            val updated = repository.updateStudent(normalizedStudent)
+            if (updated == 0) EntityWriteResult.NOT_FOUND else EntityWriteResult.SUCCESS
+        } catch (_: SQLiteConstraintException) {
+            EntityWriteResult.DUPLICATE
         }
-        repository.updateStudent(normalizedStudent)
-        return EntityWriteResult.SUCCESS
     }
 }
-
-
-
-

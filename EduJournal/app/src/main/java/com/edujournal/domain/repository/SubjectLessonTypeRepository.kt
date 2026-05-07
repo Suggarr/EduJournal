@@ -12,9 +12,6 @@ interface SubjectLessonTypeRepository {
     suspend fun createLessonType(SubjectLessonType: SubjectLessonType): Long
 
     suspend fun updateLessonType(SubjectLessonType: SubjectLessonType): Int
-    suspend fun existsById(id: Long): Boolean
-    suspend fun existsByName(subjectId: Long, name: String): Boolean
-    suspend fun existsByNameExceptId(subjectId: Long, name: String, id: Long): Boolean
 
     suspend fun deleteLessonType(typeId: Long)
 }

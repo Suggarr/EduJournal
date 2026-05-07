@@ -26,7 +26,7 @@ interface HomeworkDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(homework: HomeworkEntity): Long
 
-    @Update(onConflict = OnConflictStrategy.IGNORE)
+    @Update
     suspend fun update(homework: HomeworkEntity): Int
 
     @Query("DELETE FROM homeworks WHERE id = :id")
