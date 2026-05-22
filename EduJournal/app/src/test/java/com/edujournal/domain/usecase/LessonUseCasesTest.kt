@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
 import java.time.LocalDate
 
@@ -30,6 +31,31 @@ class LessonUseCasesTest {
 
         assertEquals(EntityWriteResult.SUCCESS, result)
         coVerify { repo.insertLesson(match { it.topic == "Topic 1" }) }
+    }
+
+    @Test
+    fun `create lesson returns duplicate when insert ignored`() = runBlocking {
+        val repo = mockk<LessonRepository>()
+        coEvery { repo.insertLesson(any()) } returns -1L
+        val useCase = CreateLessonUseCase(repo)
+        val lesson = Lesson(1L, 10L, 20L, 2L, LocalDate.of(2026, 5, 1), "Topic")
+
+        val result = useCase(lesson)
+
+        assertEquals(EntityWriteResult.DUPLICATE, result)
+    }
+
+    @Test
+    fun `create lesson throws when topic is blank after normalization`() {
+        runBlocking {
+            val repo = mockk<LessonRepository>(relaxed = true)
+            val useCase = CreateLessonUseCase(repo)
+            val lesson = Lesson(1L, 10L, 20L, 2L, LocalDate.of(2026, 5, 1), "   ")
+
+            assertThrows(IllegalArgumentException::class.java) {
+                runBlocking { useCase(lesson) }
+            }
+        }
     }
 
     @Test

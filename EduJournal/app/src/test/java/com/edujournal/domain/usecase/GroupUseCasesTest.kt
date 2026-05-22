@@ -14,11 +14,27 @@ import org.junit.Test
 
 class GroupUseCasesTest {
     @Test
+    fun `create group returns success when inserted`() = runBlocking {
+        val repo = mockk<GroupRepository>()
+        coEvery { repo.createGroup(any()) } returns 10L
+        val result = CreateGroupUseCase(repo)("PI-101")
+        assertEquals(EntityWriteResult.SUCCESS, result)
+    }
+
+    @Test
     fun `create group returns duplicate on insert ignore`() = runBlocking {
         val repo = mockk<GroupRepository>()
         coEvery { repo.createGroup(any()) } returns -1L
         val result = CreateGroupUseCase(repo)("PI-101")
         assertEquals(EntityWriteResult.DUPLICATE, result)
+    }
+
+    @Test
+    fun `update group returns success when row updated`() = runBlocking {
+        val repo = mockk<GroupRepository>()
+        coEvery { repo.updateGroup(any()) } returns 1
+        val result = UpdateGroupUseCase(repo)(Group(7L, "PI-101"))
+        assertEquals(EntityWriteResult.SUCCESS, result)
     }
 
     @Test

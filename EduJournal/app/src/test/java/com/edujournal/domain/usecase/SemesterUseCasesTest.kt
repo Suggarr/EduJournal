@@ -10,9 +10,18 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class SemesterUseCasesTest {
+    @Test
+    fun `create semester returns success when inserted`() = runBlocking {
+        val repo = mockk<SemesterRepository>()
+        coEvery { repo.createSemester(any()) } returns 3L
+        val result = CreateSemesterUseCase(repo)(SemesterSeason.SPRING, 2027)
+        assertEquals(EntityWriteResult.SUCCESS, result)
+    }
+
     @Test
     fun `create semester returns duplicate when insert ignored`() = runBlocking {
         val repo = mockk<SemesterRepository>()
@@ -22,10 +31,30 @@ class SemesterUseCasesTest {
     }
 
     @Test
+    fun `update semester returns success when row updated`() = runBlocking {
+        val repo = mockk<SemesterRepository>()
+        coEvery { repo.updateSemester(any()) } returns 1
+        val result = UpdateSemesterUseCase(repo)(Semester(5L, SemesterSeason.AUTUMN, 2026))
+        assertEquals(EntityWriteResult.SUCCESS, result)
+    }
+
+    @Test
     fun `update semester returns not found when no rows`() = runBlocking {
         val repo = mockk<SemesterRepository>()
         coEvery { repo.updateSemester(any()) } returns 0
         val result = UpdateSemesterUseCase(repo)(Semester(5L, SemesterSeason.AUTUMN, 2026))
         assertEquals(EntityWriteResult.NOT_FOUND, result)
+    }
+
+    @Test
+    fun `update semester throws when year invalid`() {
+        runBlocking {
+            val repo = mockk<SemesterRepository>(relaxed = true)
+            assertThrows(IllegalArgumentException::class.java) {
+                runBlocking {
+                    UpdateSemesterUseCase(repo)(Semester(5L, SemesterSeason.AUTUMN, 0))
+                }
+            }
+        }
     }
 }

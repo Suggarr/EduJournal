@@ -69,7 +69,8 @@ class HomeworkViewModel @Inject constructor(
             ) { homework, students -> homework to students }
                 .flatMapLatest { (homework, students) ->
                     val submissionsFlow: Flow<List<HomeworkSubmission>> =
-                        if (homework != null) observeHomeworkSubmissionsUseCase(homework.id)
+                        if (homework != null)
+                            observeHomeworkSubmissionsUseCase(homework.id)
                         else flowOf(emptyList())
 
                     submissionsFlow.map { submissions ->
@@ -79,15 +80,18 @@ class HomeworkViewModel @Inject constructor(
                             homework = homework,
                             students = students.map { student ->
                                 val submission = submissionsByStudent[student.id]
-                                val storedStatus = submission?.status ?: HomeworkSubmissionStatus.NOT_SUBMITTED
+                                val storedStatus = submission?.status
+                                    ?: HomeworkSubmissionStatus.NOT_SUBMITTED
                                 val displayStatus = when {
-                                    storedStatus == HomeworkSubmissionStatus.SUBMITTED -> HomeworkDisplayStatus.SUBMITTED
+                                    storedStatus == HomeworkSubmissionStatus.SUBMITTED
+                                        -> HomeworkDisplayStatus.SUBMITTED
                                     else -> HomeworkDisplayStatus.NOT_SUBMITTED
                                 }
 
                                 HomeworkStudentUi(
                                     studentId = student.id,
-                                    studentName = "${student.lastName} ${student.firstName} ${student.middleName}",
+                                    studentName =
+                                        "${student.lastName} ${student.firstName} ${student.middleName}",
                                     storedStatus = storedStatus,
                                     displayStatus = displayStatus
                                 )

@@ -13,11 +13,27 @@ import org.junit.Test
 
 class SubjectLessonTypeUseCasesTest {
     @Test
+    fun `create returns success when inserted`() = runBlocking {
+        val repo = mockk<SubjectLessonTypeRepository>()
+        coEvery { repo.createLessonType(any()) } returns 5L
+        val result = CreateSubjectLessonTypeUseCase(repo)(1L, "Lecture", 20.0)
+        assertEquals(EntityWriteResult.SUCCESS, result)
+    }
+
+    @Test
     fun `create returns duplicate when insert ignored`() = runBlocking {
         val repo = mockk<SubjectLessonTypeRepository>()
         coEvery { repo.createLessonType(any()) } returns -1L
         val result = CreateSubjectLessonTypeUseCase(repo)(1L, "Lecture", 20.0)
         assertEquals(EntityWriteResult.DUPLICATE, result)
+    }
+
+    @Test
+    fun `update returns success when row updated`() = runBlocking {
+        val repo = mockk<SubjectLessonTypeRepository>()
+        coEvery { repo.updateLessonType(any()) } returns 1
+        val result = UpdateSubjectLessonTypeUseCase(repo)(SubjectLessonType(9L, 1L, "Practice", 8.0))
+        assertEquals(EntityWriteResult.SUCCESS, result)
     }
 
     @Test

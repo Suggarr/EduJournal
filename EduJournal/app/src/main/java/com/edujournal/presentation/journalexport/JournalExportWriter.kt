@@ -7,6 +7,12 @@ import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import com.edujournal.presentation.state.JournalMetaState
 import com.edujournal.presentation.state.JournalState
+import org.apache.poi.ss.usermodel.BorderStyle
+import org.apache.poi.ss.usermodel.FillPatternType
+import org.apache.poi.ss.usermodel.HorizontalAlignment
+import org.apache.poi.ss.usermodel.IndexedColors
+import org.apache.poi.ss.usermodel.CellStyle
+import org.apache.poi.ss.usermodel.VerticalAlignment
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -64,25 +70,140 @@ object JournalExportWriter {
         val workbook = XSSFWorkbook()
         val sheet = workbook.createSheet("Журнал")
 
+        val headerStyle = workbook.createCellStyle().apply {
+            fillForegroundColor = IndexedColors.GREY_25_PERCENT.index
+            fillPattern = FillPatternType.SOLID_FOREGROUND
+            alignment = HorizontalAlignment.CENTER
+            verticalAlignment = VerticalAlignment.CENTER
+            borderTop = BorderStyle.THIN
+            borderBottom = BorderStyle.THIN
+            borderLeft = BorderStyle.THIN
+            borderRight = BorderStyle.THIN
+        }
+        val headerFont = workbook.createFont().apply { bold = true }
+        headerStyle.setFont(headerFont)
+
+        val defaultCellStyle = workbook.createCellStyle().apply {
+            alignment = HorizontalAlignment.CENTER
+            verticalAlignment = VerticalAlignment.CENTER
+            borderTop = BorderStyle.THIN
+            borderBottom = BorderStyle.THIN
+            borderLeft = BorderStyle.THIN
+            borderRight = BorderStyle.THIN
+        }
+        val studentCellStyle = workbook.createCellStyle().apply {
+            alignment = HorizontalAlignment.LEFT
+            verticalAlignment = VerticalAlignment.CENTER
+            borderTop = BorderStyle.THIN
+            borderBottom = BorderStyle.THIN
+            borderLeft = BorderStyle.THIN
+            borderRight = BorderStyle.THIN
+        }
+        val summaryRowStyle = workbook.createCellStyle().apply {
+            fillForegroundColor = IndexedColors.LEMON_CHIFFON.index
+            fillPattern = FillPatternType.SOLID_FOREGROUND
+            alignment = HorizontalAlignment.CENTER
+            verticalAlignment = VerticalAlignment.CENTER
+            borderTop = BorderStyle.THIN
+            borderBottom = BorderStyle.THIN
+            borderLeft = BorderStyle.THIN
+            borderRight = BorderStyle.THIN
+        }
+        val summaryLabelStyle = workbook.createCellStyle().apply {
+            cloneStyleFrom(summaryRowStyle)
+            alignment = HorizontalAlignment.LEFT
+        }
+        val summaryHeaderStyle = workbook.createCellStyle().apply {
+            cloneStyleFrom(headerStyle)
+            fillForegroundColor = IndexedColors.LIGHT_TURQUOISE.index
+        }
+        val legendStyle = workbook.createCellStyle().apply {
+            alignment = HorizontalAlignment.LEFT
+        }
+        val gradeStyleCache = mutableMapOf<String, CellStyle>()
+
         val headerRow = sheet.createRow(0)
-        headerRow.createCell(0).setCellValue("Студент")
+        headerRow.createCell(0).apply {
+            setCellValue("Студент")
+            setCellStyle(headerStyle)
+        }
         state.lessons.forEachIndexed { index, lesson ->
-            headerRow.createCell(index + 1).setCellValue(lesson.date.format(dateFormatter))
+            headerRow.createCell(index + 1).apply {
+                setCellValue(lesson.date.format(dateFormatter))
+                setCellStyle(headerStyle)
+            }
+        }
+        val avgColumnIndex = state.lessons.size + 1
+        val absColumnIndex = state.lessons.size + 2
+        headerRow.createCell(avgColumnIndex).apply {
+            setCellValue("Ср. балл")
+            setCellStyle(summaryHeaderStyle)
+        }
+        headerRow.createCell(absColumnIndex).apply {
+            setCellValue("Н/З/О")
+            setCellStyle(summaryHeaderStyle)
         }
 
         state.rows.forEachIndexed { rowIndex, row ->
             val xlsxRow = sheet.createRow(rowIndex + 1)
-            xlsxRow.createCell(0).setCellValue(row.studentName)
-            row.cells.forEachIndexed { cellIndex, cell ->
-                val value = if (cell.value == "-") "" else cell.value
-                xlsxRow.createCell(cellIndex + 1).setCellValue(value)
+            xlsxRow.createCell(0).apply {
+                setCellValue(row.studentName)
+                setCellStyle(studentCellStyle)
             }
+            row.cells.forEachIndexed { cellIndex, cell ->
+                val value = if (cell.value == "-") "" else (cell.value ?: "")
+                val styleKey = gradeStyleKey(value)
+                val gradeStyle = gradeStyleCache.getOrPut(styleKey) {
+                    createGradeCellStyle(workbook, styleKey)
+                }
+                xlsxRow.createCell(cellIndex + 1).apply {
+                    setCellValue(value)
+                    setCellStyle(if (styleKey == "default") defaultCellStyle else gradeStyle)
+                }
+            }
+            xlsxRow.createCell(avgColumnIndex).apply {
+                setCellValue(row.averageText)
+                setCellStyle(summaryRowStyle)
+            }
+            xlsxRow.createCell(absColumnIndex).apply {
+                setCellValue(row.absencesCount.toString())
+                setCellStyle(summaryRowStyle)
+            }
+        }
+
+        val absencesRowIndex = state.rows.size + 1
+        val absencesRow = sheet.createRow(absencesRowIndex)
+        absencesRow.createCell(0).apply {
+            setCellValue("Отсутствующие (Н/З/О)")
+            setCellStyle(summaryLabelStyle)
+        }
+        state.lessonAbsencesCounts.forEachIndexed { index, count ->
+            absencesRow.createCell(index + 1).apply {
+                setCellValue(count.toDouble())
+                setCellStyle(summaryRowStyle)
+            }
+        }
+        absencesRow.createCell(avgColumnIndex).apply {
+            setCellValue("-")
+            setCellStyle(summaryRowStyle)
+        }
+        absencesRow.createCell(absColumnIndex).apply {
+            setCellValue("-")
+            setCellStyle(summaryRowStyle)
+        }
+
+        val legendRow = sheet.createRow(absencesRowIndex + 2)
+        legendRow.createCell(0).apply {
+            setCellValue("Обозначения: 1-10 — оценки, Н — отсутствовал, З — болел, О — освобожден")
+            setCellStyle(legendStyle)
         }
 
         sheet.setColumnWidth(0, 9000)
         for (i in state.lessons.indices) {
             sheet.setColumnWidth(i + 1, 4200)
         }
+        sheet.setColumnWidth(avgColumnIndex, 3800)
+        sheet.setColumnWidth(absColumnIndex, 3800)
 
         val topicsSheet = workbook.createSheet("Темы занятий")
         val topicsHeaderRow = topicsSheet.createRow(0)
@@ -134,6 +255,18 @@ object JournalExportWriter {
             textSize = 14f
             isFakeBoldText = true
         }
+        val headerBgPaint = Paint().apply {
+            color = Color.parseColor("#DDE6FF")
+            style = Paint.Style.FILL
+        }
+        val summaryHeaderBgPaint = Paint().apply {
+            color = Color.parseColor("#D6F5EA")
+            style = Paint.Style.FILL
+        }
+        val summaryBgPaint = Paint().apply {
+            color = Color.parseColor("#FFF3E0")
+            style = Paint.Style.FILL
+        }
         val cellPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.BLACK
             textSize = 13f
@@ -144,18 +277,19 @@ object JournalExportWriter {
             style = Paint.Style.STROKE
         }
 
-        val availableHeight = pageHeight - margin * 2 - titleHeight - rowHeight
+        val availableHeight = pageHeight - margin * 2 - titleHeight - rowHeight * 3
         val maxRowsPerPage = (availableHeight / rowHeight).coerceAtLeast(1)
 
         val tableWidth = pageWidth - margin * 2
-        val maxLessonColumns = 8.coerceAtMost(state.lessons.size)
+        val summaryColumnWidth = 96
+        val maxLessonColumns = 7.coerceAtMost(state.lessons.size)
         var pageNumber = 1
 
         for (colStart in state.lessons.indices step maxLessonColumns) {
             val colEnd = min(colStart + maxLessonColumns, state.lessons.size)
             val dateSlice = state.lessons.subList(colStart, colEnd)
-            val dateColumnWidth = ((tableWidth - studentColumnWidth) / dateSlice.size).coerceAtLeast(80)
-            val currentTableWidth = studentColumnWidth + dateColumnWidth * dateSlice.size
+            val dateColumnWidth = ((tableWidth - studentColumnWidth - summaryColumnWidth * 2) / dateSlice.size).coerceAtLeast(80)
+            val currentTableWidth = studentColumnWidth + dateColumnWidth * dateSlice.size + summaryColumnWidth * 2
 
             for (rowStart in state.rows.indices step maxRowsPerPage) {
                 val rowEnd = min(rowStart + maxRowsPerPage, state.rows.size)
@@ -186,6 +320,22 @@ object JournalExportWriter {
                 val tableLeft = margin
                 val headerBottom = tableTop + rowHeight
 
+                canvas.drawRect(
+                    tableLeft.toFloat(),
+                    tableTop.toFloat(),
+                    (tableLeft + studentColumnWidth + dateColumnWidth * dateSlice.size).toFloat(),
+                    headerBottom.toFloat(),
+                    headerBgPaint
+                )
+                val summaryStartX = tableLeft + studentColumnWidth + dateColumnWidth * dateSlice.size
+                canvas.drawRect(
+                    summaryStartX.toFloat(),
+                    tableTop.toFloat(),
+                    (summaryStartX + summaryColumnWidth * 2).toFloat(),
+                    headerBottom.toFloat(),
+                    summaryHeaderBgPaint
+                )
+
                 drawTextCentered(
                     canvas = canvas,
                     text = "Студент",
@@ -209,10 +359,33 @@ object JournalExportWriter {
                         paint = headerPaint
                     )
                 }
+                val avgLeft = summaryStartX
+                val avgRight = avgLeft + summaryColumnWidth
+                val absLeft = avgRight
+                val absRight = absLeft + summaryColumnWidth
+                drawTextCentered(
+                    canvas = canvas,
+                    text = "Ср. балл",
+                    left = avgLeft,
+                    right = avgRight,
+                    top = tableTop,
+                    bottom = headerBottom,
+                    paint = headerPaint
+                )
+                drawTextCentered(
+                    canvas = canvas,
+                    text = "Н/З/О",
+                    left = absLeft,
+                    right = absRight,
+                    top = tableTop,
+                    bottom = headerBottom,
+                    paint = headerPaint
+                )
 
                 rowsSlice.forEachIndexed { visualRowIndex, row ->
                     val top = headerBottom + visualRowIndex * rowHeight
                     val bottom = top + rowHeight
+                    canvas.drawRect(avgLeft.toFloat(), top.toFloat(), absRight.toFloat(), bottom.toFloat(), summaryBgPaint)
 
                     drawTextLeft(
                         canvas = canvas,
@@ -229,6 +402,17 @@ object JournalExportWriter {
                         val value = row.cells.getOrNull(colStart + index)?.value.orEmpty().let {
                             if (it == "-") "" else it
                         }
+                        val gradeColors = gradeCellColors(value)
+                        if (gradeColors != null) {
+                            val bgPaint = Paint().apply {
+                                color = gradeColors.first
+                                style = Paint.Style.FILL
+                            }
+                            canvas.drawRect(left.toFloat(), top.toFloat(), right.toFloat(), bottom.toFloat(), bgPaint)
+                        }
+                        val valuePaint = Paint(cellPaint).apply {
+                            color = gradeColors?.second ?: Color.BLACK
+                        }
                         drawTextCentered(
                             canvas = canvas,
                             text = value,
@@ -236,9 +420,27 @@ object JournalExportWriter {
                             right = right,
                             top = top,
                             bottom = bottom,
-                            paint = cellPaint
+                            paint = valuePaint
                         )
                     }
+                    drawTextCentered(
+                        canvas = canvas,
+                        text = row.averageText,
+                        left = avgLeft,
+                        right = avgRight,
+                        top = top,
+                        bottom = bottom,
+                        paint = cellPaint
+                    )
+                    drawTextCentered(
+                        canvas = canvas,
+                        text = row.absencesCount.toString(),
+                        left = absLeft,
+                        right = absRight,
+                        top = top,
+                        bottom = bottom,
+                        paint = cellPaint
+                    )
                 }
 
                 val tableBottom = headerBottom + rowsSlice.size * rowHeight
@@ -254,6 +456,10 @@ object JournalExportWriter {
                     tableBottom.toFloat(),
                     linePaint
                 )
+                val summarySep = (tableLeft + studentColumnWidth + dateColumnWidth * dateSlice.size).toFloat()
+                val avgSep = (tableLeft + studentColumnWidth + dateColumnWidth * dateSlice.size + summaryColumnWidth).toFloat()
+                canvas.drawLine(summarySep, tableTop.toFloat(), summarySep, tableBottom.toFloat(), linePaint)
+                canvas.drawLine(avgSep, tableTop.toFloat(), avgSep, tableBottom.toFloat(), linePaint)
 
                 val horizontalLines = rowsSlice.size + 1
                 for (lineY in 0..horizontalLines) {
@@ -266,6 +472,50 @@ object JournalExportWriter {
                         linePaint
                     )
                 }
+
+                val absTop = tableBottom
+                val absBottom = absTop + rowHeight
+                canvas.drawRect(tableLeft.toFloat(), absTop.toFloat(), (tableLeft + currentTableWidth).toFloat(), absBottom.toFloat(), summaryBgPaint)
+                drawTextLeft(
+                    canvas = canvas,
+                    text = "Отсутствующие (Н/З/О)",
+                    left = tableLeft + 8,
+                    top = absTop,
+                    bottom = absBottom,
+                    paint = cellPaint
+                )
+                dateSlice.forEachIndexed { index, _ ->
+                    val left = tableLeft + studentColumnWidth + index * dateColumnWidth
+                    val right = left + dateColumnWidth
+                    val countValue = state.lessonAbsencesCounts.getOrNull(colStart + index)?.toString().orEmpty()
+                    drawTextCentered(
+                        canvas = canvas,
+                        text = countValue,
+                        left = left,
+                        right = right,
+                        top = absTop,
+                        bottom = absBottom,
+                        paint = cellPaint
+                    )
+                }
+                drawTextCentered(canvas, "-", avgLeft, avgRight, absTop, absBottom, cellPaint)
+                drawTextCentered(canvas, "-", absLeft, absRight, absTop, absBottom, cellPaint)
+                canvas.drawRect(
+                    tableLeft.toFloat(),
+                    absTop.toFloat(),
+                    (tableLeft + currentTableWidth).toFloat(),
+                    absBottom.toFloat(),
+                    linePaint
+                )
+                canvas.drawLine(summarySep, absTop.toFloat(), summarySep, absBottom.toFloat(), linePaint)
+                canvas.drawLine(avgSep, absTop.toFloat(), avgSep, absBottom.toFloat(), linePaint)
+                for (lineX in 0..dateSlice.size) {
+                    val x = (tableLeft + studentColumnWidth + lineX * dateColumnWidth).toFloat()
+                    canvas.drawLine(x, absTop.toFloat(), x, absBottom.toFloat(), linePaint)
+                }
+
+                val legendY = absBottom + 22
+                canvas.drawText("Обозначения: 1-10 — оценки, Н — отсутствовал, З — болел, О — освобожден.", margin.toFloat(), legendY.toFloat(), subtitlePaint)
 
                 document.finishPage(page)
             }
@@ -435,5 +685,72 @@ object JournalExportWriter {
             .replace(Regex("[\\\\/:*?\"<>|]"), "_")
             .replace(Regex("\\s+"), "_")
             .ifBlank { "БезНазвания" }
+    }
+
+    private fun gradeStyleKey(value: String): String = when (value) {
+        "1", "2", "3" -> "low"
+        "4", "5", "6" -> "mid"
+        "7", "8", "9", "10" -> "high"
+        "Н" -> "absent"
+        "З" -> "sick"
+        "О" -> "pass"
+        else -> "default"
+    }
+
+    private fun createGradeCellStyle(workbook: XSSFWorkbook, key: String): CellStyle {
+        val style = workbook.createCellStyle().apply {
+            alignment = HorizontalAlignment.CENTER
+            verticalAlignment = VerticalAlignment.CENTER
+            borderTop = BorderStyle.THIN
+            borderBottom = BorderStyle.THIN
+            borderLeft = BorderStyle.THIN
+            borderRight = BorderStyle.THIN
+            fillPattern = FillPatternType.SOLID_FOREGROUND
+        }
+        val font = workbook.createFont()
+        when (key) {
+            "low" -> {
+                style.fillForegroundColor = IndexedColors.ROSE.index
+                font.color = IndexedColors.DARK_RED.index
+            }
+            "mid" -> {
+                style.fillForegroundColor = IndexedColors.LIGHT_YELLOW.index
+                font.color = IndexedColors.BROWN.index
+            }
+            "high" -> {
+                style.fillForegroundColor = IndexedColors.LIGHT_GREEN.index
+                font.color = IndexedColors.DARK_GREEN.index
+            }
+            "absent" -> {
+                style.fillForegroundColor = IndexedColors.LIGHT_ORANGE.index
+                font.color = IndexedColors.BROWN.index
+            }
+            "sick" -> {
+                style.fillForegroundColor = IndexedColors.PALE_BLUE.index
+                font.color = IndexedColors.DARK_BLUE.index
+            }
+            "pass" -> {
+                style.fillForegroundColor = IndexedColors.LAVENDER.index
+                font.color = IndexedColors.VIOLET.index
+            }
+            else -> {
+                style.fillForegroundColor = IndexedColors.WHITE.index
+                font.color = IndexedColors.BLACK.index
+            }
+        }
+        style.setFont(font)
+        return style
+    }
+
+    private fun gradeCellColors(value: String): Pair<Int, Int>? {
+        return when (value) {
+            "1", "2", "3" -> Color.parseColor("#FFDAD6") to Color.parseColor("#7F1D1D")
+            "4", "5", "6" -> Color.parseColor("#FFECB3") to Color.parseColor("#8A4B00")
+            "7", "8", "9", "10" -> Color.parseColor("#C8E6C9") to Color.parseColor("#1B5E20")
+            "Н" -> Color.parseColor("#FFCC80") to Color.parseColor("#6D3500")
+            "З" -> Color.parseColor("#90CAF9") to Color.parseColor("#0D47A1")
+            "О" -> Color.parseColor("#B39DDB") to Color.parseColor("#311B92")
+            else -> null
+        }
     }
 }
