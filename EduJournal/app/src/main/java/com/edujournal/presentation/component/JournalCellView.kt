@@ -14,31 +14,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.edujournal.presentation.state.JournalCell
+import com.edujournal.presentation.state.JournalCellVisualStyles
 
 @Composable
 fun JournalCellView(
     cell: JournalCell,
     modifier: Modifier = Modifier
 ) {
-    val bgColor = when (cell.value) {
-        "1", "2", "3" -> Color(0xFFFFDAD6)
-        "4", "5", "6" -> Color(0xFFFFECB3)
-        "7", "8", "9", "10" -> Color(0xFFC8E6C9)
-        "Н" -> Color(0xFFFFCC80)
-        "З" -> Color(0xFF90CAF9)
-        "О" -> Color(0xFFB39DDB)
-        else -> Color.White
-    }
-
-    val textColor = when (cell.value) {
-        "1", "2", "3" -> Color(0xFF7F1D1D)
-        "4", "5", "6" -> Color(0xFF8A4B00)
-        "7", "8", "9", "10" -> Color(0xFF1B5E20)
-        "Н" -> Color(0xFF6D3500)
-        "З" -> Color(0xFF0D47A1)
-        "О" -> Color(0xFF311B92)
-        else -> Color.Black
-    }
+    val visualStyle = JournalCellVisualStyles.forValue(cell.value)
+    val bgColor = Color(visualStyle.backgroundArgb)
+    val textColor = Color(visualStyle.textArgb)
 
     Box(
         modifier = modifier

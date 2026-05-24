@@ -6,6 +6,9 @@ import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import com.edujournal.presentation.state.JournalMetaState
+import com.edujournal.presentation.state.JournalCellTone
+import com.edujournal.presentation.state.JournalCellVisualStyle
+import com.edujournal.presentation.state.JournalCellVisualStyles
 import com.edujournal.presentation.state.JournalState
 import org.apache.poi.ss.usermodel.BorderStyle
 import org.apache.poi.ss.usermodel.FillPatternType
@@ -13,6 +16,8 @@ import org.apache.poi.ss.usermodel.HorizontalAlignment
 import org.apache.poi.ss.usermodel.IndexedColors
 import org.apache.poi.ss.usermodel.CellStyle
 import org.apache.poi.ss.usermodel.VerticalAlignment
+import org.apache.poi.xssf.usermodel.DefaultIndexedColorMap
+import org.apache.poi.xssf.usermodel.XSSFColor
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -120,7 +125,7 @@ object JournalExportWriter {
         val legendStyle = workbook.createCellStyle().apply {
             alignment = HorizontalAlignment.LEFT
         }
-        val gradeStyleCache = mutableMapOf<String, CellStyle>()
+        val gradeStyleCache = mutableMapOf<JournalCellTone, CellStyle>()
 
         val headerRow = sheet.createRow(0)
         headerRow.createCell(0).apply {
@@ -152,13 +157,13 @@ object JournalExportWriter {
             }
             row.cells.forEachIndexed { cellIndex, cell ->
                 val value = if (cell.value == "-") "" else (cell.value ?: "")
-                val styleKey = gradeStyleKey(value)
-                val gradeStyle = gradeStyleCache.getOrPut(styleKey) {
-                    createGradeCellStyle(workbook, styleKey)
+                val visualStyle = JournalCellVisualStyles.forValue(value)
+                val gradeStyle = gradeStyleCache.getOrPut(visualStyle.tone) {
+                    createGradeCellStyle(workbook, visualStyle)
                 }
                 xlsxRow.createCell(cellIndex + 1).apply {
                     setCellValue(value)
-                    setCellStyle(if (styleKey == "default") defaultCellStyle else gradeStyle)
+                    setCellStyle(if (visualStyle.tone == JournalCellTone.DEFAULT) defaultCellStyle else gradeStyle)
                 }
             }
             xlsxRow.createCell(avgColumnIndex).apply {
@@ -402,16 +407,16 @@ object JournalExportWriter {
                         val value = row.cells.getOrNull(colStart + index)?.value.orEmpty().let {
                             if (it == "-") "" else it
                         }
-                        val gradeColors = gradeCellColors(value)
-                        if (gradeColors != null) {
+                        val visualStyle = JournalCellVisualStyles.forValue(value)
+                        if (visualStyle.tone != JournalCellTone.DEFAULT) {
                             val bgPaint = Paint().apply {
-                                color = gradeColors.first
+                                color = visualStyle.backgroundArgb
                                 style = Paint.Style.FILL
                             }
                             canvas.drawRect(left.toFloat(), top.toFloat(), right.toFloat(), bottom.toFloat(), bgPaint)
                         }
                         val valuePaint = Paint(cellPaint).apply {
-                            color = gradeColors?.second ?: Color.BLACK
+                            color = visualStyle.textArgb
                         }
                         drawTextCentered(
                             canvas = canvas,
@@ -687,17 +692,7 @@ object JournalExportWriter {
             .ifBlank { "БезНазвания" }
     }
 
-    private fun gradeStyleKey(value: String): String = when (value) {
-        "1", "2", "3" -> "low"
-        "4", "5", "6" -> "mid"
-        "7", "8", "9", "10" -> "high"
-        "Н" -> "absent"
-        "З" -> "sick"
-        "О" -> "pass"
-        else -> "default"
-    }
-
-    private fun createGradeCellStyle(workbook: XSSFWorkbook, key: String): CellStyle {
+    private fun createGradeCellStyle(workbook: XSSFWorkbook, visualStyle: JournalCellVisualStyle): CellStyle {
         val style = workbook.createCellStyle().apply {
             alignment = HorizontalAlignment.CENTER
             verticalAlignment = VerticalAlignment.CENTER
@@ -707,50 +702,22 @@ object JournalExportWriter {
             borderRight = BorderStyle.THIN
             fillPattern = FillPatternType.SOLID_FOREGROUND
         }
-        val font = workbook.createFont()
-        when (key) {
-            "low" -> {
-                style.fillForegroundColor = IndexedColors.ROSE.index
-                font.color = IndexedColors.DARK_RED.index
-            }
-            "mid" -> {
-                style.fillForegroundColor = IndexedColors.LIGHT_YELLOW.index
-                font.color = IndexedColors.BROWN.index
-            }
-            "high" -> {
-                style.fillForegroundColor = IndexedColors.LIGHT_GREEN.index
-                font.color = IndexedColors.DARK_GREEN.index
-            }
-            "absent" -> {
-                style.fillForegroundColor = IndexedColors.LIGHT_ORANGE.index
-                font.color = IndexedColors.BROWN.index
-            }
-            "sick" -> {
-                style.fillForegroundColor = IndexedColors.PALE_BLUE.index
-                font.color = IndexedColors.DARK_BLUE.index
-            }
-            "pass" -> {
-                style.fillForegroundColor = IndexedColors.LAVENDER.index
-                font.color = IndexedColors.VIOLET.index
-            }
-            else -> {
-                style.fillForegroundColor = IndexedColors.WHITE.index
-                font.color = IndexedColors.BLACK.index
-            }
+        style.setFillForegroundColor(xssfColor(visualStyle.backgroundArgb))
+        val font = workbook.createFont().apply {
+            setColor(xssfColor(visualStyle.textArgb))
         }
         style.setFont(font)
         return style
     }
 
-    private fun gradeCellColors(value: String): Pair<Int, Int>? {
-        return when (value) {
-            "1", "2", "3" -> Color.parseColor("#FFDAD6") to Color.parseColor("#7F1D1D")
-            "4", "5", "6" -> Color.parseColor("#FFECB3") to Color.parseColor("#8A4B00")
-            "7", "8", "9", "10" -> Color.parseColor("#C8E6C9") to Color.parseColor("#1B5E20")
-            "Н" -> Color.parseColor("#FFCC80") to Color.parseColor("#6D3500")
-            "З" -> Color.parseColor("#90CAF9") to Color.parseColor("#0D47A1")
-            "О" -> Color.parseColor("#B39DDB") to Color.parseColor("#311B92")
-            else -> null
-        }
+    private fun xssfColor(argb: Int): XSSFColor {
+        return XSSFColor(
+            byteArrayOf(
+                ((argb ushr 16) and 0xFF).toByte(),
+                ((argb ushr 8) and 0xFF).toByte(),
+                (argb and 0xFF).toByte()
+            ),
+            DefaultIndexedColorMap()
+        )
     }
 }

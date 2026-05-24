@@ -91,12 +91,15 @@ class AnalyticsViewModel @Inject constructor(
                 .takeIf { it.isNotEmpty() }
                 ?.sum()
 
-            val gradeRowsWithMark = gradeRows.filter { it.gradeType != null }
-            val attendanceMarkedCount = gradeRowsWithMark.size
-            val attendanceAbsentCount = gradeRowsWithMark.count { it.gradeType == GradeType.ABSENT.name }
-            val attendanceSickCount = gradeRowsWithMark.count { it.gradeType == GradeType.SICK.name }
-            val attendancePassCount = gradeRowsWithMark.count { it.gradeType == GradeType.PASS.name }
-            val attendancePresentCount = gradeRowsWithMark.count { it.gradeType == GradeType.GRADE.name }
+            val attendanceRows = gradeRows.filter { it.lessonId != null }
+            val attendanceMarkedCount = attendanceRows.size
+            val attendanceAbsentCount = attendanceRows.count { it.gradeType == GradeType.ABSENT.name }
+            val attendanceSickCount = attendanceRows.count { it.gradeType == GradeType.SICK.name }
+            val attendancePassCount = attendanceRows.count { it.gradeType == GradeType.PASS.name }
+            val attendancePresentCount = attendanceMarkedCount -
+                attendanceAbsentCount -
+                attendanceSickCount -
+                attendancePassCount
             val attendancePercent = attendanceMarkedCount
                 .takeIf { it > 0 }
                 ?.let { attendancePresentCount * 100.0 / it }
